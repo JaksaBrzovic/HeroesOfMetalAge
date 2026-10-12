@@ -1,10 +1,9 @@
-using HeroesOfMetalAge.Domain;
 using TMPro;
 using UnityEngine;
 
 namespace HeroesOfMetalAge.Presentation
 {
-    /// <summary>Shared UI font, palette and placeholder art used when content has no portrait or icon.</summary>
+    /// <summary>Shared font, palette and placeholder art used when content has no portrait or icon.</summary>
     [CreateAssetMenu(menuName = "Heroes of Metal Age/UI Theme")]
     public sealed class UiTheme : ScriptableObject
     {
@@ -22,15 +21,6 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private Color enemy = new Color(0.82f, 0.29f, 0.22f);
         [SerializeField] private Color friendly = new Color(0.33f, 0.69f, 0.61f);
 
-        [Header("Adventure map")]
-        [SerializeField] private Color grassColor = new Color(0.16f, 0.23f, 0.17f);
-        [SerializeField] private Color forestColor = new Color(0.105f, 0.18f, 0.135f);
-        [SerializeField] private Color roadColor = new Color(0.29f, 0.26f, 0.2f);
-        [SerializeField] private Color mountainColor = new Color(0.19f, 0.2f, 0.22f);
-        [SerializeField] private Color waterColor = new Color(0.1f, 0.19f, 0.24f);
-        [SerializeField] private Color forestIconColor = new Color(0.31f, 0.39f, 0.28f);
-        [SerializeField] private Color mountainIconColor = new Color(0.41f, 0.44f, 0.43f);
-
         [Header("Combat board")]
         [SerializeField] private Color hexColor = new Color(0.22f, 0.24f, 0.22f);
         [SerializeField] private Color reachableHexColor = new Color(0.17f, 0.32f, 0.32f);
@@ -42,10 +32,6 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private Sprite axe;
         [SerializeField] private Sprite bow;
         [SerializeField] private Sprite rider;
-        [SerializeField] private Sprite tree;
-        [SerializeField] private Sprite mountain;
-        [SerializeField] private Sprite hex;
-        [SerializeField] private Sprite arrow;
 
         public TMP_FontAsset Font => font;
         public Color Background => background;
@@ -63,46 +49,6 @@ namespace HeroesOfMetalAge.Presentation
         public Sprite Axe => axe;
         public Sprite Bow => bow;
         public Sprite Rider => rider;
-        public Sprite Tree => tree;
-        public Sprite Mountain => mountain;
-        public Sprite Hex => hex;
-        public Sprite Arrow => arrow;
-
-        public Color TerrainColor(TerrainType terrain)
-        {
-            switch (terrain)
-            {
-                case TerrainType.Forest:
-                    return forestColor;
-                case TerrainType.Road:
-                    return roadColor;
-                case TerrainType.Mountain:
-                    return mountainColor;
-                case TerrainType.Water:
-                    return waterColor;
-                default:
-                    return grassColor;
-            }
-        }
-
-        /// <summary>Decoration drawn on a terrain tile (trees, peaks); null for open terrain.</summary>
-        public Sprite TerrainIcon(TerrainType terrain)
-        {
-            switch (terrain)
-            {
-                case TerrainType.Forest:
-                    return tree;
-                case TerrainType.Mountain:
-                    return mountain;
-                default:
-                    return null;
-            }
-        }
-
-        public Color TerrainIconColor(TerrainType terrain)
-        {
-            return terrain == TerrainType.Forest ? forestIconColor : mountainIconColor;
-        }
 
         /// <summary>Placeholder creature art for a unit's icon key; unknown keys use the axe.</summary>
         public Sprite Unit(string iconKey)

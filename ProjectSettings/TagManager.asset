@@ -38,8 +38,23 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Background
+    uniqueID: 1000
+    locked: 0
+  - name: Terrain
+    uniqueID: 1001
+    locked: 0
+  - name: Route
+    uniqueID: 1002
+    locked: 0
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Units
+    uniqueID: 1003
+    locked: 0
+  - name: Effects
+    uniqueID: 1004
     locked: 0
   m_RenderingLayers:
   - Default

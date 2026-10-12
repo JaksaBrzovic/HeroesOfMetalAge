@@ -14,8 +14,8 @@ namespace HeroesOfMetalAge.Presentation
     {
         private const float NOTICE_SECONDS = 5f;
         private const float HIT_SECONDS = 1.5f;
-        private const string ADVENTURE_HELP = "CLICK TO PLAN / CLICK AGAIN OR SPACE TO RIDE / E END DAY / H HERO / M MUTE";
-        private const string BATTLE_HELP = "CLICK BLUE HEX TO MOVE / CLICK ENEMY TO ATTACK / ARCHERS CAN SHOOT AT RANGE";
+        private const string ADVENTURE_HELP = "CLICK TO PLAN / AGAIN OR SPACE TO RIDE / ARROWS OR DRAG TO LOOK AROUND / E END DAY / H HERO";
+        private const string BATTLE_HELP = "CLICK A BLUE HEX TO MOVE / CLICK AN ENEMY TO ATTACK / ARCHERS CAN SHOOT AT RANGE";
         private const string MENU_HELP = "ESC RETURN / F3 DEVELOPMENT PANEL / M MUTE";
 
         [SerializeField] private UiTheme theme;
@@ -63,6 +63,10 @@ namespace HeroesOfMetalAge.Presentation
         public DialogCanvasView DialogView => dialogView;
         public EventSystem Events => eventSystem;
         public CanvasGroup ContentGroup => contentGroup;
+        public CanvasViewContext Context => context;
+
+        /// <summary>False under dialogs, options and the development panel; the world takes no clicks then either.</summary>
+        public bool IsGameplayInputEnabled => contentGroup.interactable;
 
         /// <exception cref="InvalidOperationException">A screen or control reference is missing on the root prefab.</exception>
         public void Initialize(GameSession session, IAudioControls audio, PresentationAssets media)

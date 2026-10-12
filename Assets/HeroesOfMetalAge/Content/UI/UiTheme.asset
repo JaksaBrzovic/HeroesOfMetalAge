@@ -20,13 +20,6 @@ MonoBehaviour:
   muted: {r: 0.51, g: 0.58, b: 0.57, a: 1}
   enemy: {r: 0.82, g: 0.29, b: 0.22, a: 1}
   friendly: {r: 0.33, g: 0.69, b: 0.61, a: 1}
-  grassColor: {r: 0.16, g: 0.23, b: 0.17, a: 1}
-  forestColor: {r: 0.105, g: 0.18, b: 0.135, a: 1}
-  roadColor: {r: 0.29, g: 0.26, b: 0.2, a: 1}
-  mountainColor: {r: 0.19, g: 0.2, b: 0.22, a: 1}
-  waterColor: {r: 0.1, g: 0.19, b: 0.24, a: 1}
-  forestIconColor: {r: 0.31, g: 0.39, b: 0.28, a: 1}
-  mountainIconColor: {r: 0.41, g: 0.44, b: 0.43, a: 1}
   hexColor: {r: 0.22, g: 0.24, b: 0.22, a: 1}
   reachableHexColor: {r: 0.17, g: 0.32, b: 0.32, a: 1}
   activeHexColor: {r: 0.46, g: 0.38, b: 0.2, a: 1}
@@ -35,7 +28,3 @@ MonoBehaviour:
   axe: {fileID: 21300000, guid: 78de8261f789ba54494d03f060051da2, type: 3}
   bow: {fileID: 21300000, guid: 37c79754996892c4faf278418242c8ba, type: 3}
   rider: {fileID: 21300000, guid: 174571cb8c1527c47948d6d29913d08f, type: 3}
-  tree: {fileID: 21300000, guid: 87476c754b14c0d439972002ec9dbbb1, type: 3}
-  mountain: {fileID: 21300000, guid: 114a5e78e498e0e41aa90b4b26cb9bf0, type: 3}
-  hex: {fileID: 21300000, guid: d573d65f3ccd13546b9f21d6d61cb1d3, type: 3}
-  arrow: {fileID: 21300000, guid: 86a8547b52d1dc44594574d91de0db05, type: 3}

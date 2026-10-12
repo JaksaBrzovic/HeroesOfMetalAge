@@ -30,16 +30,17 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [Tooltip("Recruitment price multiplier once the player owns the town.")]
         [Range(0.01f, 1f)]
         [SerializeField] private float ownedRecruitmentMultiplier = 0.55f;
+        [Tooltip("Adventure map prefab: map image, cell size and the terrain logic layer.")]
+        [SerializeField] private AdventureMapAuthoring map;
+        [Tooltip("Cell from the top-left corner of the map; hover the map in the Scene view to read a cell's coordinates.")]
         [SerializeField] private Vector2Int startingPosition = new Vector2Int(2, 5);
-        [Range(4, 18)]
-        [SerializeField] private int mapWidth = 18;
-        [Range(4, 11)]
-        [SerializeField] private int mapHeight = 11;
-        [SerializeField] private List<TerrainRow> terrainRows = new List<TerrainRow>();
         [SerializeField] private List<string> recruitmentUnitIds = new List<string>();
+        [Tooltip("Encounter positions are cells from the top-left corner of the map.")]
         [SerializeField] private List<EncounterEntry> encounters = new List<EncounterEntry>();
 
-        [Header("Combat rules")]
+        [Header("Combat")]
+        [Tooltip("Battlefield image; the hex board is laid over it. Empty uses the Battlefield prefab's image.")]
+        [SerializeField] private Sprite battleBackground;
         [Range(6, 10)]
         [SerializeField] private int combatWidth = 10;
         [Range(7, 7)]
@@ -87,11 +88,15 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public int ForestMovementCost => forestMovementCost;
         public int GroundMovementCost => groundMovementCost;
         public float OwnedRecruitmentMultiplier => ownedRecruitmentMultiplier;
+        public AdventureMapAuthoring Map
+        {
+            get => map;
+            internal set => map = value;
+        }
+
         public Vector2Int StartingPosition => startingPosition;
-        public int MapWidth => mapWidth;
-        public int MapHeight => mapHeight;
-        public IReadOnlyList<TerrainRow> TerrainRows => terrainRows;
         public IReadOnlyList<string> RecruitmentUnitIds => recruitmentUnitIds;
+        public Sprite BattleBackground => battleBackground;
         public IReadOnlyList<EncounterEntry> Encounters => encounters;
         public int CombatWidth => combatWidth;
         public int CombatHeight => combatHeight;

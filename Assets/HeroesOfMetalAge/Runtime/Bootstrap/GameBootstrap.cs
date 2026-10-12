@@ -30,13 +30,15 @@ namespace HeroesOfMetalAge.Bootstrap
         [SerializeField] private AudioDatabaseScriptableObject audioDatabase;
         [SerializeField] private MissionSettingsScriptableObject mission;
         [SerializeField] private GameHud uiPrefab;
+        [Tooltip("World root: cameras, the battlefield and the parent of the mission's adventure map.")]
+        [SerializeField] private GameWorld worldPrefab;
         [Tooltip("Development panel (F3); only instantiated in the Editor and development builds.")]
         [SerializeField] private DebugPanelView debugPanelPrefab;
 
         /// <summary>Used by the scene generator to wire the authored assets.</summary>
         public void Configure(UnitDatabaseScriptableObject unitDatabase, ArtefactDatabaseScriptableObject artefactDatabase,
             HeroDataBaseScriptableObject heroDatabase, AudioDatabaseScriptableObject audio, MissionSettingsScriptableObject missionSettings,
-            GameHud hudPrefab, DebugPanelView debugPrefab)
+            GameHud hudPrefab, GameWorld world, DebugPanelView debugPrefab)
         {
             units = unitDatabase;
             artefacts = artefactDatabase;
@@ -44,6 +46,7 @@ namespace HeroesOfMetalAge.Bootstrap
             audioDatabase = audio;
             mission = missionSettings;
             uiPrefab = hudPrefab;
+            worldPrefab = world;
             debugPanelPrefab = debugPrefab;
         }
 
@@ -74,9 +77,9 @@ namespace HeroesOfMetalAge.Bootstrap
 
         private void Compose()
         {
-            if (uiPrefab == null)
+            if (uiPrefab == null || worldPrefab == null)
             {
-                throw new InvalidOperationException("GameUiRoot prefab is not configured on GameBootstrap.");
+                throw new InvalidOperationException("GameUiRoot or World prefab is not configured on GameBootstrap.");
             }
 
             DefinitionCatalog catalog = ContentLoader.Load(units, artefacts, heroes, audioDatabase, mission);
@@ -95,17 +98,26 @@ namespace HeroesOfMetalAge.Bootstrap
             hud.Initialize(session, audio, media);
             hud.IsDrivingSession = !isSmokeTest;
 
+            AdventureMapView mapPrefab = mission.Map.GetComponent<AdventureMapView>();
+            if (mapPrefab == null)
+            {
+                throw new InvalidOperationException("Map prefab '" + mission.Map.name + "' has no AdventureMapView.");
+            }
+
+            GameWorld world = Instantiate(worldPrefab);
+            world.Initialize(hud, Instantiate(mapPrefab, world.Maps), mission.BattleBackground);
+
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (debugPanelPrefab != null)
             {
                 DebugPanelView debugPanel = Instantiate(debugPanelPrefab, hud.DesignFrame);
-                debugPanel.Initialize(session, audio);
+                debugPanel.Initialize(session, audio, world.ToggleTerrainOverlay);
                 hud.AttachDebugPanel(debugPanel);
             }
 
             if (isSmokeTest)
             {
-                gameObject.AddComponent<RuntimeSmokeRunner>().Initialize(session, store, hud);
+                gameObject.AddComponent<RuntimeSmokeRunner>().Initialize(session, store, hud, world);
             }
 #endif
         }

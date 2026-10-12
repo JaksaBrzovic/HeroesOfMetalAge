@@ -1,6 +1,6 @@
 # Heroes of Metal Age — Game Design Document
 
-Verzija: 0.2 · Ažurirano: 12. listopada 2026. · Jezik dokumenta: hrvatski
+Verzija: 0.3 · Ažurirano: 12. listopada 2026. · Jezik dokumenta: hrvatski
 
 Živi dokument dizajna cijele igre. Trenutno detaljno opisuje postojeći prototip i razdvaja ga od buduće vizije. Nepotvrđene odluke ostaju otvorene; ovaj dokument ne predstavlja tvrdnju da je cijela igra već definirana ili implementirana.
 
@@ -85,7 +85,9 @@ E završava dan i obnavlja dnevni budžet. Tjedan traje 7 dana; zalihe rastu na 
 
 Fog of war, rudnici, skupljanje resursa na mapi, više heroja, proceduralne mape i neprijateljski strateški potezi nisu dio opisanog prototipa. Njihova potreba i pravila: **otvoreno**.
 
-**Dogovoreni smjer (2026-10-12):** za početak koristiti jednu fiksnu ilustriranu pozadinu Ashen Passa, bez vizualnih tileova; logičku mrežu i prohodnost prilagoditi slici. Nova pozadina još nije integrirana i postojeće koordinate/prohodnost nisu promijenjene.
+**Dogovoreni smjer (2026-10-12):** za početak koristiti jednu fiksnu ilustriranu pozadinu Ashen Passa, bez vizualnih tileova; logičku mrežu i prohodnost prilagoditi slici.
+
+**Implementirano (0.5):** mapa i bojište su world objekti, a UI ostaje uGUI. Mapa je slika podijeljena na kvadratne ćelije; broj piksela po ćeliji je postavka s gumbom Rebuild. Prohodnost se crta logičkim Tilemap slojem preko slike (Grass, Road, Forest, Water, Mountain), a neobojane ćelije su neprohodne. Mape smiju biti veće od ekrana: kamera prati heroja dok putuje, a strelice i povlačenje pomiču pogled; zum još nije implementiran. Trenutna slika mape je generirani placeholder napravljen iz starog grida, pa koordinate i prohodnost još odgovaraju prethodnoj verziji. Prava naslikana pozadina još nije uvezena.
 
 ## 6. Susreti i prva misija: The Ashen Pass
 
@@ -296,5 +298,6 @@ Kriteriji prve misije: pridruživanje, pobjeda na prolazu, opremanje nagrade, ku
 | 2026-10-12 | 0.1 — town art | Izrađen koncept town screena Ashen Holda s home/visiting vojskama i zgradama za odabir postojećih jedinica | Vizualni pregled; bez funkcionalnih klikova, promjene ekonomije ili Unity integracije/builda |
 | 2026-10-12 | 0.1 — hero screen | Izrađen hero screen koncept i zabilježen korisnikov budući raspored 10 equipment slotova; inventory 5 × 5 ostaje vizualni prijedlog | Vizualni pregled; bez promjena gameplaya, saveova ili Unity integracije/builda |
 | 2026-10-12 | 0.2 | Audio prebačen na MLin Audio System: cueovi kao SoundDefinition asseti, mixer kanali Music/Effects/Voice, ducking glazbe dok jedinica govori, sinkronizirani slojevi, utišavanje bez fokusa. F3 panel prebačen na uGUI. Kod refaktoriran bez promjene pravila igre | EditMode testovi i scenarij cijele misije u buildu |
+| 2026-10-12 | 0.3 | Mapa i bojište prebačeni u world space (URP 2D): slika mape (za sada generirani placeholder) s logičkim Tilemap slojem prohodnosti i podesivom veličinom ćelije (Rebuild), kamera koja prati heroja uz pan strelicama i povlačenjem, bojište kao fiksna slika s hex mrežom, animacije figura, brojevi štete i trešnja kamere. Pravila igre nepromijenjena | EditMode testovi i scenarij cijele misije u buildu |
 
 | 2026-10-12 | 0.1 — equipment art | Izrađeno 40 item ikona za 10 equipment slotova i 4 razine vizualne kvalitete; rare amulet dorađen radi kompletnog lanca; pripremljeni zasebni PNG-ovi i pregled | Vizualni pregled svih ikona; provjerene dimenzije i transparentni kutovi; bez gameplay statova ili Unity integracije/builda |

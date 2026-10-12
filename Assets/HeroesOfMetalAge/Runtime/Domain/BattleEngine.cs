@@ -336,7 +336,7 @@ namespace HeroesOfMetalAge.Domain
                 target.IsDefending, isMelee, random.NextValue(), Policy);
             int countBefore = target.Count;
             target.TotalHealth = Math.Max(0, target.TotalHealth - damage);
-            hits.Add(new DamageEvent(attacker.UnitId, target.UnitId, damage, countBefore - target.Count, target.IsPlayer, isRetaliation));
+            hits.Add(new DamageEvent(attacker.Id, target.Id, attacker.UnitId, target.UnitId, damage, countBefore - target.Count, target.IsPlayer, isRetaliation));
 
             if (!isRetaliation && isMelee && target.IsAlive && !target.HasRetaliated)
             {

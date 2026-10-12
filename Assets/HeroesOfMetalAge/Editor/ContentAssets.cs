@@ -12,6 +12,8 @@ namespace HeroesOfMetalAge.EditorTools
         public const string DATABASE_FOLDER = "Assets/HeroesOfMetalAge/Content/Databases";
         public const string AUDIO_FOLDER = "Assets/HeroesOfMetalAge/Content/Audio";
         public const string UI_FOLDER = "Assets/HeroesOfMetalAge/Prefabs/UI";
+        public const string WORLD_FOLDER = "Assets/HeroesOfMetalAge/Prefabs/World";
+        public const string MAPS_FOLDER = "Assets/HeroesOfMetalAge/Content/Maps";
         public const string THEME_PATH = "Assets/HeroesOfMetalAge/Content/UI/UiTheme.asset";
         public const string SCENE_PATH = "Assets/Scenes/AshenPass.unity";
 
@@ -24,6 +26,9 @@ namespace HeroesOfMetalAge.EditorTools
         public static UiTheme Theme => Load<UiTheme>(THEME_PATH);
         public static GameHud RootPrefab => Load<GameHud>(UI_FOLDER + "/GameUiRoot.prefab");
         public static DebugPanelView DebugPanelPrefab => Load<DebugPanelView>(UI_FOLDER + "/Screens/DebugPanel.prefab");
+        public static GameWorld WorldPrefab => Load<GameWorld>(WORLD_FOLDER + "/World.prefab");
+        public static BattlefieldView BattlefieldPrefab => Load<BattlefieldView>(WORLD_FOLDER + "/Battlefield.prefab");
+        public static WorldMarker MarkerPrefab => Load<WorldMarker>(WORLD_FOLDER + "/WorldMarker.prefab");
 
         /// <summary>The validated gameplay catalog built from the authored databases.</summary>
         public static DefinitionCatalog LoadCatalog()

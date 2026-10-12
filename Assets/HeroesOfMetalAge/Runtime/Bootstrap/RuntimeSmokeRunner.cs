@@ -23,18 +23,22 @@ namespace HeroesOfMetalAge.Bootstrap
         private const int MAX_MOVEMENT_TICKS = 100;
         private const int MAX_BATTLE_ACTIONS = 1000;
         private const float FRAME_TOLERANCE = 0.5f;
+        private const float EDGE_TOLERANCE = 0.01f;
+        private const float FOLLOW_WAIT_SECONDS = 1.5f;
 
         private readonly List<string> results = new List<string>();
         private GameSession session;
         private ISaveStore store;
         private GameHud hud;
+        private GameWorld world;
         private string reportFolder;
 
-        public void Initialize(GameSession gameSession, ISaveStore saveStore, GameHud gameHud)
+        public void Initialize(GameSession gameSession, ISaveStore saveStore, GameHud gameHud, GameWorld gameWorld)
         {
             session = gameSession;
             store = saveStore;
             hud = gameHud;
+            world = gameWorld;
             reportFolder = Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, "..", "..", "..", "Reports"));
             Directory.CreateDirectory(reportFolder);
             StartCoroutine(Drive());
@@ -148,6 +152,26 @@ namespace HeroesOfMetalAge.Bootstrap
             Check(isInside, "Canvas design frame fits " + Screen.width + "x" + Screen.height);
         }
 
+        /// <summary>The world camera covers exactly the screen area of the UI viewport it draws into.</summary>
+        private void CheckViewport(RectTransform viewport, string message)
+        {
+            Vector3[] corners = new Vector3[4];
+            viewport.GetWorldCorners(corners);
+            Rect pixels = world.Camera.Camera.pixelRect;
+            bool isAligned = world.Camera.Camera.enabled
+                && Mathf.Abs(pixels.xMin - corners[0].x) <= 1f && Mathf.Abs(pixels.yMin - corners[0].y) <= 1f
+                && Mathf.Abs(pixels.xMax - corners[2].x) <= 1f && Mathf.Abs(pixels.yMax - corners[2].y) <= 1f;
+            Check(isAligned, message);
+        }
+
+        /// <summary>Points the camera at a map cell and lets a frame apply it, so the cell can be clicked like a player would.</summary>
+        private IEnumerator ShowCell(WorldPosition position)
+        {
+            world.CenterOn(position);
+            hud.RefreshNow();
+            yield return null;
+        }
+
         private IEnumerator Screenshot(string file)
         {
             hud.RefreshNow();
@@ -240,31 +264,38 @@ namespace HeroesOfMetalAge.Bootstrap
                 "Development panel is a hidden uGUI prefab with a button per audio cue");
             hud.RefreshNow();
             Check(!hud.ContentGroup.interactable && !hud.ContentGroup.blocksRaycasts, "Intro modal blocks underlying content");
-            Canvas.ForceUpdateCanvases();
-            UiWidget friendlyTile = hud.WorldView.Tile(friendly.Position);
-            Check(PointerTarget(friendlyTile) != friendlyTile.gameObject, "Modal raycast prevents click-through to map");
+            yield return ShowCell(friendly.Position);
+            Check(!world.HandleClick(world.ScreenPoint(friendly.Position)) && session.Route.Count == 0, "Modal blocks clicks through to the world map");
             yield return Screenshot("00-intro.png");
 
             Click(hud.DialogView.PrimaryButton);
             Check(session.Dialog == DialogKind.None, "Intro prefab button starts mission");
             hud.RefreshNow();
-            Canvas.ForceUpdateCanvases();
-            Check(hud.WorldView.HeroMarker.HasVisibleIcon, "World hero marker has visible sprite");
-            Check(mission.Encounters.All(encounter => hud.WorldView.EncounterMarker(encounter.Id).HasVisibleIcon),
+            yield return null;
+            CheckViewport(hud.WorldView.MapViewport, "World camera draws the map inside the adventure screen's viewport");
+            Check(world.Map.HeroMarker.HasVisibleIcon, "World hero marker has visible sprite");
+            Check(mission.Encounters.All(encounter => world.Map.EncounterMarker(encounter.Id).HasVisibleIcon),
                 "World friendly/enemy/town markers have visible sprites");
             Check(session.Campaign.Army.Count > 0, "Runtime bootstrap from authored hero");
             Check(session.World.FindRoute(session.Campaign, sentinel.Position).Count > 0, "World route reaches chokepoint");
             Check(session.World.FindRoute(session.Campaign, town.Position).Count == 0, "Sentinel blocks town route");
 
-            hud.RefreshNow();
-            Canvas.ForceUpdateCanvases();
-            Click(hud.WorldView.Tile(friendly.Position));
-            Check(session.Route.Count > 0, "World tile prefab click plans route");
+            world.Camera.Pan(new Vector2(-1000f, 1000f));
+            yield return null;
+            Rect visible = world.Camera.VisibleArea;
+            Rect bounds = world.Map.Bounds;
+            Check(visible.xMin >= bounds.xMin - EDGE_TOLERANCE && visible.yMax <= bounds.yMax + EDGE_TOLERANCE, "Panning stops at the map edge");
+
+            yield return ShowCell(friendly.Position);
+            Check(world.HandleClick(world.ScreenPoint(friendly.Position)) && session.Route.Count > 0, "World map click plans route");
             yield return Screenshot("01-world.png");
 
+            world.CenterOn(session.Campaign.Position);
             session.Travel();
             FinishMovement();
             Check(session.Dialog == DialogKind.Friendly, "Travel stops for friendly encounter");
+            yield return new WaitForSecondsRealtime(FOLLOW_WAIT_SECONDS);
+            Check(world.Camera.VisibleArea.Contains(world.Map.HeroMarker.transform.position), "Camera follows the hero along the route");
             hud.RefreshNow();
             hud.DialogView.PrimaryButton.Button.onClick.Invoke();
             Check(session.Campaign.IsCompleted(friendly.Id), "Friendly army joins through command");
@@ -280,10 +311,24 @@ namespace HeroesOfMetalAge.Bootstrap
             hud.DialogView.PrimaryButton.Button.onClick.Invoke();
             Check(session.Battle.Combatants.Count == session.Campaign.Army.Count + sentinel.Army.Count, "Battle bootstrap uses unit definitions");
             hud.RefreshNow();
-            Canvas.ForceUpdateCanvases();
-            Check(session.Battle.Combatants.All(combatant => hud.CombatView.UnitMarker(combatant.Id).HasVisibleIcon),
+            yield return null;
+            CheckViewport(hud.CombatView.BattleViewport, "World camera draws the battlefield inside the battle screen's viewport");
+            Check(session.Battle.Combatants.All(combatant => world.Battlefield.UnitMarker(combatant.Id).HasVisibleIcon),
                 "Player and enemy battle units have visible sprites");
             yield return Screenshot("02-battle.png");
+
+            int ticks = 0;
+            while (!session.Battle.Active.IsPlayer && ticks++ < MAX_MOVEMENT_TICKS)
+            {
+                session.Tick(1);
+            }
+
+            BattleAction firstAction = ChoosePlayerAction(session.Battle);
+            long revision = session.Revision;
+            Check(firstAction.Kind == BattleActionKind.MoveOrAttack && world.HandleClick(world.ScreenPoint(firstAction.Target))
+                && session.Revision != revision, "Battlefield hex click sends the battle action");
+            yield return new WaitForSecondsRealtime(0.3f);
+            yield return Screenshot("02b-battle-action.png");
 
             FinishBattle();
             bool isRewarded = session.Dialog == DialogKind.Victory
@@ -316,8 +361,18 @@ namespace HeroesOfMetalAge.Bootstrap
             yield return ChangeResolution(1920, 800);
             CheckFrameInsideScreen();
             yield return Screenshot("09-hero-ultrawide.png");
-            yield return ChangeResolution(1600, 900);
             session.Back();
+            hud.RefreshNow();
+            yield return null;
+            CheckViewport(hud.WorldView.MapViewport, "World viewport follows the UI at 1920x800");
+            yield return Screenshot("09b-world-ultrawide.png");
+            yield return ChangeResolution(1600, 900);
+
+            world.ToggleTerrainOverlay();
+            yield return null;
+            Check(world.Map.IsTerrainOverlayVisible, "Development terrain overlay shows the logic layer");
+            yield return Screenshot("12-terrain-overlay.png");
+            world.ToggleTerrainOverlay();
         }
 
         private IEnumerator TownAndConquest(MissionDefinition mission, EncounterDefinition town)

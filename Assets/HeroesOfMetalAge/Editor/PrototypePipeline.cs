@@ -12,16 +12,16 @@ namespace HeroesOfMetalAge.EditorTools
 {
     /// <summary>
     /// Command-line entry points (Tools/Build.ps1): generate the bootstrap scene from the authored assets and build the
-    /// Windows player. The scene is the only generated asset; databases and UI prefabs are authored and never rebuilt.
+    /// Windows player. The scene is the only generated asset; databases, maps and prefabs are authored and never rebuilt.
+    /// The cameras come with the World prefab.
     /// </summary>
     public static class PrototypePipeline
     {
         private const string PLAYER_PATH = "Builds/Windows/HeroesOfMetalAge.exe";
-        private const string BUNDLE_VERSION = "0.4.0";
+        private const string BUNDLE_VERSION = "0.5.0";
         private const int DEFAULT_SCREEN_WIDTH = 1600;
         private const int DEFAULT_SCREEN_HEIGHT = 900;
         private const int LEGACY_INPUT_MANAGER = 0;
-        private static readonly Color CAMERA_BACKGROUND = new Color(0.04f, 0.05f, 0.06f);
 
         /// <summary>Validates the content and regenerates Assets/Scenes/AshenPass.unity wired to the authored assets.</summary>
         /// <exception cref="InvalidOperationException">Content is invalid or an authored asset is missing.</exception>
@@ -31,13 +31,13 @@ namespace HeroesOfMetalAge.EditorTools
             ContentAssets.LoadCatalog();
             RequireAsset(ContentAssets.RootPrefab, ContentAssets.UI_FOLDER + "/GameUiRoot.prefab");
             RequireAsset(ContentAssets.DebugPanelPrefab, ContentAssets.UI_FOLDER + "/Screens/DebugPanel.prefab");
+            RequireAsset(ContentAssets.WorldPrefab, ContentAssets.WORLD_FOLDER + "/World.prefab");
 
             Directory.CreateDirectory(Path.GetDirectoryName(ContentAssets.SCENE_PATH));
             UnityEngine.SceneManagement.Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            CreateCamera();
             GameBootstrap bootstrap = new GameObject("Heroes of Metal Age").AddComponent<GameBootstrap>();
             bootstrap.Configure(ContentAssets.Units, ContentAssets.Artefacts, ContentAssets.Heroes, ContentAssets.Audio, ContentAssets.Mission,
-                ContentAssets.RootPrefab, ContentAssets.DebugPanelPrefab);
+                ContentAssets.RootPrefab, ContentAssets.WorldPrefab, ContentAssets.DebugPanelPrefab);
             EditorUtility.SetDirty(bootstrap);
             EditorSceneManager.SaveScene(scene, ContentAssets.SCENE_PATH);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ContentAssets.SCENE_PATH, true) };
@@ -68,16 +68,6 @@ namespace HeroesOfMetalAge.EditorTools
             }
 
             Debug.Log("PROTOTYPE_BUILD_OK / " + report.summary.totalSize + " bytes");
-        }
-
-        private static void CreateCamera()
-        {
-            Camera camera = new GameObject("Camera").AddComponent<Camera>();
-            camera.orthographic = true;
-            camera.backgroundColor = CAMERA_BACKGROUND;
-            camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.transform.position = new Vector3(0f, 0f, -10f);
-            camera.gameObject.AddComponent<AudioListener>();
         }
 
         private static void ConfigurePlayer()

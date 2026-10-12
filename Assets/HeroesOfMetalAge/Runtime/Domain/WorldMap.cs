@@ -37,7 +37,7 @@ namespace HeroesOfMetalAge.Domain
             }
 
             TerrainType terrain = Terrain(position);
-            return terrain != TerrainType.Mountain && terrain != TerrainType.Water;
+            return terrain != TerrainType.Mountain && terrain != TerrainType.Water && terrain != TerrainType.Blocked;
         }
 
         public int Cost(WorldPosition position)
@@ -87,12 +87,20 @@ namespace HeroesOfMetalAge.Domain
                 return route.AsReadOnly();
             }
 
-            List<WorldPosition> open = new List<WorldPosition> { from };
+            OpenSet open = new OpenSet();
+            open.Push(from, 0);
             Dictionary<WorldPosition, int> costs = new Dictionary<WorldPosition, int> { [from] = 0 };
             Dictionary<WorldPosition, WorldPosition> previous = new Dictionary<WorldPosition, WorldPosition>();
             while (open.Count > 0)
             {
-                WorldPosition current = TakeCheapest(open, costs);
+                OpenEntry entry = open.Pop();
+                WorldPosition current = entry.Position;
+                // a cell pushed again with a lower cost leaves its older, dearer entry behind
+                if (entry.Cost != costs[current])
+                {
+                    continue;
+                }
+
                 if (current == destination)
                 {
                     break;
@@ -120,35 +128,7 @@ namespace HeroesOfMetalAge.Domain
             return route.AsReadOnly();
         }
 
-        private static WorldPosition TakeCheapest(List<WorldPosition> open, Dictionary<WorldPosition, int> costs)
-        {
-            int bestIndex = 0;
-            for (int i = 1; i < open.Count; i++)
-            {
-                if (IsCheaper(open[i], open[bestIndex], costs))
-                {
-                    bestIndex = i;
-                }
-            }
-
-            WorldPosition best = open[bestIndex];
-            open.RemoveAt(bestIndex);
-            return best;
-        }
-
-        private static bool IsCheaper(WorldPosition candidate, WorldPosition best, Dictionary<WorldPosition, int> costs)
-        {
-            int candidateCost = costs[candidate];
-            int bestCost = costs[best];
-            if (candidateCost != bestCost)
-            {
-                return candidateCost < bestCost;
-            }
-
-            return candidate.Y != best.Y ? candidate.Y < best.Y : candidate.X < best.X;
-        }
-
-        private void Relax(WorldPosition current, List<WorldPosition> open, Dictionary<WorldPosition, int> costs,
+        private void Relax(WorldPosition current, OpenSet open, Dictionary<WorldPosition, int> costs,
             Dictionary<WorldPosition, WorldPosition> previous)
         {
             for (int dy = -1; dy <= 1; dy++)
@@ -169,11 +149,95 @@ namespace HeroesOfMetalAge.Domain
 
                     costs[next] = candidate;
                     previous[next] = current;
-                    if (!open.Contains(next))
-                    {
-                        open.Add(next);
-                    }
+                    open.Push(next, candidate);
                 }
+            }
+        }
+
+        private readonly struct OpenEntry
+        {
+            public OpenEntry(WorldPosition position, int cost)
+            {
+                Position = position;
+                Cost = cost;
+            }
+
+            public WorldPosition Position { get; }
+            public int Cost { get; }
+
+            /// <summary>Cheapest first, then by row, then column: the tie-breaking that keeps routes deterministic.</summary>
+            public bool IsBefore(OpenEntry other)
+            {
+                if (Cost != other.Cost)
+                {
+                    return Cost < other.Cost;
+                }
+
+                return Position.Y != other.Position.Y ? Position.Y < other.Position.Y : Position.X < other.Position.X;
+            }
+        }
+
+        /// <summary>Binary min-heap of open cells, so routing stays fast on large maps.</summary>
+        private sealed class OpenSet
+        {
+            private readonly List<OpenEntry> heap = new List<OpenEntry>();
+
+            public int Count => heap.Count;
+
+            public void Push(WorldPosition position, int cost)
+            {
+                heap.Add(new OpenEntry(position, cost));
+                int child = heap.Count - 1;
+                while (child > 0)
+                {
+                    int parent = (child - 1) / 2;
+                    if (!heap[child].IsBefore(heap[parent]))
+                    {
+                        break;
+                    }
+
+                    Swap(child, parent);
+                    child = parent;
+                }
+            }
+
+            public OpenEntry Pop()
+            {
+                OpenEntry first = heap[0];
+                int last = heap.Count - 1;
+                heap[0] = heap[last];
+                heap.RemoveAt(last);
+                int parent = 0;
+                while (true)
+                {
+                    int left = parent * 2 + 1;
+                    int right = left + 1;
+                    int smallest = parent;
+                    if (left < heap.Count && heap[left].IsBefore(heap[smallest]))
+                    {
+                        smallest = left;
+                    }
+
+                    if (right < heap.Count && heap[right].IsBefore(heap[smallest]))
+                    {
+                        smallest = right;
+                    }
+
+                    if (smallest == parent)
+                    {
+                        return first;
+                    }
+
+                    Swap(parent, smallest);
+                    parent = smallest;
+                }
+            }
+
+            private void Swap(int a, int b)
+            {
+                OpenEntry value = heap[a];
+                heap[a] = heap[b];
+                heap[b] = value;
             }
         }
     }

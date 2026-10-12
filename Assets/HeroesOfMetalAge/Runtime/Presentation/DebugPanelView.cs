@@ -19,6 +19,8 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private UiWidget nextDayButton;
         [SerializeField] private UiWidget townButton;
         [SerializeField] private UiWidget artefactsButton;
+        [Tooltip("Shows the adventure map's terrain logic layer over the map image.")]
+        [SerializeField] private UiWidget terrainButton;
 
         private readonly List<UiWidget> cueWidgets = new List<UiWidget>();
         private GameSession session;
@@ -26,9 +28,10 @@ namespace HeroesOfMetalAge.Presentation
         public IReadOnlyList<UiWidget> CueWidgets => cueWidgets;
 
         /// <exception cref="InvalidOperationException">A reference is missing on the DebugPanel prefab.</exception>
-        public void Initialize(GameSession gameSession, IAudioControls audio)
+        public void Initialize(GameSession gameSession, IAudioControls audio, Action toggleTerrainOverlay)
         {
-            if (cueButtons == null || cueButtonPrefab == null || goldButton == null || nextDayButton == null || townButton == null || artefactsButton == null)
+            if (cueButtons == null || cueButtonPrefab == null || goldButton == null || nextDayButton == null || townButton == null || artefactsButton == null
+                || terrainButton == null)
             {
                 throw new InvalidOperationException($"DebugPanelView on '{name}' has unassigned references. Assign them in the DebugPanel prefab.");
             }
@@ -54,6 +57,7 @@ namespace HeroesOfMetalAge.Presentation
             nextDayButton.Bind(session.EndDay);
             townButton.Bind(session.DebugTown);
             artefactsButton.Bind(session.DebugArtefacts);
+            terrainButton.Bind(toggleTerrainOverlay);
         }
 
         public void Refresh()
@@ -63,6 +67,7 @@ namespace HeroesOfMetalAge.Presentation
             UiBinding.SetButton(nextDayButton, "NEXT DAY", canUseCampaign);
             UiBinding.SetButton(townButton, "TELEPORT TO TOWN", canUseCampaign);
             UiBinding.SetButton(artefactsButton, "GRANT ARTEFACTS", canUseCampaign);
+            UiBinding.SetButton(terrainButton, "TERRAIN OVERLAY", true);
         }
 
         private void AddCueButton(string label, Action play)

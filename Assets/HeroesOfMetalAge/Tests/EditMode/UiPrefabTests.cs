@@ -20,7 +20,7 @@ namespace HeroesOfMetalAge.Tests
     /// <summary>The authored uGUI prefabs are complete, wired and initialize against the real content.</summary>
     public class UiPrefabTests
     {
-        private static readonly string[] WidgetPrefabs = { "Button", "ArmySlot", "RecruitmentCard", "ArtefactCard", "WorldTile", "CombatHex", "RouteSegment", "WorldEntity", "CombatUnit" };
+        private static readonly string[] WidgetPrefabs = { "Button", "ArmySlot", "RecruitmentCard", "ArtefactCard" };
 
         private GameHud root;
 
@@ -71,21 +71,16 @@ namespace HeroesOfMetalAge.Tests
         }
 
         [Test]
-        public void Adventure_KeepsTerrainAndEntitiesInSeparateLayers()
+        public void WorldViewports_LetTheWorldShowThroughAndTakeNoClicks()
         {
             GameObject adventure = AssetDatabase.LoadAssetAtPath<GameObject>(ContentAssets.UI_FOLDER + "/Screens/Adventure.prefab");
-            string[] layers = { "Environment/Road Tiles", "Environment/Forest Tiles", "Environment/Grass Tiles", "Environment/Mountain Tiles",
-                "Environment/Water Tiles", "Heroes", "Enemies", "Friendly Units", "Towns" };
-            foreach (string layer in layers)
-            {
-                Assert.IsNotNull(adventure.transform.Find(layer), layer);
-            }
-
-            Assert.Greater(adventure.transform.Find("Heroes").GetComponentsInChildren<UiWidget>(true).Length, 0);
-            Assert.Greater(adventure.transform.Find("Enemies").GetComponentsInChildren<UiWidget>(true).Length, 0);
             GameObject combat = AssetDatabase.LoadAssetAtPath<GameObject>(ContentAssets.UI_FOLDER + "/Screens/Combat.prefab");
-            Assert.Greater(combat.transform.Find("Units/Player Units").GetComponentsInChildren<UiWidget>(true).Length, 0);
-            Assert.Greater(combat.transform.Find("Units/Enemy Units").GetComponentsInChildren<UiWidget>(true).Length, 0);
+
+            Assert.AreSame(adventure.transform.Find("MapViewport"), adventure.GetComponent<WorldCanvasView>().MapViewport);
+            Assert.AreSame(combat.transform.Find("BattleViewport"), combat.GetComponent<CombatCanvasView>().BattleViewport);
+            Assert.IsEmpty(adventure.transform.Find("MapViewport").GetComponentsInChildren<Graphic>(true), "nothing drawn over the map");
+            Assert.IsEmpty(combat.transform.Find("BattleViewport").GetComponentsInChildren<Graphic>(true), "nothing drawn over the battlefield");
+            Assert.IsNull(root.transform.Find("Backdrop"), "no full-screen backdrop hides the world");
         }
 
         [Test]
@@ -136,7 +131,7 @@ namespace HeroesOfMetalAge.Tests
                 GameSession session = CampaignTestUtility.NewSession(ContentAssets.LoadCatalog(), new MemorySaveStore());
                 int expected = Enum.GetValues(typeof(MusicLayer)).Length + Enum.GetValues(typeof(SoundCue)).Length + session.Catalog.Units.Count;
 
-                panel.Initialize(session, audio);
+                panel.Initialize(session, audio, () => { });
 
                 // clicks need OnEnable listeners, which only run in play mode; the built-player scenario covers them
                 Assert.AreEqual(expected, panel.CueWidgets.Count);

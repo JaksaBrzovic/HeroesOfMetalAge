@@ -15,7 +15,9 @@ namespace HeroesOfMetalAge.Domain
         Forest,
         Road,
         Mountain,
-        Water
+        Water,
+        /// <summary>Not painted on the map: impassable.</summary>
+        Blocked
     }
 
     public enum EncounterKind

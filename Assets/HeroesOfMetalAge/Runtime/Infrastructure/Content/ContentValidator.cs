@@ -17,13 +17,14 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         private const int MAX_DAMAGE = 100000;
         private const int MAX_SPEED = 100;
         private const int MAX_MOVEMENT = 100000;
+        private const int MAX_MAP_CELLS = 512;
 
         public static void ValidateReferences(UnitDatabaseScriptableObject units, ArtefactDatabaseScriptableObject artefacts,
             HeroDataBaseScriptableObject heroes, AudioDatabaseScriptableObject audio, MissionSettingsScriptableObject mission)
         {
             Require(units != null && artefacts != null && heroes != null && audio != null && mission != null, "Missing database reference on Bootstrap.");
             Require(AllPresent(units.Units) && AllPresent(artefacts.Artefacts) && AllPresent(heroes.Heroes)
-                && AllPresent(mission.Encounters) && mission.TerrainRows != null && mission.RecruitmentUnitIds != null,
+                && AllPresent(mission.Encounters) && mission.RecruitmentUnitIds != null,
                 "A database contains a missing list or entry.");
             Require(!string.IsNullOrWhiteSpace(mission.Id) && !string.IsNullOrWhiteSpace(mission.ClanId) && mission.ClanId != CampaignState.PLAYER_OWNER_ID,
                 "Invalid mission/clan ID.");
@@ -98,12 +99,15 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public static void ValidateMission(MissionSettingsScriptableObject mission, HeroDataBaseScriptableObject heroes, HashSet<string> unitIds,
             HashSet<string> artefactIds)
         {
-            Require(mission.TerrainRows.Count == mission.MapHeight && mission.TerrainRows.All(row => row != null && row.Cells != null && row.Cells.Count == mission.MapWidth),
-                "Terrain dimensions do not match the map.");
+            AdventureMapAuthoring map = mission.Map;
+            Require(map != null, "The mission has no adventure map prefab.");
+            Require(map.TerrainLogic != null && map.Background != null && map.MapImage != null,
+                "Map '" + map.name + "' needs its background renderer, map image and terrain logic layer.");
+            Require(map.IsBuilt, "Map '" + map.name + "' changed since its last rebuild: press Rebuild on the map prefab.");
+            Require(InRange(map.Width, 4, MAX_MAP_CELLS) && InRange(map.Height, 4, MAX_MAP_CELLS),
+                "Map '" + map.name + "' must be 4.." + MAX_MAP_CELLS + " cells on each side.");
 
-            bool isValidRules = InRange(mission.MapWidth, 4, 18)
-                && InRange(mission.MapHeight, 4, 11)
-                && InRange(mission.ArmySlots, 1, 7)
+            bool isValidRules = InRange(mission.ArmySlots, 1, 7)
                 && mission.DaysPerWeek > 0
                 && mission.StartingGold >= 0
                 && mission.ForestMovementCost > 0
@@ -120,7 +124,7 @@ namespace HeroesOfMetalAge.Infrastructure.Content
 
             foreach (EncounterEntry encounter in mission.Encounters)
             {
-                bool isInside = InRange(encounter.Position.x, 0, mission.MapWidth - 1) && InRange(encounter.Position.y, 0, mission.MapHeight - 1);
+                bool isInside = InRange(encounter.Position.x, 0, map.Width - 1) && InRange(encounter.Position.y, 0, map.Height - 1);
                 Require(isInside, "Encounter outside map: " + encounter.Id);
                 ValidateArmy(encounter.Army, unitIds, mission.ArmySlots, "encounter " + encounter.Id);
                 bool isValidReward = encounter.RewardGold >= 0

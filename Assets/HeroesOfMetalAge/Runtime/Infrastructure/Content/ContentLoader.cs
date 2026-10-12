@@ -39,13 +39,13 @@ namespace HeroesOfMetalAge.Infrastructure.Content
             CombatPolicy combat = new CombatPolicy(mission.CombatWidth, mission.CombatHeight, mission.EnemyAttack, mission.EnemyDefense,
                 mission.DefendDamageMultiplier, mission.RangedMeleeDamageMultiplier, mission.AttackDeltaMultiplier, mission.DefenseDeltaMultiplier,
                 mission.MaximumAttackDelta, mission.MaximumDefenseDelta);
-            TerrainType[] terrain = mission.TerrainRows.SelectMany(row => row.Cells).ToArray();
+            AdventureMapAuthoring map = mission.Map;
             WorldPosition start = new WorldPosition(mission.StartingPosition.x, mission.StartingPosition.y);
             double ownedPriceMultiplier = Math.Round(mission.OwnedRecruitmentMultiplier, PRICE_MULTIPLIER_DECIMALS);
 
             return new MissionDefinition(mission.Id, mission.DisplayName, mission.Description, mission.HeroId, mission.ClanId, mission.ClanName,
                 mission.ClanHeroName, mission.StartingGold, mission.ArmySlots, mission.DaysPerWeek, mission.ForestMovementCost,
-                mission.GroundMovementCost, ownedPriceMultiplier, mission.MapWidth, mission.MapHeight, start, terrain, combat,
+                mission.GroundMovementCost, ownedPriceMultiplier, map.Width, map.Height, start, map.ReadTerrain(), combat,
                 mission.Encounters.Select(entry => entry.ToDefinition()), mission.RecruitmentUnitIds);
         }
     }

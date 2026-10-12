@@ -236,13 +236,4 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                 army.Select(entry => entry.ToTroop()), rewardExperience, rewardGold, rewardArtefactId);
         }
     }
-
-    /// <summary>One row of the mission map, west to east.</summary>
-    [Serializable]
-    public sealed class TerrainRow
-    {
-        [SerializeField] private TerrainType[] cells;
-
-        public IReadOnlyList<TerrainType> Cells => cells;
-    }
 }

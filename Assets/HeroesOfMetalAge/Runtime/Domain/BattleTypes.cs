@@ -32,8 +32,11 @@ namespace HeroesOfMetalAge.Domain
     /// <summary>One resolved hit, published after the command succeeded.</summary>
     public readonly struct DamageEvent
     {
-        public DamageEvent(string attackerId, string targetId, int damage, int casualties, bool isReceivedByPlayer, bool isRetaliation)
+        public DamageEvent(int attackerCombatantId, int targetCombatantId, string attackerId, string targetId, int damage, int casualties,
+            bool isReceivedByPlayer, bool isRetaliation)
         {
+            AttackerCombatantId = attackerCombatantId;
+            TargetCombatantId = targetCombatantId;
             AttackerId = attackerId;
             TargetId = targetId;
             Damage = damage;
@@ -42,6 +45,10 @@ namespace HeroesOfMetalAge.Domain
             IsRetaliation = isRetaliation;
         }
 
+        /// <summary>The stacks involved, so presentation can animate the right ones when both sides field the same unit.</summary>
+        public int AttackerCombatantId { get; }
+        public int TargetCombatantId { get; }
+        /// <summary>Unit definition IDs.</summary>
         public string AttackerId { get; }
         public string TargetId { get; }
         public int Damage { get; }
