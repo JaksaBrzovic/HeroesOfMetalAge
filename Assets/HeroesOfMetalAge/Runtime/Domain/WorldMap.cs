@@ -7,6 +7,10 @@ namespace HeroesOfMetalAge.Domain
     /// <summary>Traversal model of the adventure map: terrain costs, blocking cells, encounter sites and routing.</summary>
     public sealed class WorldMap
     {
+        // map distance of a step, used only to prefer natural routes: a diagonal is about √2 times a straight step
+        private const int STRAIGHT_LENGTH = 10;
+        private const int DIAGONAL_LENGTH = 14;
+
         private readonly MissionDefinition mission;
         private readonly Dictionary<WorldPosition, EncounterDefinition> sites;
 
@@ -75,8 +79,10 @@ namespace HeroesOfMetalAge.Domain
         }
 
         /// <summary>
-        /// Cheapest route from the hero to <paramref name="destination"/>, excluding the start. Ties are broken by row,
-        /// then column, so the same request always returns the same route. Unresolved sites end a route but are not crossed.
+        /// Cheapest route from the hero to <paramref name="destination"/>, excluding the start. Among equally cheap routes the
+        /// shortest on the map wins (a diagonal step is longer than a straight one), then the one closest to the straight line
+        /// to the destination; remaining ties are broken by row, then column, so the same request always returns the same
+        /// route. Unresolved sites end a route but are not crossed.
         /// </summary>
         public IReadOnlyList<WorldPosition> FindRoute(CampaignState campaign, WorldPosition destination)
         {
@@ -88,15 +94,15 @@ namespace HeroesOfMetalAge.Domain
             }
 
             OpenSet open = new OpenSet();
-            open.Push(from, 0);
-            Dictionary<WorldPosition, int> costs = new Dictionary<WorldPosition, int> { [from] = 0 };
+            open.Push(from, default);
+            Dictionary<WorldPosition, RouteCost> costs = new Dictionary<WorldPosition, RouteCost> { [from] = default };
             Dictionary<WorldPosition, WorldPosition> previous = new Dictionary<WorldPosition, WorldPosition>();
             while (open.Count > 0)
             {
                 OpenEntry entry = open.Pop();
                 WorldPosition current = entry.Position;
                 // a cell pushed again with a lower cost leaves its older, dearer entry behind
-                if (entry.Cost != costs[current])
+                if (entry.Cost.CompareTo(costs[current]) != 0)
                 {
                     continue;
                 }
@@ -111,7 +117,7 @@ namespace HeroesOfMetalAge.Domain
                     continue;
                 }
 
-                Relax(current, open, costs, previous);
+                Relax(current, from, destination, open, costs, previous);
             }
 
             if (!previous.ContainsKey(destination))
@@ -128,8 +134,8 @@ namespace HeroesOfMetalAge.Domain
             return route.AsReadOnly();
         }
 
-        private void Relax(WorldPosition current, OpenSet open, Dictionary<WorldPosition, int> costs,
-            Dictionary<WorldPosition, WorldPosition> previous)
+        private void Relax(WorldPosition current, WorldPosition from, WorldPosition destination, OpenSet open,
+            Dictionary<WorldPosition, RouteCost> costs, Dictionary<WorldPosition, WorldPosition> previous)
         {
             for (int dy = -1; dy <= 1; dy++)
             {
@@ -141,8 +147,9 @@ namespace HeroesOfMetalAge.Domain
                         continue;
                     }
 
-                    int candidate = costs[current] + Cost(next);
-                    if (costs.TryGetValue(next, out int known) && candidate >= known)
+                    int length = dx != 0 && dy != 0 ? DIAGONAL_LENGTH : STRAIGHT_LENGTH;
+                    RouteCost candidate = costs[current].Add(Cost(next), length, Deviation(next, from, destination));
+                    if (costs.TryGetValue(next, out RouteCost known) && candidate.CompareTo(known) >= 0)
                     {
                         continue;
                     }
@@ -154,23 +161,65 @@ namespace HeroesOfMetalAge.Domain
             }
         }
 
+        // how far a cell lies from the straight line to the destination, scaled by that line's length
+        private static long Deviation(WorldPosition cell, WorldPosition from, WorldPosition destination)
+        {
+            long lineX = destination.X - from.X;
+            long lineY = destination.Y - from.Y;
+            return Math.Abs(lineX * (cell.Y - from.Y) - lineY * (cell.X - from.X));
+        }
+
+        /// <summary>
+        /// What a route has cost so far, compared in order: movement points (the rule), distance on the map, then distance from
+        /// the straight line. Only movement points are a game rule; the rest picks the natural route among equally cheap ones.
+        /// </summary>
+        private readonly struct RouteCost
+        {
+            public RouteCost(int movement, int length, long deviation)
+            {
+                Movement = movement;
+                Length = length;
+                Deviation = deviation;
+            }
+
+            public int Movement { get; }
+            public int Length { get; }
+            public long Deviation { get; }
+
+            public RouteCost Add(int movement, int length, long deviation)
+            {
+                return new RouteCost(Movement + movement, Length + length, Deviation + deviation);
+            }
+
+            public int CompareTo(RouteCost other)
+            {
+                if (Movement != other.Movement)
+                {
+                    return Movement.CompareTo(other.Movement);
+                }
+
+                return Length != other.Length ? Length.CompareTo(other.Length) : Deviation.CompareTo(other.Deviation);
+            }
+        }
+
         private readonly struct OpenEntry
         {
-            public OpenEntry(WorldPosition position, int cost)
+            public OpenEntry(WorldPosition position, RouteCost cost)
             {
                 Position = position;
                 Cost = cost;
             }
 
             public WorldPosition Position { get; }
-            public int Cost { get; }
+            public RouteCost Cost { get; }
 
             /// <summary>Cheapest first, then by row, then column: the tie-breaking that keeps routes deterministic.</summary>
             public bool IsBefore(OpenEntry other)
             {
-                if (Cost != other.Cost)
+                int comparison = Cost.CompareTo(other.Cost);
+                if (comparison != 0)
                 {
-                    return Cost < other.Cost;
+                    return comparison < 0;
                 }
 
                 return Position.Y != other.Position.Y ? Position.Y < other.Position.Y : Position.X < other.Position.X;
@@ -184,7 +233,7 @@ namespace HeroesOfMetalAge.Domain
 
             public int Count => heap.Count;
 
-            public void Push(WorldPosition position, int cost)
+            public void Push(WorldPosition position, RouteCost cost)
             {
                 heap.Add(new OpenEntry(position, cost));
                 int child = heap.Count - 1;

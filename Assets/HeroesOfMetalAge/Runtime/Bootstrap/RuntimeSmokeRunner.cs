@@ -315,6 +315,8 @@ namespace HeroesOfMetalAge.Bootstrap
             CheckViewport(hud.CombatView.BattleViewport, "World camera draws the battlefield inside the battle screen's viewport");
             Check(session.Battle.Combatants.All(combatant => world.Battlefield.UnitMarker(combatant.Id).HasVisibleIcon),
                 "Player and enemy battle units have visible sprites");
+            Check(session.Battle.Combatants.All(combatant => world.Battlefield.UnitMarker(combatant.Id).IsSelected == (combatant == session.Battle.Active)),
+                "Only the acting stack is highlighted");
             yield return Screenshot("02-battle.png");
 
             int ticks = 0;

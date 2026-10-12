@@ -22,7 +22,6 @@ MonoBehaviour:
   friendly: {r: 0.33, g: 0.69, b: 0.61, a: 1}
   hexColor: {r: 0.22, g: 0.24, b: 0.22, a: 1}
   reachableHexColor: {r: 0.17, g: 0.32, b: 0.32, a: 1}
-  activeHexColor: {r: 0.46, g: 0.38, b: 0.2, a: 1}
   hero: {fileID: 21300000, guid: cd43e4875141a1143a206e6c1a54efd1, type: 3}
   town: {fileID: 21300000, guid: 197c9107b5219c94ab8811aa55f5be34, type: 3}
   axe: {fileID: 21300000, guid: 78de8261f789ba54494d03f060051da2, type: 3}

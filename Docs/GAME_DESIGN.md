@@ -212,15 +212,28 @@ Prijedlog produkcije: kompatibilne snimljene petlje, više varijanti lickova, or
 | Asset | Lokacija u vanjskoj zbirci | Status |
 |---|---|---|
 | Heroj na konju, udesno | assets/hero_horse_right | 4 PNG framea i sheet |
-| Heroj na konju, udesno | assets/hero_horse_right_8frames | 8 RGBA frameova 444 × 444 i sheet; predloženo 90 ms/frame |
+| Heroj na konju, udesno | assets/hero_horse_right_8frames; kopija: C:/Users/jaksa/Downloads/HOMA_ART/Hero_Horse_WorldMap_Walk_Right_8Frames | Konceptualna animacija: 8 RGBA frameova 444 × 444 i sheet; predloženo 90 ms/frame. Kopija svih frameova, sheeta i README-a provjerena 2026-10-12; nije ovim korakom integrirano u Unity |
 | Air Guitarist | assets/air-guitarist | Koncept, više 8-frame walk varijanti, sheetovi i GIF previewi |
 | Equipment ikone — 4 razine | assets/items/metal-equipment-v1 | 40 konceptualnih transparentnih PNG ikona 512 × 512: 10 slotova × common/rare/epic/legendary; 4 izvorna sheeta, overview i manifest. Left Hand je ilustriran štitom, Right Hand mačem; ilustracije nisu potvrđena pravila kompatibilnosti. Bez statova, loot pravila ili integracije |
 | Hero screen | assets/ui/hero-screen/hero-screen-v1.png | Koncept UI-a: portret/statovi, 10 equipment slotova prema korisnikovu popisu, inventory 5 × 5 i red sa 7 army slotova. Nije integrirano; tekst, slotovi i ikone kategorija ucrtani su u koncept |
 | Ashen Hold — town screen | assets/town/ashen-hold/ashen-hold-town-screen-v1.png | Konceptualna slika grada s dvorcem, odvojenim home/visiting redovima (portret + 7 army slotova) i vizualno odvojenim zgradama za Ironbound, Ash Archer i Doom Rider. Zgrade su prijedlog vizualnog odabira regrutacije, ne implementirano pravilo proizvodnje/gradnje. Nije integrirano; klikovi, portreti i sadržaj slotova zahtijevaju zaseban UI |
 | Ashen Pass — battle pozadine | assets/battle/ashen-pass | Dvije generirane konceptualne pozadine: battle-green-v1.png (zelena šumska čistina) i battle-infernal-v1.png (pepeljasto/infernalno bojište). Otvorena sredina za zasebne heksove i jedinice; nisu integrirane u gameplay |
 | UI okviri — drvo i kovano željezo | assets/ui/wood-iron-v1 | Tri generirana transparentna PNG okvira: screen s kuglicama, manji dialog, veći menu panel. Pripremljene preporučene 9-slice granice u README-u; nije integrirano niti provjereno u Unityju |
-| Ashen Pass — fiksna mapa | assets/maps/ashen-pass/ashen-pass-background-v1.png | Generirana konceptualna pozadina: zapadna šuma i čistine, planinski prolaz, Ashen Hold, istočno pepeljasto područje; bez heroja/vojski i bez grida. Nije integrirana; prilagodba mreže i prohodnosti tek slijedi |
-| Roadie | assets/roadie | Koncept s flight caseom i kabelima; walk animacija u izradi u drugom chatu pri pregledu |
+| Ashen Pass — fiksna mapa | assets/maps/ashen-pass/ashen-pass-background-v1.png; izvoz: C:/Users/jaksa/Downloads/HOMA_ART/Map_1.png | Generirana konceptualna pozadina: zapadna šuma i čistine, planinski prolaz, Ashen Hold, istočno pepeljasto područje; bez heroja/vojski i bez grida. Izvoz Map_1.png povećan 2026-10-12 s 1605 × 980 na 3210 × 1960 Lanczos interpolacijom, bez generiranja novih detalja; original izvoza sačuvan kao Map_1-original-1605x980.png. Nije ovim korakom integrirana; prilagodba mreže i prohodnosti tek slijedi |
+| Roadie | assets/roadie; kopija: C:/Users/jaksa/Downloads/HOMA_ART/Roadie_Walk_Right_8Frames | Vizualni koncept s flight caseom i kabelima; izrađeno 8 PNG walk frameova udesno, sheet i GIF preview na 8 fps. Kopija provjerena 2026-10-12; bez potvrđene Unity integracije |
+
+**Izvoz grupa animacijskih frameova (2026-10-12):** u `C:/Users/jaksa/Downloads/HOMA_ART` kopirano je svih 6 grupa iz vanjske zbirke, s izvornim imenima datoteka, pripadajućim sheetovima i dostupnim GIF previewima te promptovima/README-ima. Originali su sačuvani. Sadržaj kopija provjeren je SHA-256 usporedbom i brojem frameova:
+
+| Folder u HOMA_ART | Broj PNG frameova |
+|---|---:|
+| Hero_Horse_WorldMap_Walk_Right_4Frames | 4 |
+| Hero_Horse_WorldMap_Walk_Right_8Frames | 8 |
+| Air_Guitarist_Walk_Right_With_Cape_8Frames | 8 |
+| Air_Guitarist_Walk_Right_Air_Guitar_No_Cape_8Frames | 8 |
+| Air_Guitarist_Walk_Right_Air_Guitar_Lively_v2_8Frames | 8 |
+| Roadie_Walk_Right_8Frames | 8 |
+
+Ukupno 44 pojedinačna framea; ovo je organizacija i izvoz konceptualnog arta, bez promjena gameplay sadržaja, statova ili Unity integracije.
 
 Air Guitarist hoda i svira zamišljenu gitaru, bez stvarnog instrumenta i bez plašta. Posljednja varijanta ima izraženije naginjanje/head bob, ali izmjena nogu još traži doradu. Roadiejev koncept nosi opremu, s prepoznatljivim osjećajem težine.
 

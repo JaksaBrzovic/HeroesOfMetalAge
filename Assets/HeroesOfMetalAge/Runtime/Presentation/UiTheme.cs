@@ -24,7 +24,6 @@ namespace HeroesOfMetalAge.Presentation
         [Header("Combat board")]
         [SerializeField] private Color hexColor = new Color(0.22f, 0.24f, 0.22f);
         [SerializeField] private Color reachableHexColor = new Color(0.17f, 0.32f, 0.32f);
-        [SerializeField] private Color activeHexColor = new Color(0.46f, 0.38f, 0.2f);
 
         [Header("Placeholder art")]
         [SerializeField] private Sprite hero;
@@ -43,7 +42,6 @@ namespace HeroesOfMetalAge.Presentation
         public Color Friendly => friendly;
         public Color HexColor => hexColor;
         public Color ReachableHexColor => reachableHexColor;
-        public Color ActiveHexColor => activeHexColor;
         public Sprite Hero => hero;
         public Sprite Town => town;
         public Sprite Axe => axe;

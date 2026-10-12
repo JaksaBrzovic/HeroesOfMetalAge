@@ -69,7 +69,7 @@ The logic layer is the only terrain the rules use and it is hidden in the game; 
 
 **Battlefield**: `Prefabs/World/Battlefield.prefab` holds the fixed background image and the hex board laid over it (`Board Center`, `Hex Width`; select it to preview the hexes in the Scene view). A mission can set its own image in `AshenPass.asset` (`Battle Background`).
 
-Figures (`Prefabs/World/WorldMarker.prefab`) glide between cells, lunge when they strike, flash when hit and fade when a stack dies; damage numbers rise from the target and heavy hits shake the camera. All of this only shows what the rules already resolved.
+Figures (`Prefabs/World/WorldMarker.prefab`) glide between cells; in battle the stack whose turn it is has a pulsing ring and a highlighted hex. Figures lunge when they strike, flash when hit and fade when a stack dies; damage numbers rise from the target and heavy hits shake the camera. All of this only shows what the rules already resolved.
 
 ## Edit UI prefabs
 

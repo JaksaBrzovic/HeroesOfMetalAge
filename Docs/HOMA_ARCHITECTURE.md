@@ -70,7 +70,7 @@ Views call `GameSession` methods: `Plan`, `Travel`, `EndDay`, `AcceptFriendly`, 
 
 ## 5. Game rules the architecture must preserve
 
-- Adventure grid (`WorldPosition`) and combat hexes (`HexPosition`) are separate value types. `WorldPosition` rows count from the top; Tilemap rows count from the bottom, converted only in `AdventureMapAuthoring.ReadTerrain` and `AdventureMapView`. Unpainted cells are `TerrainType.Blocked`. Pathfinding (a binary-heap Dijkstra, fast on maps of hundreds of cells per side) allows diagonals without corner cutting and breaks ties by cost, row, column; travel stops before an unresolved encounter or when movement runs out.
+- Adventure grid (`WorldPosition`) and combat hexes (`HexPosition`) are separate value types. `WorldPosition` rows count from the top; Tilemap rows count from the bottom, converted only in `AdventureMapAuthoring.ReadTerrain` and `AdventureMapView`. Unpainted cells are `TerrainType.Blocked`. Pathfinding (a binary-heap Dijkstra, fast on maps of hundreds of cells per side) allows diagonals without corner cutting; among equally cheap routes it prefers the shortest on the map (diagonal ≈ 1.4 straight steps), then the one closest to the straight line, then row and column; travel stops before an unresolved encounter or when movement runs out.
 - `EndDay` restores movement and applies weekly growth on days 8, 15, 22…; loading a save never applies growth again.
 - Combat damage, retaliation (once per round), ranged half-damage in melee, defending (−30 %) and casualties are resolved by `BattleEngine` independently of animation. Randomness comes from an injected `IRandomSource`; tests use fixed seeds. `BattleAi` acts through the same validated actions as the player.
 - Victory rewards are granted once, even if the terminal action repeats. Defeat offers a retry from the pre-battle snapshot without persistent casualties.
@@ -94,7 +94,7 @@ AshenPassMap (AdventureMapAuthoring + AdventureMapView)     Battlefield (Battlef
 
 `GameWorld` shows the map on the Adventure screen and the battlefield in battle, points the world camera at the screen's viewport each frame (its pixel rect follows the UI at any resolution) and turns pointer and arrow input into `Plan`, `ShowHero` or `BattleAction`. World input obeys the UI's blocking: nothing while a dialog, options or the F3 panel is open, and nothing through UI controls (an EventSystem raycast at the pointer). On the map the camera size comes from the cell's display size (UI design pixels per cell), follows the hero while he travels, pans with arrows or a drag and is clamped to the map; on the battlefield it frames the board. Runtime only instantiates saved prefabs (markers, route steps, hexes, damage numbers). `CanvasViewContext` picks live sprites or theme placeholders with Unity null checks for both UI and world figures.
 
-Animations show resolved results and never decide gameplay: the hero glides from cell to cell (jumps of more than six cells are shown at once), stacks glide, lunge, flash and fade, damage numbers rise and hits at or above a threshold shake the camera. Battle animations are keyed by combatant ID from `DamageEvent`.
+Animations show resolved results and never decide gameplay: the hero glides from cell to cell (jumps of more than six cells are shown at once), the acting stack has a pulsing ring in its side's colour and a highlighted hex, stacks glide, lunge, flash and fade, damage numbers rise and hits at or above a threshold shake the camera. Battle animations are keyed by combatant ID from `DamageEvent`.
 
 ## 7. Audio
 

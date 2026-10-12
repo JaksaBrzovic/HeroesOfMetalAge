@@ -13,10 +13,14 @@ namespace HeroesOfMetalAge.Presentation
         private const float FLASH_SECONDS = 0.3f;
         private const float FADE_SECONDS = 0.45f;
         private const float ARRIVED_DISTANCE = 0.001f;
+        private const float PULSE_SPEED = 5f;
+        private const float PULSE_SCALE = 0.08f;
 
         [SerializeField] private SpriteRenderer baseRenderer;
         [SerializeField] private SpriteRenderer iconRenderer;
         [SerializeField] private TextMeshPro countText;
+        [Tooltip("Ring shown around the figure whose turn it is.")]
+        [SerializeField] private SpriteRenderer selectionRenderer;
         [Tooltip("Largest side of the icon, in marker units (1 = one cell).")]
         [Min(0.1f)]
         [SerializeField] private float iconSize = 0.72f;
@@ -30,9 +34,12 @@ namespace HeroesOfMetalAge.Presentation
         private float lungeTime;
         private float flashTime;
         private float fadeTime;
+        private float pulseTime;
+        private Vector3 selectionScale = Vector3.one;
         private bool isFading;
 
         public Vector3 Target => target;
+        public bool IsSelected => selectionRenderer.gameObject.activeSelf;
         public bool IsMoving => (position - target).sqrMagnitude > ARRIVED_DISTANCE * ARRIVED_DISTANCE;
 
         /// <summary>True when the icon is actually drawn: active, with a sprite and not faded out.</summary>
@@ -60,6 +67,23 @@ namespace HeroesOfMetalAge.Presentation
         public void SetFlipped(bool isFlipped)
         {
             iconRenderer.flipX = isFlipped;
+        }
+
+        /// <summary>Shows a pulsing ring in <paramref name="color"/> while this figure is the one acting.</summary>
+        public void SetSelected(bool isSelected, Color color)
+        {
+            if (isSelected && !IsSelected)
+            {
+                selectionScale = selectionRenderer.transform.localScale;
+                pulseTime = 0f;
+            }
+            else if (!isSelected && IsSelected)
+            {
+                selectionRenderer.transform.localScale = selectionScale;
+            }
+
+            selectionRenderer.color = color;
+            selectionRenderer.gameObject.SetActive(isSelected);
         }
 
         /// <summary>Jumps to a position without animating.</summary>
@@ -124,6 +148,12 @@ namespace HeroesOfMetalAge.Presentation
             }
 
             transform.localPosition = position + offset;
+            if (IsSelected)
+            {
+                pulseTime += deltaTime;
+                selectionRenderer.transform.localScale = selectionScale * (1f + PULSE_SCALE * Mathf.Sin(pulseTime * PULSE_SPEED));
+            }
+
             if (flashTime > 0f)
             {
                 flashTime = Mathf.Max(0f, flashTime - deltaTime);

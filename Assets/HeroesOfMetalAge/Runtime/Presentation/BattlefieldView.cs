@@ -21,6 +21,7 @@ namespace HeroesOfMetalAge.Presentation
         private const float LUNGE_FRACTION = 0.3f;
         private const float MARKER_BASE_BLEND = 0.45f;
         private const float HEX_ALPHA = 0.5f;
+        private const float ACTIVE_HEX_ALPHA = 0.85f;
 
         [SerializeField] private SpriteRenderer background;
         [Tooltip("Centre of the hex board, in this object's space. Select the object to preview the board in the Scene view.")]
@@ -254,6 +255,7 @@ namespace HeroesOfMetalAge.Presentation
             marker.Display(context.UnitIcon(combatant.UnitId), context.UnitTint(combatant.UnitId, combatant.IsPlayer), BaseColor(side),
                 combatant.Count.ToString());
             marker.SetFlipped(!combatant.IsPlayer);
+            marker.SetSelected(combatant == Session.Battle.Active, side);
             marker.MoveTo(HexCenter(combatant.Position), UNIT_HEXES_PER_SECOND * hexWidth);
         }
 
@@ -262,9 +264,13 @@ namespace HeroesOfMetalAge.Presentation
             Color color;
             if (battle.At(position) == active)
             {
-                color = context.Theme.ActiveHexColor;
+                // the acting stack's hex stands out in its side's colour
+                color = active.IsPlayer ? context.Theme.Gold : context.Theme.Enemy;
+                color.a = ACTIVE_HEX_ALPHA;
+                return color;
             }
-            else if (canAct && battle.IsReachable(position))
+
+            if (canAct && battle.IsReachable(position))
             {
                 color = context.Theme.ReachableHexColor;
             }

@@ -19,6 +19,7 @@ namespace HeroesOfMetalAge.Tests
     public class WorldTests
     {
         private const int LARGE_MAP_CELLS = 256;
+        private const int STRAIGHT_MAP_CELLS = 24;
         private const long LARGE_ROUTE_BUDGET_MILLISECONDS = 2000;
 
         private readonly List<Object> created = new List<Object>();
@@ -147,16 +148,7 @@ namespace HeroesOfMetalAge.Tests
         [Test]
         public void Routing_StaysFastOnLargeMaps()
         {
-            DefinitionCatalog real = ContentAssets.LoadCatalog();
-            MissionDefinition mission = real.Mission;
-            TerrainType[] open = Enumerable.Repeat(TerrainType.Grass, LARGE_MAP_CELLS * LARGE_MAP_CELLS).ToArray();
-            MissionDefinition large = new MissionDefinition(mission.Id, mission.Name, mission.Description, mission.HeroId, mission.ClanId,
-                mission.ClanName, mission.ClanHeroName, mission.StartingGold, mission.ArmySlots, mission.DaysPerWeek, mission.ForestCost,
-                mission.GroundCost, mission.OwnedPriceMultiplier, LARGE_MAP_CELLS, LARGE_MAP_CELLS, new WorldPosition(0, 0), open, mission.Combat,
-                mission.Encounters, mission.RecruitmentIds);
-            DefinitionCatalog catalog = new DefinitionCatalog(real.Units, real.Artefacts, real.Heroes, large);
-            CampaignState campaign = new CampaignRules(catalog).NewCampaign();
-            WorldMap world = new WorldMap(large);
+            WorldMap world = OpenWorld(LARGE_MAP_CELLS, new WorldPosition(0, 0), out CampaignState campaign);
             WorldPosition corner = new WorldPosition(LARGE_MAP_CELLS - 1, LARGE_MAP_CELLS - 1);
 
             Stopwatch timer = Stopwatch.StartNew();
@@ -165,6 +157,36 @@ namespace HeroesOfMetalAge.Tests
 
             Assert.AreEqual(corner, route.Last());
             Assert.Less(timer.ElapsedMilliseconds, LARGE_ROUTE_BUDGET_MILLISECONDS);
+        }
+
+        [Test]
+        public void EquallyCheapRoutes_PreferTheStraightLine()
+        {
+            // rows below the mission's own encounters, so no site is in the way
+            WorldMap world = OpenWorld(STRAIGHT_MAP_CELLS, new WorldPosition(2, 15), out CampaignState campaign);
+            Assert.IsTrue(world.FindRoute(campaign, new WorldPosition(9, 15)).All(step => step.Y == 15), "horizontal");
+
+            world = OpenWorld(STRAIGHT_MAP_CELLS, new WorldPosition(15, 12), out campaign);
+            Assert.IsTrue(world.FindRoute(campaign, new WorldPosition(15, 20)).All(step => step.X == 15), "vertical");
+
+            world = OpenWorld(STRAIGHT_MAP_CELLS, new WorldPosition(2, 12), out campaign);
+            IReadOnlyList<WorldPosition> diagonal = world.FindRoute(campaign, new WorldPosition(8, 18));
+            Assert.AreEqual(6, diagonal.Count, "a pure diagonal needs no straight steps");
+            Assert.IsTrue(diagonal.All(step => step.X - 2 == step.Y - 12), "diagonal");
+        }
+
+        /// <summary>An open grass map of the given size with the real mission's content, the hero starting at <paramref name="start"/>.</summary>
+        private static WorldMap OpenWorld(int size, WorldPosition start, out CampaignState campaign)
+        {
+            DefinitionCatalog real = ContentAssets.LoadCatalog();
+            MissionDefinition mission = real.Mission;
+            TerrainType[] open = Enumerable.Repeat(TerrainType.Grass, size * size).ToArray();
+            MissionDefinition openMission = new MissionDefinition(mission.Id, mission.Name, mission.Description, mission.HeroId, mission.ClanId,
+                mission.ClanName, mission.ClanHeroName, mission.StartingGold, mission.ArmySlots, mission.DaysPerWeek, mission.ForestCost,
+                mission.GroundCost, mission.OwnedPriceMultiplier, size, size, start, open, mission.Combat, mission.Encounters, mission.RecruitmentIds);
+            DefinitionCatalog catalog = new DefinitionCatalog(real.Units, real.Artefacts, real.Heroes, openMission);
+            campaign = new CampaignRules(catalog).NewCampaign();
+            return new WorldMap(openMission);
         }
 
         private AdventureMapAuthoring NewMap(out Tilemap logic)
