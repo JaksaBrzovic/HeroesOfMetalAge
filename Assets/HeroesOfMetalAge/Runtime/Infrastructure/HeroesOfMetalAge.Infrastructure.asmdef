@@ -1,0 +1,10 @@
+{
+  "name": "HeroesOfMetalAge.Infrastructure",
+  "rootNamespace": "HeroesOfMetalAge.Infrastructure",
+  "references": [
+    "HeroesOfMetalAge.Domain",
+    "HeroesOfMetalAge.Application",
+    "MLin.Audio"
+  ],
+  "noEngineReferences": false
+}

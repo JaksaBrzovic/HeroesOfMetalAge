@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8db13f74c5344084ae1af05a97bffb5c, type: 3}
+  m_Name: ArtefactDatabase
+  m_EditorClassIdentifier: HeroesOfMetalAge.Infrastructure::HeroesOfMetalAge.Infrastructure.Content.ArtefactDatabaseScriptableObject
+  artefacts:
+  - id: fang-of-thunder
+    displayName: Fang of Thunder
+    description: The wardens' weapon, tempered in thunder.
+    icon: {fileID: 0}
+    slot: 0
+    attackBonus: 2
+    defenseBonus: 0
+    speedBonus: 0
+  - id: ashen-ward
+    displayName: Ashen Ward
+    description: A charm bearing the clan's protective oath.
+    icon: {fileID: 0}
+    slot: 1
+    attackBonus: 0
+    defenseBonus: 2
+    speedBonus: 0
+  - id: warborn-sigil
+    displayName: Warborn Sigil
+    description: The Black Banner's mark of relentless advance.
+    icon: {fileID: 0}
+    slot: 1
+    attackBonus: 0
+    defenseBonus: 0
+    speedBonus: 1

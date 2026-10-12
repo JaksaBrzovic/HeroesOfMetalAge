@@ -1,11 +1,45 @@
 {
   "dependencies": {
+    "com.manalink.audiosystem": {
+      "version": "https://github.com/JaksaBrzovic/MLinAudioSystem.git?path=/Packages/com.manalink.audiosystem#v0.2.0",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.modules.audio": "1.0.0"
+      },
+      "hash": "8750cefc28d99c00482cec83d24d2c6f7d9c1ec4"
+    },
+    "com.unity.ext.nunit": {
+      "version": "2.0.5",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {}
+    },
     "com.unity.multiplayer.center": {
       "version": "1.0.1",
       "depth": 0,
       "source": "builtin",
       "dependencies": {
         "com.unity.modules.uielements": "1.0.0"
+      }
+    },
+    "com.unity.test-framework": {
+      "version": "1.6.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.ext.nunit": "2.0.3",
+        "com.unity.modules.imgui": "1.0.0",
+        "com.unity.modules.jsonserialize": "1.0.0"
+      }
+    },
+    "com.unity.ugui": {
+      "version": "2.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.ui": "1.0.0",
+        "com.unity.modules.imgui": "1.0.0"
       }
     },
     "com.unity.modules.accessibility": {

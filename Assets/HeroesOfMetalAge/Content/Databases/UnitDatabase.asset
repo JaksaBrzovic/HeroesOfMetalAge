@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f8e5e67908b46e6bb9162c747afaa3f, type: 3}
+  m_Name: UnitDatabase
+  m_EditorClassIdentifier: HeroesOfMetalAge.Infrastructure::HeroesOfMetalAge.Infrastructure.Content.UnitDatabaseScriptableObject
+  units:
+  - id: ironbound
+    displayName: IRONBOUND
+    description: Axe infantry
+    portrait: {fileID: 0}
+    placeholderIcon: axe
+    health: 18
+    minimumDamage: 3
+    maximumDamage: 5
+    attack: 5
+    defense: 4
+    speed: 4
+    recruitmentCost: 70
+    weeklyGrowth: 14
+    ranged: 0
+    voice: {fileID: 11400000, guid: d5789f3d02301864bb42a85ca6723c36, type: 2}
+  - id: ash-archer
+    displayName: ASH ARCHER
+    description: Ranged / half damage in melee
+    portrait: {fileID: 0}
+    placeholderIcon: bow
+    health: 13
+    minimumDamage: 3
+    maximumDamage: 6
+    attack: 6
+    defense: 3
+    speed: 5
+    recruitmentCost: 110
+    weeklyGrowth: 9
+    ranged: 1
+    voice: {fileID: 11400000, guid: f7759a0e39d52544dbeada57f86350fb, type: 2}
+  - id: doom-rider
+    displayName: DOOM RIDER
+    description: Heavy cavalry
+    portrait: {fileID: 0}
+    placeholderIcon: rider
+    health: 40
+    minimumDamage: 7
+    maximumDamage: 11
+    attack: 9
+    defense: 8
+    speed: 6
+    recruitmentCost: 260
+    weeklyGrowth: 4
+    ranged: 0
+    voice: {fileID: 11400000, guid: 26ce2d11f751506489324181d501cca6, type: 2}

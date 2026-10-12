@@ -1,0 +1,6 @@
+{
+  "name": "HeroesOfMetalAge.Domain",
+  "rootNamespace": "HeroesOfMetalAge.Domain",
+  "references": [],
+  "noEngineReferences": true
+}

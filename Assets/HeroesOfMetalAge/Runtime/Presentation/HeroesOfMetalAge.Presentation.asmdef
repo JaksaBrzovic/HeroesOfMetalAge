@@ -1,0 +1,11 @@
+{
+  "name": "HeroesOfMetalAge.Presentation",
+  "rootNamespace": "HeroesOfMetalAge.Presentation",
+  "references": [
+    "HeroesOfMetalAge.Domain",
+    "HeroesOfMetalAge.Application",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro"
+  ],
+  "noEngineReferences": false
+}

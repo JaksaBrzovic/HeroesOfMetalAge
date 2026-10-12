@@ -1,0 +1,114 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a3775f729ea4d808adfa50b29314549, type: 3}
+  m_Name: AshenPass
+  m_EditorClassIdentifier: HeroesOfMetalAge.Infrastructure::HeroesOfMetalAge.Infrastructure.Content.MissionSettingsScriptableObject
+  id: ashen-pass
+  displayName: THE ASHEN PASS
+  heroId: kael
+  description: Across the pass, the Ashen Clan sells steel. Beyond it, the Black
+    Banner waits.
+  clanId: ashen-clan
+  clanName: Ashen Clan
+  clanHeroName: Lord Varg
+  townPortrait: {fileID: 0}
+  startingGold: 1600
+  armySlots: 7
+  daysPerWeek: 7
+  forestMovementCost: 2
+  groundMovementCost: 1
+  ownedRecruitmentMultiplier: 0.55
+  startingPosition: {x: 2, y: 5}
+  mapWidth: 18
+  mapHeight: 11
+  terrainRows:
+  - cells: 040000000400000004000000000000000000000000000000000000000300000000000000010000000100000001000000000000000000000000000000000000000000000000000000
+  - cells: 040000000400000004000000000000000000000000000000000000000300000001000000010000000000000000000000000000000000000000000000000000000100000001000000
+  - cells: 040000000400000004000000000000000000000003000000010000000300000000000000000000000000000000000000000000000300000001000000010000000100000000000000
+  - cells: 000000000000000000000000010000000100000001000000000000000300000000000000000000000000000000000000010000000100000001000000000000000000000000000000
+  - cells: 000000000100000001000000010000000000000000000000000000000300000000000000000000000200000002000000020000000200000002000000020000000200000002000000
+  - cells: 020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000020000000200000002000000
+  - cells: 000000000000000000000000000000000000000000000000010000000300000001000000000000000000000000000000000000000000000000000000010000000100000001000000
+  - cells: 000000000000000000000000000000000100000001000000010000000300000000000000000000000000000000000000000000000100000001000000010000000000000000000000
+  - cells: 000000000000000001000000010000000100000000000000000000000300000000000000000000000000000001000000030000000100000000000000000000000000000000000000
+  - cells: 010000000100000001000000000000000000000000000000000000000300000000000000010000000100000001000000000000000000000000000000040000000400000004000000
+  - cells: 010000000000000000000000000000000000000000000000000000000300000001000000010000000000000000000000000000000000000000000000040000000400000004000000
+  recruitmentUnitIds:
+  - ironbound
+  - ash-archer
+  - doom-rider
+  encounters:
+  - id: friendly
+    displayName: THE WILLING
+    kind: 0
+    position: {x: 4, y: 5}
+    description: We heard the iron oath. Let us ride with you.
+    army:
+    - unitId: ash-archer
+      count: 6
+    rewardExperience: 0
+    rewardGold: 0
+    rewardArtefactId: 
+  - id: sentinel
+    displayName: THE PASS WARDENS
+    kind: 1
+    position: {x: 7, y: 5}
+    description: The wardens block the only passage through the ridge and refuse
+      to join.
+    army:
+    - unitId: ironbound
+      count: 10
+    rewardExperience: 180
+    rewardGold: 500
+    rewardArtefactId: fang-of-thunder
+  - id: town
+    displayName: ASHEN HOLD
+    kind: 2
+    position: {x: 11, y: 5}
+    description: The Ashen Clan will not surrender its ancestral forges. Defeat its
+      defenders to claim the town.
+    army:
+    - unitId: ironbound
+      count: 13
+    - unitId: ash-archer
+      count: 5
+    rewardExperience: 250
+    rewardGold: 0
+    rewardArtefactId: 
+  - id: boss
+    displayName: THE BLACK BANNER
+    kind: 3
+    position: {x: 15, y: 5}
+    description: A stronger warhost awaits. Recruit at the town and equip your reward
+      before challenging them.
+    army:
+    - unitId: ironbound
+      count: 18
+    - unitId: ash-archer
+      count: 9
+    - unitId: doom-rider
+      count: 3
+    rewardExperience: 450
+    rewardGold: 900
+    rewardArtefactId: warborn-sigil
+  combatWidth: 10
+  combatHeight: 7
+  enemyAttack: 1
+  enemyDefense: 1
+  defendDamageMultiplier: 0.7
+  rangedMeleeDamageMultiplier: 0.5
+  attackDeltaMultiplier: 0.05
+  defenseDeltaMultiplier: 0.025
+  maximumAttackDelta: 30
+  maximumDefenseDelta: 28
+  travelStepSeconds: 0.15
+  enemyTurnSeconds: 0.7

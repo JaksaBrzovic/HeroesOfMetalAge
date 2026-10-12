@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48d71549e6c942feaa7705d7ad3dbaf3, type: 3}
+  m_Name: AudioDatabase
+  m_EditorClassIdentifier: HeroesOfMetalAge.Infrastructure::HeroesOfMetalAge.Infrastructure.Content.AudioDatabaseScriptableObject
+  settings: {fileID: 11400000, guid: 43f3212da22a77e4283a4ea7a4656766, type: 2}
+  ambientLayer: {fileID: 11400000, guid: 0558bc0577e411b458756a9711ffbc74, type: 2}
+  gallopLayer: {fileID: 11400000, guid: 91270dffa9e70ff48b639c972615da1b, type: 2}
+  battleLayer: {fileID: 11400000, guid: 9884fcf3566611043ac3771447e153ec, type: 2}
+  friendly: {fileID: 11400000, guid: ceae94e170136804283c6b5d48555775, type: 2}
+  enemy: {fileID: 11400000, guid: 249a5c9da1ebb1048b11b1af33916140, type: 2}
+  battleIntro: {fileID: 11400000, guid: 380ab4920412196439cdf51f74108509, type: 2}
+  victory: {fileID: 11400000, guid: e1d4a41522ce3d547b79e73f7bae04b6, type: 2}
+  defeat: {fileID: 11400000, guid: 3a2b4d44482a08842afcc88833e67f8c, type: 2}
+  levelUp: {fileID: 11400000, guid: 95c12a14b14591d438f9abf26fdbf8ed, type: 2}
+  gold: {fileID: 11400000, guid: f6252218b845ad442bac0912f901d183, type: 2}
+  equip: {fileID: 11400000, guid: d73a09ccd0d721b4a81a31c8f256e17c, type: 2}
+  click: {fileID: 11400000, guid: 9ce26dbaa004d064b81614bbde94d07a, type: 2}
+  hit: {fileID: 11400000, guid: d234d441c5d06874cab8b17e9b7b3108, type: 2}
+  heavyHit: {fileID: 11400000, guid: 8e4c600edf289b14896117a7482c244e, type: 2}
+  hurt: {fileID: 11400000, guid: f6815c466c5ab3343889882feca4cfe0, type: 2}
+  heavyHitThreshold: 45
+  ambientAtRest: 0.7
+  ambientWhileRiding: 0.4
+  ambientInBattle: 0.17
+  gallopMix: 0.72
+  battleMix: 0.85
+  layerFadeSeconds: 0.6

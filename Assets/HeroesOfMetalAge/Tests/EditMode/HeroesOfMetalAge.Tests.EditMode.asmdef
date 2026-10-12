@@ -1,0 +1,28 @@
+{
+  "name": "HeroesOfMetalAge.Tests.EditMode",
+  "rootNamespace": "HeroesOfMetalAge.Tests",
+  "references": [
+    "HeroesOfMetalAge.Domain",
+    "HeroesOfMetalAge.Application",
+    "HeroesOfMetalAge.Presentation",
+    "HeroesOfMetalAge.Infrastructure",
+    "HeroesOfMetalAge.Bootstrap",
+    "HeroesOfMetalAge.Editor",
+    "MLin.Audio",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro",
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ]
+}

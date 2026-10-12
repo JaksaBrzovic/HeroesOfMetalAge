@@ -1,0 +1,17 @@
+{
+  "name": "HeroesOfMetalAge.Editor",
+  "rootNamespace": "HeroesOfMetalAge.EditorTools",
+  "references": [
+    "HeroesOfMetalAge.Domain",
+    "HeroesOfMetalAge.Application",
+    "HeroesOfMetalAge.Presentation",
+    "HeroesOfMetalAge.Infrastructure",
+    "HeroesOfMetalAge.Bootstrap",
+    "MLin.Audio",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

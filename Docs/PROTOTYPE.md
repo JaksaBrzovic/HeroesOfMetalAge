@@ -10,4 +10,4 @@ Hero starts with attack 2 and defense 2. Every 300 XP grants a level; attack inc
 
 Combat: 10 x 7 odd-row hex grid. One action per stack per round. Speed determines initiative. Actions: move, attack (including move-and-melee), defend, pass. One retaliation per round. Casualties persist after victory. Top surviving creatures are fully healed between battles. Defeat does not persist casualties and offers retry/preparation/new mission.
 
-Acceptance: complete all four map events, recruit at town, equip reward, defeat final force, observe independent victory/defeat screens, weekly growth, protected neutral home slots and transferable owned slots, and audible context changes. Compilation alone is insufficient: run rules checks and built-player smoke simulation.
+Acceptance: complete all four map events, recruit at town, equip reward, defeat final force, observe independent victory/defeat screens, weekly growth, protected neutral home slots and transferable owned slots, and audible context changes. Compilation alone is insufficient: run the EditMode tests and the built-player smoke simulation.

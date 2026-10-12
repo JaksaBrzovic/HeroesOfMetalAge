@@ -1,0 +1,8 @@
+{
+  "name": "HeroesOfMetalAge.Application",
+  "rootNamespace": "HeroesOfMetalAge.Application",
+  "references": [
+    "HeroesOfMetalAge.Domain"
+  ],
+  "noEngineReferences": true
+}
