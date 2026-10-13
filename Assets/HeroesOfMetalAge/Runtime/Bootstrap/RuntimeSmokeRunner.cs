@@ -221,8 +221,10 @@ namespace HeroesOfMetalAge.Bootstrap
         private void FinishBattle()
         {
             int actions = 0;
+            bool hasPausedOnResult = false;
             while (session.Screen == GameScreen.Battle && session.Dialog == DialogKind.None && actions++ < MAX_BATTLE_ACTIONS)
             {
+                hasPausedOnResult |= session.Battle.Outcome != BattleOutcome.InProgress;
                 if (session.IsBusy)
                 {
                     session.Tick(1);
@@ -233,6 +235,7 @@ namespace HeroesOfMetalAge.Bootstrap
             }
 
             Check(actions < MAX_BATTLE_ACTIONS, "Battle terminates");
+            Check(hasPausedOnResult, "Decided battle stays on the battlefield before the result screen");
         }
 
         private static BattleAction ChoosePlayerAction(BattleEngine battle)
@@ -336,32 +339,56 @@ namespace HeroesOfMetalAge.Bootstrap
             yield return Screenshot("02-battle.png");
 
             int ticks = 0;
-            while (!session.Battle.Active.IsPlayer && ticks++ < MAX_MOVEMENT_TICKS)
+            while ((session.IsBusy || !session.Battle.Active.IsPlayer) && ticks++ < MAX_MOVEMENT_TICKS)
             {
                 session.Tick(1);
             }
 
             BattleAction firstAction = ChoosePlayerAction(session.Battle);
-            long revision = session.Revision;
+            Combatant actor = session.Battle.Active;
             Check(firstAction.Kind == BattleActionKind.MoveOrAttack && world.HandleClick(world.ScreenPoint(firstAction.Target))
-                && session.Revision != revision, "Battlefield hex click sends the battle action");
+                && session.Battle.Active != actor, "Battlefield hex click sends the battle action");
+            Combatant next = session.Battle.Active;
+            session.BattleAction(new BattleAction(BattleActionKind.Pass));
+            Check(session.IsBusy && session.Battle.Active == next, "A battle action pauses the battle before the next one");
             yield return new WaitForSecondsRealtime(0.3f);
             yield return Screenshot("02b-battle-action.png");
 
             FinishBattle();
+            VictorySummary rewards = session.Victory;
             bool isRewarded = session.Dialog == DialogKind.Victory
                 && session.Campaign.IsCompleted(sentinel.Id)
-                && session.Campaign.Gold == mission.StartingGold + sentinel.RewardGold
-                && session.Campaign.Experience == sentinel.RewardExperience;
-            Check(isRewarded, "Sentinel victory and authored rewards");
+                && rewards.Gold > 0
+                && session.Campaign.Gold == mission.StartingGold + rewards.Gold
+                && session.Campaign.Experience == sentinel.RewardExperience
+                && session.Campaign.Inventory.Count == rewards.ArtefactIds.Count
+                && rewards.ArtefactIds.Count <= 1;
+            Check(isRewarded, "Sentinel victory applies the rolled gold and at most one artefact");
             int gold = session.Campaign.Gold;
             session.BattleAction(new BattleAction(BattleActionKind.Pass));
             Check(session.Campaign.Gold == gold, "Repeated terminal action grants no extra rewards");
+            hud.RefreshNow();
+            Check(hud.VictoryView.gameObject.activeInHierarchy && !hud.ContentGroup.interactable, "Victory screen opens over the battle and blocks it");
+            yield return Screenshot("05a-victory-screen.png");
 
-            session.ContinueVictory();
+            Click(hud.VictoryView.PrimaryButton);
+            Check(session.Dialog == DialogKind.Rewards, "Victory screen leads to the rewards screen");
+            hud.RefreshNow();
+            Canvas.ForceUpdateCanvases();
+            Check(hud.RewardsView.gameObject.activeInHierarchy
+                && hud.RewardsView.ArtefactCards.Count(card => card.gameObject.activeSelf) == rewards.ArtefactIds.Count,
+                "Rewards screen shows one card per rolled artefact");
+            yield return Screenshot("05b-rewards-screen.png");
+            Click(hud.RewardsView.PrimaryButton);
+            Check(session.Dialog == DialogKind.None, "Rewards screen closes to the map");
+
             session.ShowHero();
-            session.Equip(0);
-            Check(session.Campaign.WeaponId == sentinel.RewardArtefactId, "Reward equipment command");
+            if (rewards.ArtefactIds.Count > 0)
+            {
+                session.Equip(0);
+                Check(session.Campaign.WeaponId == rewards.ArtefactIds[0] || session.Campaign.CharmId == rewards.ArtefactIds[0], "Reward equipment command");
+            }
+
             yield return Screenshot("03-hero.png");
 
             Check(session.Campaign.Inventory.Count == 0, "Empty inventory is displayed safely");
@@ -369,7 +396,7 @@ namespace HeroesOfMetalAge.Bootstrap
             session.DebugArtefacts();
             hud.RefreshNow();
             Canvas.ForceUpdateCanvases();
-            Check(session.Campaign.Inventory.Count == 6 && hud.HeroView.GetComponentsInChildren<UiWidget>(true).Length >= 15,
+            Check(session.Campaign.Inventory.Count == session.Catalog.Artefacts.Count * 2 && hud.HeroView.GetComponentsInChildren<UiWidget>(true).Length >= 15,
                 "Populated inventory instantiates reusable artefact prefabs");
             yield return Screenshot("10-inventory.png");
 
@@ -428,6 +455,7 @@ namespace HeroesOfMetalAge.Bootstrap
             FinishBattle();
             Check(session.Dialog == DialogKind.Victory && session.Campaign.IsTownOwned, "Town conquest");
             session.ContinueVictory();
+            session.ContinueRewards();
             session.StationHero();
             Check(session.Campaign.IsHeroHome && session.Campaign.Army.Count == 0, "Hero home slot and army");
             session.Save(false);
@@ -460,6 +488,9 @@ namespace HeroesOfMetalAge.Bootstrap
             session.FightEncounter();
             FinishBattle();
             Check(session.Dialog == DialogKind.Defeat, "Weak army defeat panel");
+            hud.RefreshNow();
+            Check(hud.DefeatView.gameObject.activeInHierarchy && hud.Events.currentSelectedGameObject == hud.DefeatView.PrimaryButton.gameObject,
+                "Defeat screen opens with retry focused");
             yield return Screenshot("06-defeat.png");
 
             session.FightEncounter();

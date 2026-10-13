@@ -175,10 +175,66 @@ namespace HeroesOfMetalAge.Tests
             CampaignState state = rules.NewCampaign();
             EncounterDefinition sentinel = catalog.Mission.Encounter(EncounterKind.Sentinel);
             int gold = state.Gold;
+            VictoryRewards rewards = rules.RollRewards(state, sentinel, new SeededRandomSource(3), 0);
 
-            Assert.IsTrue(rules.ApplyVictory(state, sentinel, state.Army.ToList()).IsSuccess);
-            Assert.IsFalse(rules.ApplyVictory(state, sentinel, state.Army.ToList()).IsSuccess);
-            Assert.AreEqual(gold + sentinel.RewardGold, state.Gold);
+            Assert.IsTrue(rules.ApplyVictory(state, sentinel, state.Army.ToList(), rewards).IsSuccess);
+            Assert.IsFalse(rules.ApplyVictory(state, sentinel, state.Army.ToList(), rewards).IsSuccess);
+            Assert.AreEqual(gold + rewards.Gold, state.Gold);
+            CollectionAssert.AreEqual(rewards.ArtefactIds, state.Inventory);
+        }
+
+        [Test]
+        public void RolledRewards_AlwaysPayGoldAndAtMostOneArtefact()
+        {
+            CampaignState state = rules.NewCampaign();
+            EncounterDefinition sentinel = catalog.Mission.Encounter(EncounterKind.Sentinel);
+            RewardPolicy policy = catalog.Mission.Rewards;
+            SeededRandomSource random = new SeededRandomSource(11);
+            bool sawNone = false;
+            bool sawOne = false;
+            for (int i = 0; i < 200; i++)
+            {
+                VictoryRewards rewards = rules.RollRewards(state, sentinel, random, 0);
+                Assert.That(rewards.Gold, Is.InRange((int)Math.Floor(sentinel.RewardGold * (1 - policy.GoldVariation)),
+                    (int)Math.Ceiling(sentinel.RewardGold * (1 + policy.GoldVariation))));
+                Assert.LessOrEqual(rewards.ArtefactIds.Count, 1);
+                sawNone |= rewards.ArtefactIds.Count == 0;
+                sawOne |= rewards.ArtefactIds.Count == 1;
+            }
+
+            Assert.IsTrue(sawNone && sawOne, "victories sometimes bring no artefact and sometimes one");
+        }
+
+        [Test]
+        public void RolledRewards_GuaranteeALegendaryWithinEveryRunOfVictories()
+        {
+            CampaignState state = rules.NewCampaign();
+            EncounterDefinition sentinel = catalog.Mission.Encounter(EncounterKind.Sentinel);
+            int guarantee = catalog.Mission.Rewards.LegendaryGuaranteeVictories;
+            Assert.Greater(guarantee, 0);
+            SeededRandomSource random = new SeededRandomSource(5);
+            int withoutLegendary = 0;
+            for (int i = 0; i < 400; i++)
+            {
+                VictoryRewards rewards = rules.RollRewards(state, sentinel, random, withoutLegendary);
+                withoutLegendary = rewards.HasLegendary ? 0 : withoutLegendary + 1;
+                Assert.Less(withoutLegendary, guarantee, "a legendary artefact is forced at the latest on every " + guarantee + "th victory");
+            }
+
+            VictoryRewards due = rules.RollRewards(state, sentinel, random, guarantee - 1);
+            Assert.IsTrue(due.HasLegendary && catalog.Artefact(due.ArtefactIds.Single()).Rarity == ArtefactRarity.Legendary);
+        }
+
+        [Test]
+        public void UnknownRewardArtefact_IsRejectedWithoutChanges()
+        {
+            CampaignState state = rules.NewCampaign();
+            EncounterDefinition sentinel = catalog.Mission.Encounter(EncounterKind.Sentinel);
+            int gold = state.Gold;
+
+            Assert.IsFalse(rules.ApplyVictory(state, sentinel, state.Army.ToList(), new VictoryRewards(100, new[] { "missing" }, false)).IsSuccess);
+            Assert.AreEqual(gold, state.Gold);
+            Assert.IsFalse(state.IsCompleted(sentinel.Id));
         }
 
         [Test]

@@ -13,18 +13,18 @@ MonoBehaviour:
   m_Name: Victory
   m_EditorClassIdentifier: MLin.Audio::MLin.Audio.SoundDefinition
   clips:
-  - {fileID: 8300000, guid: bb6387c1127fb2c43a92c6cd4efa692c, type: 3}
+  - {fileID: 8300000, guid: 82ac1f17c09927941912960f3fc2b003, type: 3}
   selectionMode: 2
   introClip: {fileID: 0}
   outputGroup: {fileID: 24300003, guid: 5c52072f8d5543bc9e71794e96309f85, type: 2}
-  volume: 0.75
+  volume: 0.85
   volumeVariation: 0
   pitch: 1
   pitchVariation: 0
   loop: 0
   priority: 100
   cooldown: 0
-  maxInstances: 2
+  maxInstances: 1
   instanceLimitMode: 0
   ignorePause: 0
   duckMusic: 0

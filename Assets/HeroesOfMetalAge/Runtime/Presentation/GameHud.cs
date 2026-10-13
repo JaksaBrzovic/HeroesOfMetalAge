@@ -35,6 +35,9 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private TownCanvasView townView;
         [SerializeField] private HeroCanvasView heroView;
         [SerializeField] private DialogCanvasView dialogView;
+        [SerializeField] private VictoryCanvasView victoryView;
+        [SerializeField] private RewardsCanvasView rewardsView;
+        [SerializeField] private DefeatCanvasView defeatView;
         [SerializeField] private SettingsCanvasView settingsView;
 
         private CanvasViewContext context;
@@ -61,6 +64,9 @@ namespace HeroesOfMetalAge.Presentation
         public HeroCanvasView HeroView => heroView;
         public CombatCanvasView CombatView => combatView;
         public DialogCanvasView DialogView => dialogView;
+        public VictoryCanvasView VictoryView => victoryView;
+        public RewardsCanvasView RewardsView => rewardsView;
+        public DefeatCanvasView DefeatView => defeatView;
         public EventSystem Events => eventSystem;
         public CanvasGroup ContentGroup => contentGroup;
         public CanvasViewContext Context => context;
@@ -72,7 +78,7 @@ namespace HeroesOfMetalAge.Presentation
         public void Initialize(GameSession session, IAudioControls audio, PresentationAssets media)
         {
             if (theme == null || designFrame == null || eventSystem == null || header == null || footer == null || notifications == null
-                || contentGroup == null || dialogGroup == null)
+                || contentGroup == null || dialogGroup == null || victoryView == null || rewardsView == null || defeatView == null)
             {
                 throw new InvalidOperationException($"GameHud on '{name}' has unassigned references. Assign them in the GameUiRoot prefab.");
             }
@@ -82,7 +88,7 @@ namespace HeroesOfMetalAge.Presentation
             footer.Initialize();
             notifications.Initialize();
             settingsView.SetOwner(this);
-            foreach (CanvasScreenView view in new CanvasScreenView[] { worldView, combatView, townView, heroView, dialogView, settingsView })
+            foreach (CanvasScreenView view in new CanvasScreenView[] { worldView, combatView, townView, heroView, dialogView, victoryView, rewardsView, defeatView, settingsView })
             {
                 view.Initialize(context);
             }
@@ -258,7 +264,10 @@ namespace HeroesOfMetalAge.Presentation
             ShowScreen(combatView, session.Screen == GameScreen.Battle);
             ShowScreen(townView, session.Screen == GameScreen.Town);
             ShowScreen(heroView, session.Screen == GameScreen.Hero);
-            ShowScreen(dialogView, isModal);
+            ShowScreen(dialogView, DialogCanvasView.Shows(session.Dialog));
+            ShowScreen(victoryView, session.Dialog == DialogKind.Victory);
+            ShowScreen(rewardsView, session.Dialog == DialogKind.Rewards);
+            ShowScreen(defeatView, session.Dialog == DialogKind.Defeat);
             ShowScreen(settingsView, isSettingsOpen);
             if (debugPanel != null)
             {
@@ -299,7 +308,17 @@ namespace HeroesOfMetalAge.Presentation
                 session.Screen != GameScreen.Battle && !session.IsBusy);
             footer.Display(HelpText(session.Screen), AudioStateText());
             notifications.SetNotice(session.Notice);
-            notifications.SetHit((session.LastHit.IsReceivedByPlayer ? "RECEIVED " : "DEALT ") + session.LastHit.Damage + " DAMAGE");
+            notifications.SetHit(HitText(session.LastHit));
+        }
+
+        private static string HitText(DamageEvent hit)
+        {
+            if (hit.IsMiss)
+            {
+                return hit.IsReceivedByPlayer ? "THE ENEMY MISSED" : "YOUR STRIKE MISSED";
+            }
+
+            return (hit.IsReceivedByPlayer ? "RECEIVED " : "DEALT ") + hit.Damage + " DAMAGE";
         }
 
         private string AudioStateText()
@@ -333,8 +352,13 @@ namespace HeroesOfMetalAge.Presentation
             {
                 if (isModal)
                 {
-                    selectionBeforeDialog = eventSystem.currentSelectedGameObject;
-                    eventSystem.SetSelectedGameObject(dialogView.PrimaryButton.gameObject);
+                    // one modal can follow another (victory, then rewards); remember the control from before the first
+                    if (shownDialog == DialogKind.None)
+                    {
+                        selectionBeforeDialog = eventSystem.currentSelectedGameObject;
+                    }
+
+                    eventSystem.SetSelectedGameObject(ModalPrimaryButton().gameObject);
                 }
                 else
                 {
@@ -355,7 +379,7 @@ namespace HeroesOfMetalAge.Presentation
             }
             else if (isModal)
             {
-                eventSystem.SetSelectedGameObject(dialogView.PrimaryButton.gameObject);
+                eventSystem.SetSelectedGameObject(ModalPrimaryButton().gameObject);
             }
             else
             {
@@ -363,6 +387,21 @@ namespace HeroesOfMetalAge.Presentation
             }
 
             wasSettingsOpen = isSettingsOpen;
+        }
+
+        private UiWidget ModalPrimaryButton()
+        {
+            switch (context.Session.Dialog)
+            {
+                case DialogKind.Victory:
+                    return victoryView.PrimaryButton;
+                case DialogKind.Rewards:
+                    return rewardsView.PrimaryButton;
+                case DialogKind.Defeat:
+                    return defeatView.PrimaryButton;
+                default:
+                    return dialogView.PrimaryButton;
+            }
         }
 
         private static bool IsSelectable(GameObject target)

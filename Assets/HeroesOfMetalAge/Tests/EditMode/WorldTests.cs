@@ -200,7 +200,7 @@ namespace HeroesOfMetalAge.Tests
             TerrainType[] open = Enumerable.Repeat(TerrainType.Grass, size * size).ToArray();
             MissionDefinition openMission = new MissionDefinition(mission.Id, mission.Name, mission.Description, mission.HeroId, mission.ClanId,
                 mission.ClanName, mission.ClanHeroName, mission.StartingGold, mission.ArmySlots, mission.DaysPerWeek, mission.TerrainRules,
-                mission.OwnedPriceMultiplier, size, size, start, open, mission.Combat, mission.Encounters, mission.RecruitmentIds);
+                mission.OwnedPriceMultiplier, size, size, start, open, mission.Combat, mission.Encounters, mission.RecruitmentIds, mission.Rewards);
             DefinitionCatalog catalog = new DefinitionCatalog(real.Units, real.Artefacts, real.Heroes, openMission);
             campaign = new CampaignRules(catalog).NewCampaign();
             return new WorldMap(openMission);

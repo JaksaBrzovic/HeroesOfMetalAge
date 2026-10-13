@@ -8,7 +8,7 @@ using UnityEngine;
 namespace HeroesOfMetalAge.Presentation
 {
     /// <summary>
-    /// Development panel (F3): audition every music layer, event sound and unit voice, and shortcut the campaign. Instantiated only in the Editor and
+    /// Development panel (F3): audition every music layer and track, the riding loop, every event sound and unit voice, and shortcut the campaign. Instantiated only in the Editor and
     /// development builds; normal play never depends on it.
     /// </summary>
     public sealed class DebugPanelView : MonoBehaviour
@@ -42,6 +42,12 @@ namespace HeroesOfMetalAge.Presentation
                 AddCueButton(layer + " Layer", () => audio.AuditionLayer(layer));
             }
 
+            foreach (MusicTrack track in Enum.GetValues(typeof(MusicTrack)))
+            {
+                AddCueButton(track + " Music", () => audio.AuditionMusic(track));
+            }
+
+            AddCueButton("Riding Loop", audio.AuditionRidingLoop);
             foreach (SoundCue cue in Enum.GetValues(typeof(SoundCue)))
             {
                 AddCueButton(SplitWords(cue.ToString()), () => audio.Audition(cue));

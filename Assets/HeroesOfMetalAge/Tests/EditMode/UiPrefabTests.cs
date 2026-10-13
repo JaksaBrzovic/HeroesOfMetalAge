@@ -41,7 +41,7 @@ namespace HeroesOfMetalAge.Tests
             Assert.AreEqual(CanvasScaler.ScreenMatchMode.Expand, scaler.screenMatchMode);
             Assert.AreEqual(1, root.GetComponentsInChildren<EventSystem>(true).Length);
             Assert.IsNotNull(root.GetComponentInChildren<StandaloneInputModule>(true));
-            Assert.AreEqual(6, root.GetComponentsInChildren<CanvasScreenView>(true).Length);
+            Assert.AreEqual(9, root.GetComponentsInChildren<CanvasScreenView>(true).Length);
         }
 
         [Test]
@@ -129,7 +129,9 @@ namespace HeroesOfMetalAge.Tests
             {
                 FakeAudioControls audio = new FakeAudioControls();
                 GameSession session = CampaignTestUtility.NewSession(ContentAssets.LoadCatalog(), new MemorySaveStore());
-                int expected = Enum.GetValues(typeof(MusicLayer)).Length + Enum.GetValues(typeof(SoundCue)).Length + session.Catalog.Units.Count;
+                // layers, music tracks, the riding loop, cues and unit voices
+                int expected = Enum.GetValues(typeof(MusicLayer)).Length + Enum.GetValues(typeof(MusicTrack)).Length + 1
+                    + Enum.GetValues(typeof(SoundCue)).Length + session.Catalog.Units.Count;
 
                 panel.Initialize(session, audio, () => { });
 

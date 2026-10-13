@@ -84,7 +84,7 @@ Postojeći sadržaj:
 
 Dijagonalni korak košta 1,41 puta više od ravnog. Među jednako skupim rutama bira se najkraća i najravnija.
 
-Postoji dijagonalno kretanje bez presijecanja blokiranih kutova. Klik odabire odredište i prikazuje rutu; drugi klik ili Space potvrđuje putovanje. Susret zaustavlja prolaz i zahtijeva interakciju. Trenutni interval koraka je 0,15 s, podesiv u misiji.
+Postoji dijagonalno kretanje bez presijecanja blokiranih kutova. Klik odabire odredište i prikazuje rutu; drugi klik ili Space potvrđuje putovanje. Susret zaustavlja prolaz i zahtijeva interakciju. Heroj prelazi jedno polje u sekundi (Travel Step Seconds = 1 u AshenPass.asset, Presentation pacing); figura klizi kontinuirano od polja do polja.
 
 E završava dan i obnavlja dnevni budžet. Tjedan traje 7 dana; zalihe rastu na danima 8, 15, 22 itd. Nove jedinice dodaju se preostalim zalihama.
 
@@ -103,14 +103,16 @@ Početak: 1.600 golda, Kael, 12 Roadieja, attack 2, defense 2.
 | Redoslijed | Lokacija | Sadržaj | Rezultat / nagrada |
 |---|---|---|---|
 | 1 | The Willing (13, 14), čistina uz put | 6 Air Guitarista želi se pridružiti | Besplatno pridruživanje; opcionalno, ne blokira put |
-| 2 | The Pass Wardens (21, 15), planinski prolaz | 10 Roadieja blokira jedini prolaz | 180 XP, 500 golda, Fang of Thunder |
+| 2 | The Pass Wardens (21, 15), planinski prolaz | 10 Roadieja blokira jedini prolaz | 180 XP, oko 500 golda, možda artefakt |
 | 3 | Ashen Hold (32, 13), ispred vrata | Neutralni grad Ashen Clana | Kupnja tri vrste jedinica |
-| Opcionalno | Branitelji Ashen Holda | 13 Roadieja + 5 Air Guitarista | Vlasništvo grada, 250 XP |
-| 4 | The Black Banner (44, 15), istočna čistina | 18 Roadieja + 9 Air Guitarista + 3 Doom Ridera | 450 XP, 900 golda, Warborn Sigil; završetak misije |
+| Opcionalno | Branitelji Ashen Holda | 13 Roadieja + 5 Air Guitarista | Vlasništvo grada, 250 XP, oko 300 golda, možda artefakt |
+| 4 | The Black Banner (44, 15), istočna čistina | 18 Roadieja + 9 Air Guitarista + 3 Doom Ridera | 450 XP, oko 900 golda, možda artefakt; završetak misije |
 
 Bitke u prolazu vode se na zelenoj dolini, a kod Ashen Holda i Black Bannera na infernalnoj pustoši. Put do istoka traje više dana.
 
 Prva misija uvodi pridruživanje, obaveznu borbu, opremanje nagrade, novačenje i jači završni izazov. Osvajanje grada dodatna je opcija. Nagrade se dodjeljuju jednom; zatvaranje ili ponovno prikazivanje panela ne smije ih duplicirati.
+
+**Implementirano (0.7):** nagrade bitke su nasumične. Gold je uvijek dodijeljen: iznos susreta × faktor između 0,75 i 1,25. Pobjeda donosi najviše jedan artefakt: 50 % šanse za artefakt; od toga 10 % legendary, 30 % rare, ostalo common. Prednost imaju artefakti koje heroj još nema. Legendary artefakt je zajamčen najkasnije na svaku četvrtu pobjedu (privremeno pravilo za testiranje legendary zvuka; niz se broji kroz sesiju, ne sprema se). Sve vrijednosti su u AshenPass.asset (Battle rewards). Nakon zadnjeg udarca bojište ostaje 2 sekunde na ekranu (Battle Result Seconds u AshenPass.asset, Presentation pacing), zatim se otvara ekran Victory (XP, gubici, level), zatim Rewards (gold i kartica artefakta; legendary kartica ima posebnu boju), a poraz otvara ekran Defeat (retry, povratak na pripremu, nova misija).
 
 Prijedlog budućeg zapisa svake misije: ID, sažetak, početno stanje, mapa, obavezni/opcionalni ciljevi, susreti, dijalozi, nagrade, pobjeda/poraz, audio tok, posebna pravila i kriteriji provjere.
 
@@ -147,6 +149,8 @@ Akcije:
 - Defend: primljena šteta × 0,7.
 - Pass: završetak poteza bez akcije; nije odgoda inicijative.
 
+**Implementirano (0.7):** svaki udarac, i uzvrat, ima 15 % šanse za promašaj (Miss Chance u AshenPass.asset): bez štete i gubitaka, na bojištu piše MISS, a zvuk je promašaj mača ili strijele. Promašeni melee napad i dalje izaziva uzvrat.
+
 Melee meta uzvraća ako preživi i nije već uzvratila u toj rundi. Ranged napad na udaljenosti ne izaziva taj melee uzvrat. Air Guitarist u melee radi štetu × 0,5. Prototip nema streljivo, zaklone, magiju ni posebne sposobnosti.
 
 Formula aktualnog damagea:
@@ -160,7 +164,7 @@ Ako je delta < 0: množitelj = `1 − min(−delta, 28) × 0,025`.
 
 Broj preživjelih = zaokruženi preostali ukupni HP prema gore / HP jedne jedinice. Pobjeda nastupa kad nema živih neprijateljskih stackova; poraz kad nema igračeve vojske. Gubici ostaju nakon pobjede, a preživjele jedinice vraćaju puni HP između borbi. Poraz ne zapisuje trajne gubitke i omogućuje retry s vojskom prije borbe ili povratak na pripremu.
 
-Jednostavni AI bira najbližu metu, zatim niži ukupni HP i stabilni ID. Napada ako može, inače ide prema meti. Trenutni razmak AI poteza je 0,7 s. Težine, napredniji AI, wait, bježanje i predaja: **otvoreno**.
+Jednostavni AI bira najbližu metu, zatim niži ukupni HP i stabilni ID. Napada ako može, inače ide prema meti. Nakon svake akcije u borbi (igračeve ili neprijateljeve) slijedi pauza od 1,5 s prije sljedeće akcije, da se potezi ne mogu prokliknuti jedan za drugim (Battle Action Seconds u AshenPass.asset, Presentation pacing). Neprijatelj koji počinje borbu čeka 0,7 s (Enemy Turn Seconds). Težine, napredniji AI, wait, bježanje i predaja: **otvoreno**.
 
 ## 9. Heroj, XP i artefakti
 
@@ -170,11 +174,15 @@ Implementirani slotovi opreme: weapon i charm. **Dogovoreni budući smjer (2026-
 
 | Artefakt | Bonus | Dostupnost |
 |---|---|---|
-| Fang of Thunder | +2 attack | Pass Wardens nagrada |
-| Ashen Ward | +2 defense | Development panel za testiranje |
-| Warborn Sigil | +1 speed | Black Banner nagrada |
+| Fang of Thunder | rare, +2 attack | nasumična nagrada |
+| Ashen Ward | common, +2 defense | nasumična nagrada |
+| Warborn Sigil | rare, +1 speed | nasumična nagrada |
+| Rusted Cleaver | common, +1 attack | nasumična nagrada |
+| Studded Wristband | common, +1 defense | nasumična nagrada |
+| Axe of the First Riff | legendary, +4 attack, +1 speed | nasumična nagrada |
+| Amulet of Endless Feedback | legendary, +1 attack, +3 defense, +1 speed | nasumična nagrada |
 
-Artefakti imaju ID, naziv, opis, ikonu, kompatibilni slot i bonuse u ArtefactDatabaseScriptableObject. Skill tree, herojske aktivne sposobnosti, rarity, set bonusi, trgovina i više heroja: **otvoreno**.
+Artefakti imaju ID, naziv, opis, ikonu, kompatibilni slot i bonuse u ArtefactDatabaseScriptableObject. Rarity (common, rare, legendary) određuje samo vjerojatnost dropa i izgled kartice. Skill tree, herojske aktivne sposobnosti, epic razina, set bonusi, trgovina i više heroja: **otvoreno**.
 
 ## 10. Gold, gradovi i vlasništvo
 
@@ -195,19 +203,21 @@ Aktualne owned cijene: Roadie 39, Air Guitarist 61, Rider 143. Osvajanje traži 
 
 ## 11. Audio kao glavni UX
 
-**Dogovoreni smjer:** originalni heavy metal s herojskom i mračnom atmosferom; Manowar/Bathory služe kao atmosferske reference. Aktualne WAV petlje, efekti i glasovi su placeholder sadržaj.
+**Dogovoreni smjer:** originalni heavy metal s herojskom i mračnom atmosferom; Manowar/Bathory služe kao atmosferske reference. Ambient i galop petlje, dio kratkih efekata i glasovi su placeholder sadržaj; snimljeni zvukovi i licence su u AUDIO_CREDITS.md.
 
 | Stanje / događaj | Zvučna namjera | Aktualno stanje |
 |---|---|---|
-| Stajanje na mapi | Miran metal ambient | Ambient sloj |
-| Jahanje | Metal galop | Galop sloj koji se uključuje fadeom |
-| Friendly susret | Pozitivan, upbeat lick | Kratki cue |
-| Enemy susret | Prijeteći lick | Kratki cue |
-| Početak borbe | Metal intro | Intro cue i combat sloj |
+| Stajanje na mapi | Miran metal ambient | Petlja Spirit Horse (privremena, samo za interno testiranje) utišana dok heroj stoji; nastavlja gdje je stala |
+| Grad | Gradska tema | Snimljena srednjovjekovna petlja (Market Day) dok je otvoren grad |
+| Jahanje | Metal galop i kopita | Glazba mape se kratkim fadeom pojača dok heroj jaše; snimljena petlja kopita preko nje (sintetizirani galop sloj svira samo kad misija nema glazbu mape) |
+| Friendly susret | Pozitivan, upbeat lick | Snimljeni gitarski akord |
+| Enemy susret | Prijeteći lick | Snimljeni distorzirani power chord |
+| Borba | Metal intro i borbena tema | Snimljena tema: intro jednom, zatim petlja |
 | Napad jedinice | Prepoznatljiv glas | Voice cue po vrsti |
-| Mali / veliki zadani udarac | Različit intenzitet | Odvojeni hit cueovi |
-| Primljeni udarac | Jasna prijetnja/gubitak | Received hit cue |
-| Pobjeda / poraz | Odgovarajuća završnica | Odvojeni cueovi |
+| Udarac mačem / strijelom | Zamah ili ispaljivanje, zatim pogodak ili promašaj | Snimljeni sword swing/hit/miss i arrow fire/hit/miss; veliki pogodak dodaje heavy hit |
+| Pobjeda | Kratka metal završnica | Snimljeni gitarski tapping stinger, zatim victory tema (rock/metal) s dužim fade inom koja odsvira do kraja uz duži fade out |
+| Poraz | Odgovarajuća završnica | Snimljena defeat tema dok je ekran poraza otvoren |
+| Nagrade / legendary item | Zvuk plijena; posebna potvrda za legendary | Gold cue; snimljeni zbor za legendary |
 | Level, gold, oprema, klik | Kratka potvrda radnje | Kratki efekti |
 
 **Implementirano:** zvuk ide kroz MLin Audio System. GameAudio prima uspješne gameplay događaje, AudioDatabaseScriptableObject ima po jedno polje za svaki događaj i glazbeni sloj, a svaka jedinica izravno pokazuje na svoj glas. Svako polje pokazuje na SoundDefinition asset (clipovi i varijacije, glasnoća, pitch, prioritet, limit istovremenih instanci, cooldown, mixer grupa). Audio ne određuje pravila borbe. Ambient, gallop i battle slojevi (100 BPM, 9,6 s) kreću na istom DSP trenutku i miješaju se fadeom prema putovanju i borbi. Glasovi jedinica zamjenjuju jedan drugoga, a glazba se stišava 6 dB dok jedinica govori (ducking pravilo Voice → Music).
@@ -323,6 +333,10 @@ Kriteriji prve misije: pridruživanje, pobjeda na prolazu, opremanje nagrade, ku
 | 2026-10-12 | 0.1 — hero screen | Izrađen hero screen koncept i zabilježen korisnikov budući raspored 10 equipment slotova; inventory 5 × 5 ostaje vizualni prijedlog | Vizualni pregled; bez promjena gameplaya, saveova ili Unity integracije/builda |
 | 2026-10-12 | 0.2 | Audio prebačen na MLin Audio System: cueovi kao SoundDefinition asseti, mixer kanali Music/Effects/Voice, ducking glazbe dok jedinica govori, sinkronizirani slojevi, utišavanje bez fokusa. F3 panel prebačen na uGUI. Kod refaktoriran bez promjene pravila igre | EditMode testovi i scenarij cijele misije u buildu |
 | 2026-10-12 | 0.3 | Mapa i bojište prebačeni u world space (URP 2D): slika mape (za sada generirani placeholder) s logičkim Tilemap slojem prohodnosti i podesivom veličinom ćelije (Rebuild), kamera koja prati heroja uz pan strelicama i povlačenjem, bojište kao fiksna slika s hex mrežom, animacije figura, brojevi štete i trešnja kamere. Pravila igre nepromijenjena | EditMode testovi i scenarij cijele misije u buildu |
+| 2026-10-13 | 0.7 | Victory tema nakon stingera (duži fade in i fade out); glazba mape Spirit Horse (privremena) tiša dok heroj stoji, glasnija dok jaše; heroj prelazi jedno polje u sekundi | EditMode testovi i scenarij cijele misije u buildu |
+| 2026-10-13 | 0.7 | Pauza od 1,5 s nakon svake akcije u borbi (Battle Action Seconds) | EditMode testovi i scenarij cijele misije u buildu |
+| 2026-10-13 | 0.7 | Glazba mape i grada po misiji (overworld, Market Day; underworld tema pripremljena za buduću podzemnu mapu); pauza od 2 s prije ekrana pobjede/poraza (Battle Result Seconds) | EditMode testovi i scenarij cijele misije u buildu |
+| 2026-10-13 | 0.7 | Snimljeni zvukovi za borbu (intro i petlja), poraz, kopita, mač i strijelu (zamah/pogodak/promašaj), susrete, pobjedu i legendary item; ekrani Victory, Rewards i Defeat; nasumične nagrade (uvijek gold, najviše jedan artefakt, rarity, zajamčen legendary najkasnije svake četvrte pobjede); promašaji u borbi | EditMode testovi i scenarij cijele misije u buildu |
 | 2026-10-12 | 0.4 | Full HD (1920 × 1080) kao ciljna i dizajn rezolucija; uvezena naslikana karta Map_1 (50 × 30 ćelija po 64 px) s prvim nacrtom logičkog sloja i susretima na putu; model kretanja kao u Heroes 3 (bodovi ×100, cijene po terenu, dijagonala ×1,41, šuma neprohodna); veći prozor karte; heroj na konju s animacijom; Roadie i Air Guitarist umjesto Ironbounda i Ash Archera; pozadine bojišta po susretu; stari saveovi više nisu kompatibilni | EditMode testovi i scenarij cijele misije u buildu na 1920 × 1080 |
 
 | 2026-10-12 | 0.1 — equipment art | Izrađeno 40 item ikona za 10 equipment slotova i 4 razine vizualne kvalitete; rare amulet dorađen radi kompletnog lanca; pripremljeni zasebni PNG-ovi i pregled | Vizualni pregled svih ikona; provjerene dimenzije i transparentni kutovi; bez gameplay statova ili Unity integracije/builda |

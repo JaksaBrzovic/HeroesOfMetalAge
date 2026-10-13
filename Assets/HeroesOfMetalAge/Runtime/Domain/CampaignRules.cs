@@ -277,27 +277,70 @@ namespace HeroesOfMetalAge.Domain
             return CommandResult.Ok();
         }
 
-        /// <summary>Applies battle survivors and rewards exactly once per encounter.</summary>
-        public CommandResult ApplyVictory(CampaignState campaign, EncounterDefinition encounter, IReadOnlyList<Troop> survivors)
+        /// <summary>
+        /// Rolls the spoils of a won battle without changing the campaign: gold around the encounter's amount (always at
+        /// least 1) and at most one artefact. A legendary artefact is forced when the previous victories brought none for
+        /// as long as <see cref="RewardPolicy.LegendaryGuaranteeVictories"/> allows. Artefacts the hero does not own yet
+        /// are preferred.
+        /// </summary>
+        /// <param name="victoriesWithoutLegendary">Victories in a row that brought no legendary artefact.</param>
+        public VictoryRewards RollRewards(CampaignState campaign, EncounterDefinition encounter, IRandomSource random, int victoriesWithoutLegendary)
+        {
+            RewardPolicy policy = Mission.Rewards;
+            double factor = 1 + (random.NextValue() * 2 - 1) * policy.GoldVariation;
+            int gold = (int)Math.Max(1, Math.Min(int.MaxValue, Math.Round(encounter.RewardGold * factor, MidpointRounding.ToEven)));
+
+            ArtefactRarity? rarity = null;
+            bool isLegendaryDue = policy.LegendaryGuaranteeVictories > 0 && victoriesWithoutLegendary >= policy.LegendaryGuaranteeVictories - 1;
+            if (isLegendaryDue && HasArtefactOf(ArtefactRarity.Legendary))
+            {
+                rarity = ArtefactRarity.Legendary;
+            }
+            else if (random.NextValue() < policy.ArtefactChance)
+            {
+                double roll = random.NextValue();
+                rarity = roll < policy.LegendaryChance ? ArtefactRarity.Legendary
+                    : roll < policy.LegendaryChance + policy.RareChance ? ArtefactRarity.Rare
+                    : ArtefactRarity.Common;
+            }
+
+            List<string> artefacts = new List<string>();
+            string artefactId = rarity.HasValue ? PickArtefact(campaign, rarity.Value, random) : null;
+            if (artefactId != null)
+            {
+                artefacts.Add(artefactId);
+            }
+
+            bool hasLegendary = artefactId != null && catalog.Artefact(artefactId).Rarity == ArtefactRarity.Legendary;
+            return new VictoryRewards(gold, artefacts, hasLegendary);
+        }
+
+        /// <summary>Applies battle survivors, experience and the rolled rewards exactly once per encounter.</summary>
+        public CommandResult ApplyVictory(CampaignState campaign, EncounterDefinition encounter, IReadOnlyList<Troop> survivors, VictoryRewards rewards)
         {
             if (campaign.IsCompleted(encounter.Id))
             {
                 return CommandResult.Reject("Victory has already been applied.");
             }
 
-            if ((long)campaign.Gold + encounter.RewardGold > int.MaxValue || (long)campaign.Experience + encounter.RewardExperience > int.MaxValue)
+            if (rewards.Gold < 0 || (long)campaign.Gold + rewards.Gold > int.MaxValue || (long)campaign.Experience + encounter.RewardExperience > int.MaxValue)
             {
                 return CommandResult.Reject("Reward exceeds campaign limits.");
             }
 
+            foreach (string id in rewards.ArtefactIds)
+            {
+                if (!catalog.HasArtefact(id))
+                {
+                    return CommandResult.Reject("Unknown reward artefact: " + id);
+                }
+            }
+
             campaign.ArmyData.Clear();
             campaign.ArmyData.AddRange(survivors);
-            campaign.Gold += encounter.RewardGold;
+            campaign.Gold += rewards.Gold;
             campaign.Experience += encounter.RewardExperience;
-            if (!string.IsNullOrEmpty(encounter.RewardArtefactId))
-            {
-                campaign.InventoryData.Add(encounter.RewardArtefactId);
-            }
+            campaign.InventoryData.AddRange(rewards.ArtefactIds);
 
             campaign.CompletedData.Add(encounter.Id);
             if (encounter.Kind == EncounterKind.Town)
@@ -573,6 +616,52 @@ namespace HeroesOfMetalAge.Domain
             }
 
             return bonus;
+        }
+
+        private bool HasArtefactOf(ArtefactRarity rarity)
+        {
+            foreach (ArtefactDefinition artefact in catalog.Artefacts)
+            {
+                if (artefact.Rarity == rarity)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>A random artefact of the rarity, preferring unowned ones; falls back to any rarity when none is authored.</summary>
+        private string PickArtefact(CampaignState campaign, ArtefactRarity rarity, IRandomSource random)
+        {
+            List<ArtefactDefinition> candidates = new List<ArtefactDefinition>();
+            foreach (ArtefactDefinition artefact in catalog.Artefacts)
+            {
+                if (artefact.Rarity == rarity)
+                {
+                    candidates.Add(artefact);
+                }
+            }
+
+            if (candidates.Count == 0)
+            {
+                candidates.AddRange(catalog.Artefacts);
+            }
+
+            List<ArtefactDefinition> unowned = candidates.FindAll(artefact => !Owns(campaign, artefact.Id));
+            List<ArtefactDefinition> pool = unowned.Count > 0 ? unowned : candidates;
+            if (pool.Count == 0)
+            {
+                return null;
+            }
+
+            int index = Math.Min(pool.Count - 1, (int)(random.NextValue() * pool.Count));
+            return pool[index].Id;
+        }
+
+        private static bool Owns(CampaignState campaign, string artefactId)
+        {
+            return campaign.WeaponId == artefactId || campaign.CharmId == artefactId || campaign.InventoryData.Contains(artefactId);
         }
 
         private static int StatBonus(ArtefactDefinition artefact, EquippedStat stat)

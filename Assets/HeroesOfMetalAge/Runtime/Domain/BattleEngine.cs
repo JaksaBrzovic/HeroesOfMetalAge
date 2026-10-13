@@ -326,17 +326,25 @@ namespace HeroesOfMetalAge.Domain
             return new BattleResolution(CommandResult.Reject(error), new List<DamageEvent>(), string.Empty);
         }
 
-        /// <summary>Applies one hit; a surviving melee target strikes back once per round.</summary>
+        /// <summary>Applies one strike, which may miss; a surviving melee target strikes back once per round.</summary>
         private void Strike(Combatant attacker, Combatant target, List<DamageEvent> hits, bool isRetaliation)
         {
             bool isMelee = IsAdjacent(attacker, target);
-            int attack = attacker.IsPlayer ? heroAttack : Policy.EnemyAttack;
-            int defense = target.IsPlayer ? heroDefense : Policy.EnemyDefense;
-            int damage = DamageCalculator.Calculate(catalog.Unit(attacker.UnitId), attacker.Count, attack, catalog.Unit(target.UnitId), defense,
-                target.IsDefending, isMelee, random.NextValue(), Policy);
+            // no roll at a zero chance, so battles without misses replay exactly as before
+            bool isMiss = Policy.MissChance > 0 && random.NextValue() < Policy.MissChance;
+            int damage = 0;
+            if (!isMiss)
+            {
+                int attack = attacker.IsPlayer ? heroAttack : Policy.EnemyAttack;
+                int defense = target.IsPlayer ? heroDefense : Policy.EnemyDefense;
+                damage = DamageCalculator.Calculate(catalog.Unit(attacker.UnitId), attacker.Count, attack, catalog.Unit(target.UnitId), defense,
+                    target.IsDefending, isMelee, random.NextValue(), Policy);
+            }
+
             int countBefore = target.Count;
             target.TotalHealth = Math.Max(0, target.TotalHealth - damage);
-            hits.Add(new DamageEvent(attacker.Id, target.Id, attacker.UnitId, target.UnitId, damage, countBefore - target.Count, target.IsPlayer, isRetaliation));
+            hits.Add(new DamageEvent(attacker.Id, target.Id, attacker.UnitId, target.UnitId, damage, countBefore - target.Count, target.IsPlayer, isRetaliation,
+                !isMelee, isMiss));
 
             if (!isRetaliation && isMelee && target.IsAlive && !target.HasRetaliated)
             {

@@ -14,7 +14,6 @@ namespace HeroesOfMetalAge.Presentation
     /// </summary>
     public sealed class AdventureMapView : MonoBehaviour
     {
-        private const float HERO_CELLS_PER_SECOND = 8f;
         private const int MAX_GLIDE_CELLS = 6;
         private const float ROUTE_STEP_SIZE = 0.22f;
         private const float ROUTE_END_SIZE = 0.42f;
@@ -184,20 +183,22 @@ namespace HeroesOfMetalAge.Presentation
             }
         }
 
-        // a short walk glides cell by cell; a jump (load, new mission) is shown at once
+        // a short walk glides cell by cell, one cell per travel step so the ride does not halt between cells; a jump (load,
+        // new mission) is shown at once
         private void RefreshHero()
         {
             HeroDefinition hero = Session.Catalog.Hero(Session.Campaign.HeroId);
             heroMarker.name = hero.Name;
             heroMarker.Display(context.HeroIcon, context.HeroTint, BaseColor(context.Theme.Gold), string.Empty);
             Vector3 target = CellCenter(Session.Campaign.Position);
-            if (Vector3.Distance(heroMarker.Target, target) > MAX_GLIDE_CELLS)
+            float distance = Vector3.Distance(heroMarker.Target, target);
+            if (distance > MAX_GLIDE_CELLS)
             {
                 heroMarker.Place(target);
             }
-            else
+            else if (distance > 0f)
             {
-                heroMarker.MoveTo(target, HERO_CELLS_PER_SECOND);
+                heroMarker.MoveTo(target, distance / Mathf.Max(Session.TravelStepSeconds, 0.01f));
             }
         }
 

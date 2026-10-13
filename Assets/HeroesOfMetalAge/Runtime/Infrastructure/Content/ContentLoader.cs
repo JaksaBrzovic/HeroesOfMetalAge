@@ -17,13 +17,12 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         {
             ContentValidator.ValidateReferences(units, artefacts, heroes, audio, mission);
             HashSet<string> unitIds = new HashSet<string>(units.Units.Select(entry => entry.Id));
-            HashSet<string> artefactIds = new HashSet<string>(artefacts.Artefacts.Select(entry => entry.Id));
 
             ContentValidator.ValidateUnits(units);
             ContentValidator.ValidateArtefacts(artefacts);
             ContentValidator.ValidateHeroes(heroes, unitIds, mission.ArmySlots);
             ContentValidator.ValidateAudio(audio);
-            ContentValidator.ValidateMission(mission, heroes, unitIds, artefactIds);
+            ContentValidator.ValidateMission(mission, heroes, unitIds);
 
             MissionDefinition definition = ToDefinition(mission);
             ContentValidator.ValidateMap(definition);
@@ -38,7 +37,9 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         {
             CombatPolicy combat = new CombatPolicy(mission.CombatWidth, mission.CombatHeight, mission.EnemyAttack, mission.EnemyDefense,
                 mission.DefendDamageMultiplier, mission.RangedMeleeDamageMultiplier, mission.AttackDeltaMultiplier, mission.DefenseDeltaMultiplier,
-                mission.MaximumAttackDelta, mission.MaximumDefenseDelta);
+                mission.MaximumAttackDelta, mission.MaximumDefenseDelta, mission.MissChance);
+            RewardPolicy rewards = new RewardPolicy(mission.GoldVariation, mission.ArtefactChance, mission.RareChance, mission.LegendaryChance,
+                mission.LegendaryGuaranteeVictories);
             AdventureMapAuthoring map = mission.Map;
             WorldPosition start = new WorldPosition(mission.StartingPosition.x, mission.StartingPosition.y);
             double ownedPriceMultiplier = Math.Round(mission.OwnedRecruitmentMultiplier, PRICE_MULTIPLIER_DECIMALS);
@@ -46,7 +47,7 @@ namespace HeroesOfMetalAge.Infrastructure.Content
             return new MissionDefinition(mission.Id, mission.DisplayName, mission.Description, mission.HeroId, mission.ClanId, mission.ClanName,
                 mission.ClanHeroName, mission.StartingGold, mission.ArmySlots, mission.DaysPerWeek, mission.Terrain.ToRules(),
                 ownedPriceMultiplier, map.Width, map.Height, start, map.ReadTerrain(), combat,
-                mission.Encounters.Select(entry => entry.ToDefinition()), mission.RecruitmentUnitIds);
+                mission.Encounters.Select(entry => entry.ToDefinition()), mission.RecruitmentUnitIds, rewards);
         }
     }
 }

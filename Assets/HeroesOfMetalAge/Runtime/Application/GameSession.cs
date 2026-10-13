@@ -19,16 +19,23 @@ namespace HeroesOfMetalAge.Application
         private readonly BattleAi ai = new BattleAi();
         private readonly float travelStepSeconds;
         private readonly float enemyTurnSeconds;
+        private readonly float battleActionSeconds;
+        private readonly float battleResultSeconds;
         private readonly List<WorldPosition> route = new List<WorldPosition>();
         private readonly List<string> battleLog = new List<string>();
         private int routeIndex;
+        // a session-wide streak (kept across new missions and loads, never saved) so the legendary guarantee is reachable
+        // within the short first mission while it is being tested
+        private int victoriesWithoutLegendary;
         private float timer;
         private bool isTraveling;
         private WorldPosition? plannedDestination;
 
+        /// <param name="battleActionSeconds">Pause after every battle action before the next one (either army) can act.</param>
+        /// <param name="battleResultSeconds">Pause on the battlefield after the last blow before the victory or defeat screen opens.</param>
         /// <param name="reportError">Receives unexpected failures (listener exceptions, IO); gameplay continues.</param>
         public GameSession(DefinitionCatalog catalog, ISaveStore save, IRandomSource random, float travelStepSeconds, float enemyTurnSeconds,
-            Action<Exception> reportError)
+            float battleActionSeconds, float battleResultSeconds, Action<Exception> reportError)
         {
             Catalog = catalog;
             this.save = save;
@@ -36,6 +43,8 @@ namespace HeroesOfMetalAge.Application
             this.reportError = reportError;
             this.travelStepSeconds = travelStepSeconds;
             this.enemyTurnSeconds = enemyTurnSeconds;
+            this.battleActionSeconds = battleActionSeconds;
+            this.battleResultSeconds = battleResultSeconds;
             Rules = new CampaignRules(catalog);
             World = new WorldMap(catalog.Mission);
             Campaign = Rules.NewCampaign();
@@ -65,13 +74,23 @@ namespace HeroesOfMetalAge.Application
         public long Revision { get; private set; }
         public int DamageRevision { get; private set; }
         public DamageEvent LastHit { get; private set; }
+        /// <summary>Seconds the hero takes for one map step while riding.</summary>
+        public float TravelStepSeconds => travelStepSeconds;
+        /// <summary>What the music should follow now; <see cref="PlaybackChanged"/> reports every change.</summary>
+        public PlaybackState Playback { get; private set; }
         public bool HasSave => save.Exists;
         public string SaveLocation => save.Location;
 
-        /// <summary>True while the hero travels or the enemy is taking its turn; player commands wait.</summary>
-        public bool IsBusy => isTraveling || IsEnemyTurn;
+        /// <summary>
+        /// True while the hero travels, the enemy is taking its turn, the pause after a battle action runs or a decided battle
+        /// waits for its result screen; player commands wait.
+        /// </summary>
+        public bool IsBusy => isTraveling || IsEnemyTurn || IsBattlePaused || IsBattleResultPending;
 
         private bool IsEnemyTurn => Screen == GameScreen.Battle && Dialog == DialogKind.None && Battle != null && Battle.Active != null && !Battle.Active.IsPlayer;
+        private bool IsBattlePaused => Screen == GameScreen.Battle && Dialog == DialogKind.None && timer > 0;
+        // the battle is decided (and a victory already applied) but the battlefield stays on screen for the result delay
+        private bool IsBattleResultPending => Screen == GameScreen.Battle && Dialog == DialogKind.None && Battle != null && Battle.Outcome != BattleOutcome.InProgress;
         private bool CanRunCampaignCommand => !IsBusy && Screen != GameScreen.Battle && Dialog == DialogKind.None;
 
         public void Notify(string message)
@@ -89,15 +108,26 @@ namespace HeroesOfMetalAge.Application
                 return;
             }
 
+            float previous = timer;
             timer -= Math.Max(0, deltaTime);
             if (timer > 0)
             {
                 return;
             }
 
+            // the pause after a battle action ended: the player's stack can act again, so views must redraw
+            if (previous > 0 && Screen == GameScreen.Battle)
+            {
+                Revision++;
+            }
+
             if (isTraveling)
             {
                 TravelStep();
+            }
+            else if (IsBattleResultPending)
+            {
+                ShowBattleResult();
             }
             else if (Screen == GameScreen.Battle && Battle != null && Battle.Outcome == BattleOutcome.InProgress && !Battle.Active.IsPlayer)
             {
@@ -125,6 +155,7 @@ namespace HeroesOfMetalAge.Application
             }
 
             Screen = Screen == GameScreen.Hero ? HomeScreen() : GameScreen.Hero;
+            RefreshPlayback();
         }
 
         /// <summary>Closes the current dialog or overlay screen, one level at a time.</summary>
@@ -143,6 +174,7 @@ namespace HeroesOfMetalAge.Application
             else if (Screen == GameScreen.Hero)
             {
                 Screen = HomeScreen();
+                RefreshPlayback();
             }
             else if (Screen == GameScreen.Town)
             {
@@ -165,6 +197,7 @@ namespace HeroesOfMetalAge.Application
             }
 
             Screen = GameScreen.Adventure;
+            RefreshPlayback();
         }
         #endregion
 
@@ -228,7 +261,7 @@ namespace HeroesOfMetalAge.Application
             isTraveling = true;
             routeIndex = 0;
             timer = 0;
-            PublishPlayback(true, false);
+            RefreshPlayback();
         }
 
         public void EndDay()
@@ -268,7 +301,7 @@ namespace HeroesOfMetalAge.Application
             {
                 Encounter = encounter;
                 Dialog = encounter.Kind == EncounterKind.Friendly ? DialogKind.Friendly : DialogKind.Hostile;
-                Cue(encounter.Kind == EncounterKind.Friendly ? SoundCue.Friendly : SoundCue.Enemy);
+                Cue(encounter.Kind == EncounterKind.Friendly ? SoundCue.FriendlyEncounter : SoundCue.EnemyEncounter);
                 FinishTravel();
                 return;
             }
@@ -293,7 +326,7 @@ namespace HeroesOfMetalAge.Application
             isTraveling = false;
             route.Clear();
             plannedDestination = null;
-            PublishPlayback(false, false);
+            RefreshPlayback();
             Save(false);
         }
         #endregion
@@ -406,9 +439,9 @@ namespace HeroesOfMetalAge.Application
             battleLog.Clear();
             Screen = GameScreen.Battle;
             Dialog = DialogKind.None;
-            timer = enemyTurnSeconds;
-            PublishPlayback(false, true);
-            Cue(SoundCue.BattleIntro);
+            // the player may act at once; an enemy that starts waits for its turn delay
+            timer = Battle.Active.IsPlayer ? 0 : enemyTurnSeconds;
+            RefreshPlayback();
             CueActiveVoice();
         }
 
@@ -421,10 +454,28 @@ namespace HeroesOfMetalAge.Application
             }
         }
 
+        /// <summary>Moves from the victory screen to the rewards screen.</summary>
         public void ContinueVictory()
         {
             Revision++;
             if (Dialog != DialogKind.Victory)
+            {
+                return;
+            }
+
+            Dialog = DialogKind.Rewards;
+            Cue(SoundCue.Gold);
+            if (Victory.HasLegendary)
+            {
+                Cue(SoundCue.LegendaryItem);
+            }
+        }
+
+        /// <summary>Closes the rewards screen; the rewards were already applied when the battle was won.</summary>
+        public void ContinueRewards()
+        {
+            Revision++;
+            if (Dialog != DialogKind.Rewards)
             {
                 return;
             }
@@ -447,6 +498,7 @@ namespace HeroesOfMetalAge.Application
             Dialog = DialogKind.None;
             Screen = Encounter.Kind == EncounterKind.Town ? GameScreen.Town : GameScreen.Adventure;
             Battle = null;
+            RefreshPlayback();
         }
 
         private void ResolveBattleAction(BattleAction action, bool isPlayer)
@@ -464,44 +516,67 @@ namespace HeroesOfMetalAge.Application
 
             foreach (DamageEvent hit in resolution.Hits)
             {
-                string verb = hit.IsRetaliation ? " retaliates" : " strikes";
-                AddLog(Catalog.Unit(hit.AttackerId).Name + verb + ": " + hit.Damage + " damage / " + hit.Casualties + " lost.");
+                string verb = hit.IsRetaliation ? " retaliates" : hit.IsRanged ? " shoots" : " strikes";
+                string result = hit.IsMiss ? "miss." : hit.Damage + " damage / " + hit.Casualties + " lost.";
+                AddLog(Catalog.Unit(hit.AttackerId).Name + verb + ": " + result);
                 LastHit = hit;
                 DamageRevision++;
                 Publish(DamageResolved, hit);
             }
 
-            if (Battle.Outcome == BattleOutcome.Defeat)
-            {
-                Dialog = DialogKind.Defeat;
-                PublishPlayback(false, false);
-                Cue(SoundCue.Defeat);
-                return;
-            }
-
             if (Battle.Outcome == BattleOutcome.Victory)
             {
                 ApplyVictory();
+            }
+
+            // a decided battle opens its result screen after the delay (see Tick)
+            timer = Battle.Outcome == BattleOutcome.InProgress
+                ? Math.Max(battleActionSeconds, Battle.Active.IsPlayer ? 0 : enemyTurnSeconds)
+                : battleResultSeconds;
+            if (Battle.Outcome != BattleOutcome.InProgress)
+            {
                 return;
             }
 
-            timer = enemyTurnSeconds;
             CueActiveVoice();
         }
 
         private void ApplyVictory()
         {
             int oldLevel = Rules.Level(Campaign);
-            if (!Accept(Rules.ApplyVictory(Campaign, Encounter, Battle.Survivors())))
+            VictoryRewards rewards = Rules.RollRewards(Campaign, Encounter, random, victoriesWithoutLegendary);
+            if (!Accept(Rules.ApplyVictory(Campaign, Encounter, Battle.Survivors(), rewards)))
             {
                 return;
             }
 
-            Victory = new VictorySummary(Encounter, Battle.Losses, Rules.Level(Campaign) > oldLevel);
+            victoriesWithoutLegendary = rewards.HasLegendary ? 0 : victoriesWithoutLegendary + 1;
+            Victory = new VictorySummary(Encounter, rewards, Battle.Losses, Rules.Level(Campaign) > oldLevel);
+        }
+
+        /// <summary>Leaves the decided battlefield for the victory or defeat screen.</summary>
+        private void ShowBattleResult()
+        {
+            Revision++;
+            if (Battle.Outcome == BattleOutcome.Defeat)
+            {
+                Dialog = DialogKind.Defeat;
+                RefreshPlayback();
+                return;
+            }
+
             Screen = Encounter.Kind == EncounterKind.Town ? GameScreen.Town : GameScreen.Adventure;
+            // a rejected victory was already reported by Accept; leave the battle without a result screen
+            if (Victory == null)
+            {
+                RefreshPlayback();
+                return;
+            }
+
             Dialog = DialogKind.Victory;
-            PublishPlayback(false, false);
+            // the stinger comes first so the audio knows the victory music follows instead of the map or town music
             Cue(SoundCue.Victory);
+            RefreshPlayback();
             Save(false);
         }
 
@@ -569,7 +644,7 @@ namespace HeroesOfMetalAge.Application
                 ResetTransientState();
                 Screen = HomeScreen();
                 Dialog = DialogKind.None;
-                PublishPlayback(false, false);
+                RefreshPlayback();
                 Notify("Campaign loaded.");
             }
             catch (Exception error)
@@ -588,7 +663,7 @@ namespace HeroesOfMetalAge.Application
             Campaign = Rules.NewCampaign();
             Screen = GameScreen.Adventure;
             Dialog = DialogKind.Intro;
-            PublishPlayback(false, false);
+            RefreshPlayback();
         }
         #endregion
 
@@ -636,6 +711,7 @@ namespace HeroesOfMetalAge.Application
         {
             Screen = GameScreen.Town;
             Dialog = DialogKind.None;
+            RefreshPlayback();
             Cue(SoundCue.Friendly);
         }
 
@@ -670,10 +746,21 @@ namespace HeroesOfMetalAge.Application
             Publish(UnitVoiceRequested, unitId);
         }
 
-        private void PublishPlayback(bool isRiding, bool isFighting)
+        /// <summary>Publishes the playback state derived from travel, screen and dialog when it changed.</summary>
+        private void RefreshPlayback()
         {
             Revision++;
-            Publish(PlaybackChanged, new PlaybackState(isRiding, isFighting));
+            // the hero screen belongs to where the hero stands, so opening it keeps the town or map music
+            bool isInTown = Screen == GameScreen.Town || (Screen == GameScreen.Hero && HomeScreen() == GameScreen.Town);
+            PlaybackState state = new PlaybackState(isTraveling, Screen == GameScreen.Battle && Dialog == DialogKind.None, Dialog == DialogKind.Defeat,
+                isInTown);
+            if (state.Equals(Playback))
+            {
+                return;
+            }
+
+            Playback = state;
+            Publish(PlaybackChanged, state);
         }
 
         // a failing listener must not stop the others or undo an already committed command

@@ -1,4 +1,4 @@
-# Heroes of Metal Age — prototype 0.6
+# Heroes of Metal Age — prototype 0.7
 
 Unity **6000.3.26f1**, Windows x64, Mono, Universal Render Pipeline (2D Renderer). An original sound-driven turn-based strategy prototype inspired by classic adventure-map and tactical-combat games. Target resolution: Full HD (1920x1080, 16:9); the UI is designed at 1920x1080 and scales to other sizes.
 
@@ -27,26 +27,28 @@ Campaign saves are stored in `%USERPROFILE%/AppData/LocalLow/Iron Oath Studio/He
 ./Tools/SmokeTest.ps1
 ```
 
-`Build.ps1` runs the EditMode tests (`Assets/HeroesOfMetalAge/Tests/EditMode`, results in `Reports/editmode-tests.xml`), regenerates the bootstrap scene and writes the Windows development player. `SmokeTest.ps1` runs the built player with isolated campaign data, plays the whole mission including victory, defeat and retry, and captures the world, battle, hero, town, options, development-panel and terrain-overlay screens into `Reports/`. The tests also run from Unity's Test Runner window.
+`Build.ps1` runs the EditMode tests (`Assets/HeroesOfMetalAge/Tests/EditMode`, results in `Reports/editmode-tests.xml`), regenerates the bootstrap scene and writes the Windows development player. `SmokeTest.ps1` runs the built player with isolated campaign data, plays the whole mission including the victory, rewards and defeat screens and a retry, and captures the world, battle, victory, rewards, defeat, hero, town, options, development-panel and terrain-overlay screens into `Reports/`. The tests also run from Unity's Test Runner window.
 
 ## Audio
 
 Audio runs on the [MLin Audio System](https://github.com/JaksaBrzovic/MLinAudioSystem) package (`com.manalink.audiosystem`, pinned to a release tag in `Packages/manifest.json`).
 
-- `Content/Databases/AudioDatabase.asset` has one named field per game event (Victory, Heavy Hit, Click…) and per music layer, each pointing to a `SoundDefinition` in `Content/Audio/Sounds/`. Unit voices are assigned on each unit in `UnitDatabase.asset`. Replace clips, add variations or change volume, pitch, priority, instance limit or cooldown on the SoundDefinition; no code changes.
+- `Content/Databases/AudioDatabase.asset` has one named field per game event (Victory, Sword Hit, Arrow Miss, Legendary Item…), per music layer, for the battle and defeat music and for the riding loop, each pointing to a `SoundDefinition` in `Content/Audio/Sounds/`. Unit voices are assigned on each unit in `UnitDatabase.asset`. Replace clips, add variations or change volume, pitch, priority, instance limit or cooldown on the SoundDefinition; no code changes.
 - `Content/Audio/GameAudioSettings.asset` and `GameMixer.mixer` hold the Master/Music/Effects/Voice channels, the voice-over-music ducking rule and focus muting.
-- The ambient, gallop and battle layers start sample-aligned and are mixed by travel and combat state (`Layer mix` on the AudioDatabase).
+- The mission's map music plays on the adventure map and its town music in the town (`Music` on `AshenPass.asset`); the ambient and gallop layers lead only for a mission without map music (`Layer mix` on the AudioDatabase). The battle music (intro, then loop) plays while fighting and the defeat theme on the defeat screen; the hoofbeat loop plays while the hero rides.
+- Strikes play a sword swing or an arrow release, then a hit or a miss (`Strikes` timing on the AudioDatabase); heavy hits add the heavy-hit layer.
+- Recorded sounds and their licences are listed in `Docs/AUDIO_CREDITS.md`; CC-BY sounds must be credited.
 
 ## Edit content without code
 
 Open `Assets/HeroesOfMetalAge/Content/Databases/` in Unity and select:
 
 - `UnitDatabase.asset`: health, damage, attack/defense, speed, price, weekly growth, portrait, walk cycle and voice sound for each unit.
-- `ArtefactDatabase.asset`: name, description, icon, equipment slot and attack/defense/speed bonuses.
+- `ArtefactDatabase.asset`: name, description, icon, equipment slot, rarity (common, rare, legendary) and attack/defense/speed bonuses.
 - `HeroDatabase.asset`: hero name, portrait, map ride cycle, description, faction/class, base stats, movement points per day, progression and starting army.
 - `TerrainDatabase.asset`: which terrain is passable, the movement cost of each and the diagonal step cost.
-- `AudioDatabase.asset`: the sound for each game event and music layer, the layer mix and the heavy-hit threshold (see Audio above).
-- `AshenPass.asset`: the map prefab, start and encounter cells, encounter armies/rewards, starting gold, town/faction, prices, the default and per-encounter battlefield images, combat tuning and pacing.
+- `AudioDatabase.asset`: the sound for each game event, music layer and music track, the riding loop, the layer mix, strike timing and the heavy-hit threshold (see Audio above).
+- `AshenPass.asset`: the map prefab, start and encounter cells, encounter armies, experience and typical gold, starting gold, town/faction, prices, the default and per-encounter battlefield images, combat tuning (including the miss chance), battle reward rolls and pacing (travel step, enemy turn, the pause after every battle action and the pause before the victory/defeat screen).
 
 Stable IDs are used by saves and cross-references. Reorder entries freely, but do not rename/remove IDs without migrating their references/saves. Stop and restart Play Mode or rebuild the player to pick up edited definitions. In-game New Mission uses the existing catalog snapshot. Portraits/icons are optional and use the placeholder art from `Content/UI/UiTheme.asset` when unassigned; the theme also holds the hex colours.
 
@@ -84,9 +86,9 @@ The root retains the legacy EventSystem input module. CanvasScaler Expand fits t
 
 ## Current scope and limitations
 
-Implemented: square adventure grid, diagonal pathfinding without corner cutting, movement budget, days/weeks, friendly joining, blocking hostile encounter, hex tactical combat, retaliation and ranged troops, simple enemy AI, victory/defeat panels, XP/levels, gold/rewards, equipped artifacts and inventory, neutral/owned town recruitment, two army rows, weekly growth, town conquest, save/load and sound-reactive playback with ducking and focus muting.
+Implemented: square adventure grid, diagonal pathfinding without corner cutting, movement budget, days/weeks, friendly joining, blocking hostile encounter, hex tactical combat, retaliation and ranged troops, misses, simple enemy AI, victory/rewards/defeat screens, XP/levels, rolled gold and artefact rewards with a legendary guarantee, equipped artifacts and inventory, neutral/owned town recruitment, two army rows, weekly growth, town conquest, save/load and sound-reactive playback with ducking and focus muting.
 
-Art is original procedural placeholder art: the map and battlefield images are generated stand-ins until painted images are imported. Music is original synthesized ambient and distorted metal-style riffs, not recorded guitars. Creature calls are offline Microsoft David speech placeholders. The final sound experience needs authored guitar stems, performance, mixing and user listening tests. Town construction/investment, multiple playable heroes, negotiation, spells, campaign selection, multiplayer and drag/drop partial stack splitting are outside this first slice.
+Art is original procedural placeholder art: the map and battlefield images are generated stand-ins until painted images are imported. The ambient and gallop layers and some short cues are original synthesized placeholders; the battle and defeat music, hoofbeats, strikes and encounter/victory/legendary stingers are free recorded sounds (see `Docs/AUDIO_CREDITS.md`). Creature calls are offline Microsoft David speech placeholders. The final sound experience needs authored guitar stems, performance, mixing and user listening tests. Town construction/investment, multiple playable heroes, negotiation, spells, campaign selection, multiplayer and drag/drop partial stack splitting are outside this first slice.
 
 All interface text is currently English. The game is not an asset or interface copy of Heroes of Might and Magic III.
 

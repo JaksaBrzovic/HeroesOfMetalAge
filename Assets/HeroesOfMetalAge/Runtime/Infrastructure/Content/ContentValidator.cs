@@ -58,6 +58,7 @@ namespace HeroesOfMetalAge.Infrastructure.Content
             foreach (ArtefactEntry artefact in artefacts.Artefacts)
             {
                 bool isValid = Enum.IsDefined(typeof(EquipmentSlot), artefact.Slot)
+                    && Enum.IsDefined(typeof(ArtefactRarity), artefact.Rarity)
                     && InRange(artefact.AttackBonus, 0, MAX_STAT)
                     && InRange(artefact.DefenseBonus, 0, MAX_STAT)
                     && InRange(artefact.SpeedBonus, 0, MAX_SPEED);
@@ -94,10 +95,17 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                 SoundDefinition sound = audio.Layer(layer);
                 Require(sound != null && sound.HasClips && sound.Loop, "Music layer must have looping clips: " + layer);
             }
+
+            foreach (MusicTrack track in new[] { MusicTrack.Battle, MusicTrack.Victory, MusicTrack.Defeat })
+            {
+                SoundDefinition sound = audio.Music(track);
+                Require(sound != null && sound.HasClips, "Missing music or clips for track " + track);
+            }
+
+            Require(audio.RidingLoop != null && audio.RidingLoop.HasClips && audio.RidingLoop.Loop, "The riding loop must have looping clips.");
         }
 
-        public static void ValidateMission(MissionSettingsScriptableObject mission, HeroDataBaseScriptableObject heroes, HashSet<string> unitIds,
-            HashSet<string> artefactIds)
+        public static void ValidateMission(MissionSettingsScriptableObject mission, HeroDataBaseScriptableObject heroes, HashSet<string> unitIds)
         {
             TerrainDatabaseScriptableObject terrain = mission.Terrain;
             Require(terrain != null && AllPresent(terrain.Terrains), "The mission has no terrain database.");
@@ -131,9 +139,9 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                 bool isInside = InRange(encounter.Position.x, 0, map.Width - 1) && InRange(encounter.Position.y, 0, map.Height - 1);
                 Require(isInside, "Encounter outside map: " + encounter.Id);
                 ValidateArmy(encounter.Army, unitIds, mission.ArmySlots, "encounter " + encounter.Id);
-                bool isValidReward = encounter.RewardGold >= 0
-                    && encounter.RewardExperience >= 0
-                    && (string.IsNullOrEmpty(encounter.RewardArtefactId) || artefactIds.Contains(encounter.RewardArtefactId));
+                // every battle pays some gold; joining a friendly encounter is not a battle
+                bool isValidReward = encounter.RewardExperience >= 0
+                    && (encounter.Kind == EncounterKind.Friendly ? encounter.RewardGold >= 0 : encounter.RewardGold > 0);
                 Require(isValidReward, "Invalid reward: " + encounter.Id);
             }
 
@@ -144,6 +152,10 @@ namespace HeroesOfMetalAge.Infrastructure.Content
 
             Require(mission.Encounters.Select(encounter => encounter.Position).Distinct().Count() == mission.Encounters.Count, "Overlapping encounters.");
             ValidateCombat(mission);
+            ValidateRewards(mission);
+            // the map music clip may be a local file kept out of version control; without it the layers play instead
+            Require(mission.MapMusic == null || mission.MapMusic.Loop, "The mission's map music must loop.");
+            Require(mission.TownMusic == null || (mission.TownMusic.HasClips && mission.TownMusic.Loop), "The mission's town music must have looping clips.");
         }
 
         public static void ValidateMap(MissionDefinition definition)
@@ -171,9 +183,26 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                 && mission.RangedMeleeDamageMultiplier > 0
                 && mission.RangedMeleeDamageMultiplier <= 1
                 && mission.MaximumDefenseDelta * mission.DefenseDeltaMultiplier < 1
+                && mission.MissChance >= 0
+                && mission.MissChance < 1
                 && mission.TravelStepSeconds > 0
-                && mission.EnemyTurnSeconds > 0;
+                && mission.EnemyTurnSeconds > 0
+                && mission.BattleActionSeconds >= 0
+                && mission.BattleResultSeconds >= 0;
             Require(isValid, "Invalid combat/pacing settings.");
+        }
+
+        private static void ValidateRewards(MissionSettingsScriptableObject mission)
+        {
+            bool isValid = mission.GoldVariation >= 0
+                && mission.GoldVariation < 1
+                && mission.ArtefactChance >= 0
+                && mission.ArtefactChance <= 1
+                && mission.RareChance >= 0
+                && mission.LegendaryChance >= 0
+                && mission.RareChance + mission.LegendaryChance <= 1
+                && mission.LegendaryGuaranteeVictories >= 0;
+            Require(isValid, "Invalid battle reward settings.");
         }
 
         private static void ValidateArmy(IReadOnlyList<ArmyEntry> army, HashSet<string> unitIds, int slots, string context)

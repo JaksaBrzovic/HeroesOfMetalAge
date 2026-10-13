@@ -96,7 +96,7 @@ namespace HeroesOfMetalAge.Presentation
                 int index = i;
                 string id = Campaign.Inventory[i];
                 ArtefactDefinition artefact = Catalog.Artefact(id);
-                item.Display(artefact.Name, BonusText(artefact), string.Empty, Context.ArtefactIcon(id), Context.ArtefactTint(id), true);
+                item.Display(artefact.Name, ArtefactLabels.Describe(artefact), string.Empty, Context.ArtefactIcon(id), Context.ArtefactTint(id), true);
                 item.Bind(() => Session.Equip(index));
             }
         }
@@ -110,13 +110,8 @@ namespace HeroesOfMetalAge.Presentation
             }
 
             ArtefactDefinition artefact = Catalog.Artefact(artefactId);
-            slot.Display(slotName + " / " + artefact.Name, BonusText(artefact), string.Empty, Context.ArtefactIcon(artefactId),
+            slot.Display(slotName + " / " + artefact.Name, ArtefactLabels.Describe(artefact), string.Empty, Context.ArtefactIcon(artefactId),
                 Context.ArtefactTint(artefactId), true);
-        }
-
-        private static string BonusText(ArtefactDefinition artefact)
-        {
-            return "+" + artefact.AttackBonus + " ATTACK / +" + artefact.DefenseBonus + " DEFENSE / +" + artefact.SpeedBonus + " SPEED";
         }
     }
 }

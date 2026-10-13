@@ -143,6 +143,31 @@ namespace HeroesOfMetalAge.Tests
                 SoundDefinition sound = audio.Layer(layer);
                 Assert.IsTrue(sound != null && sound.Loop && sound.OutputGroup != null && sound.OutputGroup.name == GameAudio.MUSIC_CHANNEL, layer + " must loop on Music");
             }
+
+            foreach (SoundDefinition sound in new[] { audio.Music(MusicTrack.Battle), audio.Music(MusicTrack.Victory), audio.Music(MusicTrack.Defeat), mission.TownMusic })
+            {
+                Assert.IsTrue(sound != null && sound.HasClips && sound.OutputGroup != null && sound.OutputGroup.name == GameAudio.MUSIC_CHANNEL, sound + " on Music");
+            }
+
+            // the map music clip is a local file kept out of version control, so only its definition is required here
+            Assert.IsTrue(mission.MapMusic != null && mission.MapMusic.OutputGroup != null && mission.MapMusic.OutputGroup.name == GameAudio.MUSIC_CHANNEL,
+                "map music on Music");
+            Assert.IsTrue(mission.MapMusic.Loop && mission.TownMusic.Loop, "map and town music loop");
+
+            SoundDefinition battle = audio.Music(MusicTrack.Battle);
+            Assert.IsTrue(battle.Loop && battle.IntroClip != null, "battle music plays its intro once, then loops");
+            Assert.IsTrue(audio.RidingLoop != null && audio.RidingLoop.Loop && audio.RidingLoop.OutputGroup.name == GameAudio.EFFECTS_CHANNEL,
+                "riding loop loops on Effects");
+        }
+
+        [Test]
+        public void MissingMusicTrack_IsRejected()
+        {
+            UnityEditor.SerializedObject serialized = new UnityEditor.SerializedObject(audio);
+            serialized.FindProperty("defeatMusic").objectReferenceValue = null;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            Assert.Throws<InvalidOperationException>(() => Load());
         }
 
         [Test]
@@ -193,7 +218,7 @@ namespace HeroesOfMetalAge.Tests
             {
                 GameSession session = CampaignTestUtility.NewSession(Load(), new MemorySaveStore());
                 GameAudio adapter = host.AddComponent<GameAudio>();
-                adapter.Initialize(audio, units, session);
+                adapter.Initialize(audio, units, mission, session);
 
                 Assert.AreSame(replacement, adapter.VoiceFor(unit.Id));
             }
@@ -201,6 +226,58 @@ namespace HeroesOfMetalAge.Tests
             {
                 Object.DestroyImmediate(host);
             }
+        }
+
+        [Test]
+        public void Strikes_PlaySwingThenHitOrMiss()
+        {
+            GameObject host = new GameObject("audio adapter test");
+            try
+            {
+                GameSession session = CampaignTestUtility.NewSession(Load(), new MemorySaveStore());
+                GameAudio adapter = host.AddComponent<GameAudio>();
+                adapter.Initialize(audio, units, mission, session);
+                int heavy = audio.HeavyHitThreshold;
+
+                CollectionAssert.AreEqual(new[] { SoundCue.SwordSwing, SoundCue.SwordHit }, adapter.StrikeCues(Strike(1, false, false)));
+                CollectionAssert.AreEqual(new[] { SoundCue.SwordSwing, SoundCue.SwordMiss }, adapter.StrikeCues(Strike(0, false, true)));
+                CollectionAssert.AreEqual(new[] { SoundCue.ArrowFire, SoundCue.ArrowHit, SoundCue.HeavyHit }, adapter.StrikeCues(Strike(heavy, true, false)));
+                CollectionAssert.AreEqual(new[] { SoundCue.ArrowFire, SoundCue.ArrowMiss }, adapter.StrikeCues(Strike(0, true, true)));
+            }
+            finally
+            {
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        [Test]
+        public void MusicFollowsTheMapTownBattleAndDefeat()
+        {
+            GameObject host = new GameObject("audio adapter test");
+            try
+            {
+                GameSession session = CampaignTestUtility.NewSession(Load(), new MemorySaveStore());
+                GameAudio adapter = host.AddComponent<GameAudio>();
+                adapter.Initialize(audio, units, mission, session);
+                MusicTrack? map = mission.MapMusic.HasClips ? MusicTrack.Map : (MusicTrack?)null;
+                Assert.AreEqual(map, adapter.CurrentTrack, "the adventure map starts with the map music (the layers when its local clip is missing)");
+
+                session.StartMission();
+                session.DebugTown();
+                Assert.AreEqual(MusicTrack.Town, adapter.CurrentTrack, "the town screen plays the town music");
+
+                session.LeaveTown();
+                Assert.AreEqual(map, adapter.CurrentTrack, "leaving the town returns to the map music");
+            }
+            finally
+            {
+                Object.DestroyImmediate(host);
+            }
+        }
+
+        private static DamageEvent Strike(int damage, bool isRanged, bool isMiss)
+        {
+            return new DamageEvent(0, 1, "a", "b", damage, 0, false, false, isRanged, isMiss);
         }
 
         private DefinitionCatalog Load()

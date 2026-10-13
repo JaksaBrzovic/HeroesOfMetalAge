@@ -13,3 +13,7 @@
 /*.pidb
 /*.user
 /*.tmp
+
+# copyrighted placeholder music, kept local only (see Docs/AUDIO_CREDITS.md)
+/Assets/HeroesOfMetalAge/Content/Audio/Music/spirit_horse_loop.wav
+/Assets/HeroesOfMetalAge/Content/Audio/Music/spirit_horse_loop.wav.meta

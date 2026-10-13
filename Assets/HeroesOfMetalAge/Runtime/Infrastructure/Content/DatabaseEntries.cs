@@ -96,6 +96,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [SerializeField] private string description;
         [SerializeField] private Sprite icon;
         [SerializeField] private EquipmentSlot slot;
+        [Tooltip("How rarely the artefact drops as a battle reward.")]
+        [SerializeField] private ArtefactRarity rarity;
         [Min(0)]
         [SerializeField] private int attackBonus;
         [Min(0)]
@@ -106,6 +108,7 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public string Id => id;
         public Sprite Icon => icon;
         public EquipmentSlot Slot => slot;
+        public ArtefactRarity Rarity => rarity;
 
         public int AttackBonus
         {
@@ -123,7 +126,7 @@ namespace HeroesOfMetalAge.Infrastructure.Content
 
         public ArtefactDefinition ToDefinition()
         {
-            return new ArtefactDefinition(id, displayName, description, slot, attackBonus, defenseBonus, speedBonus);
+            return new ArtefactDefinition(id, displayName, description, slot, rarity, attackBonus, defenseBonus, speedBonus);
         }
     }
 
@@ -223,10 +226,9 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [SerializeField] private List<ArmyEntry> army = new List<ArmyEntry>();
         [Min(0)]
         [SerializeField] private int rewardExperience;
+        [Tooltip("Typical gold for winning; the mission's reward settings vary it and roll the artefacts.")]
         [Min(0)]
         [SerializeField] private int rewardGold;
-        [Tooltip("Artefact granted on victory; leave empty for none.")]
-        [SerializeField] private string rewardArtefactId;
         [Tooltip("Battlefield image for this encounter; empty uses the mission's.")]
         [SerializeField] private Sprite battleBackground;
 
@@ -242,13 +244,12 @@ namespace HeroesOfMetalAge.Infrastructure.Content
 
         public int RewardExperience => rewardExperience;
         public int RewardGold => rewardGold;
-        public string RewardArtefactId => rewardArtefactId;
         public Sprite BattleBackground => battleBackground;
 
         public EncounterDefinition ToDefinition()
         {
             return new EncounterDefinition(id, kind, new WorldPosition(position.x, position.y), displayName, description,
-                army.Select(entry => entry.ToTroop()), rewardExperience, rewardGold, rewardArtefactId);
+                army.Select(entry => entry.ToTroop()), rewardExperience, rewardGold);
         }
     }
 }

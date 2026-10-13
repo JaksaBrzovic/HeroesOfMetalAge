@@ -15,23 +15,38 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: 43f3212da22a77e4283a4ea7a4656766, type: 2}
   ambientLayer: {fileID: 11400000, guid: 0558bc0577e411b458756a9711ffbc74, type: 2}
   gallopLayer: {fileID: 11400000, guid: 91270dffa9e70ff48b639c972615da1b, type: 2}
-  battleLayer: {fileID: 11400000, guid: 9884fcf3566611043ac3771447e153ec, type: 2}
+  battleMusic: {fileID: 11400000, guid: 9884fcf3566611043ac3771447e153ec, type: 2}
+  victoryMusic: {fileID: 11400000, guid: 74e42a23e2448b747be1acba2b4f0603, type: 2}
+  victoryMusicDelaySeconds: 1.5
+  victoryMusicFadeInSeconds: 2.5
+  victoryMusicFadeOutSeconds: 4
+  defeatMusic: {fileID: 11400000, guid: 3a2b4d44482a08842afcc88833e67f8c, type: 2}
+  mapMusicIdleLevel: 0.35
+  mapMusicRideFadeSeconds: 0.4
+  ridingLoop: {fileID: 11400000, guid: 1abef8be60f1c614aa1720afcdd109ae, type: 2}
+  ridingFadeSeconds: 0.25
   friendly: {fileID: 11400000, guid: ceae94e170136804283c6b5d48555775, type: 2}
-  enemy: {fileID: 11400000, guid: 249a5c9da1ebb1048b11b1af33916140, type: 2}
-  battleIntro: {fileID: 11400000, guid: 380ab4920412196439cdf51f74108509, type: 2}
+  friendlyEncounter: {fileID: 11400000, guid: c98b342b4cd146143a904391b62c3060, type: 2}
+  enemyEncounter: {fileID: 11400000, guid: 249a5c9da1ebb1048b11b1af33916140, type: 2}
   victory: {fileID: 11400000, guid: e1d4a41522ce3d547b79e73f7bae04b6, type: 2}
-  defeat: {fileID: 11400000, guid: 3a2b4d44482a08842afcc88833e67f8c, type: 2}
   levelUp: {fileID: 11400000, guid: 95c12a14b14591d438f9abf26fdbf8ed, type: 2}
   gold: {fileID: 11400000, guid: f6252218b845ad442bac0912f901d183, type: 2}
+  legendaryItem: {fileID: 11400000, guid: 98e177ce77ee95f4ebbb51a1dd35a1e6, type: 2}
   equip: {fileID: 11400000, guid: d73a09ccd0d721b4a81a31c8f256e17c, type: 2}
   click: {fileID: 11400000, guid: 9ce26dbaa004d064b81614bbde94d07a, type: 2}
-  hit: {fileID: 11400000, guid: d234d441c5d06874cab8b17e9b7b3108, type: 2}
+  swordSwing: {fileID: 11400000, guid: 7bb6718beb4b4254fafade334c783d2f, type: 2}
+  swordHit: {fileID: 11400000, guid: 1472276dcf6027b489cbd2bd98c15965, type: 2}
+  swordMiss: {fileID: 11400000, guid: 59a0016fff061694381cc4f73821d482, type: 2}
+  arrowFire: {fileID: 11400000, guid: 7c66f24e0538d4a418544f2d6b731e92, type: 2}
+  arrowHit: {fileID: 11400000, guid: 983c4f0bf35c51b45ba406d8b076ec13, type: 2}
+  arrowMiss: {fileID: 11400000, guid: 9f3714fd1ce8a3443920abb5cd3e1c94, type: 2}
   heavyHit: {fileID: 11400000, guid: 8e4c600edf289b14896117a7482c244e, type: 2}
-  hurt: {fileID: 11400000, guid: f6815c466c5ab3343889882feca4cfe0, type: 2}
   heavyHitThreshold: 45
+  meleeImpactSeconds: 0.12
+  rangedImpactSeconds: 0.3
+  strikeSpacingSeconds: 0.45
   ambientAtRest: 0.7
   ambientWhileRiding: 0.4
-  ambientInBattle: 0.17
+  ambientUnderMusic: 0
   gallopMix: 0.72
-  battleMix: 0.85
   layerFadeSeconds: 0.6

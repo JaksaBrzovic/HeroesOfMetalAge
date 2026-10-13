@@ -92,10 +92,11 @@ namespace HeroesOfMetalAge.Bootstrap
             string saveFile = isSmokeTest ? SMOKE_TEST_CAMPAIGN_FILE : CAMPAIGN_FILE;
             JsonCampaignStore store = new JsonCampaignStore(Path.Combine(UnityEngine.Application.persistentDataPath, saveFile));
             IRandomSource random = new SeededRandomSource(isSmokeTest ? SMOKE_TEST_SEED : Environment.TickCount);
-            GameSession session = new GameSession(catalog, store, random, mission.TravelStepSeconds, mission.EnemyTurnSeconds, Debug.LogException);
+            GameSession session = new GameSession(catalog, store, random, mission.TravelStepSeconds, mission.EnemyTurnSeconds,
+                mission.BattleActionSeconds, mission.BattleResultSeconds, Debug.LogException);
 
             GameAudio audio = gameObject.AddComponent<GameAudio>();
-            audio.Initialize(audioDatabase, units, session);
+            audio.Initialize(audioDatabase, units, mission, session);
 
             PresentationAssets media = CreatePresentationAssets(units, artefacts, heroes, mission);
             GameHud hud = Instantiate(uiPrefab);

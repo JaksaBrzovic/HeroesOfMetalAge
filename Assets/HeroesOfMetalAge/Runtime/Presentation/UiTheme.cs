@@ -20,6 +20,8 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private Color muted = new Color(0.51f, 0.58f, 0.57f);
         [SerializeField] private Color enemy = new Color(0.82f, 0.29f, 0.22f);
         [SerializeField] private Color friendly = new Color(0.33f, 0.69f, 0.61f);
+        [Tooltip("Card background of legendary artefacts.")]
+        [SerializeField] private Color legendary = new Color(0.45f, 0.24f, 0.05f);
 
         [Header("Combat board")]
         [SerializeField] private Color hexColor = new Color(0.22f, 0.24f, 0.22f);
@@ -40,6 +42,7 @@ namespace HeroesOfMetalAge.Presentation
         public Color Muted => muted;
         public Color Enemy => enemy;
         public Color Friendly => friendly;
+        public Color Legendary => legendary;
         public Color HexColor => hexColor;
         public Color ReachableHexColor => reachableHexColor;
         public Sprite Hero => hero;

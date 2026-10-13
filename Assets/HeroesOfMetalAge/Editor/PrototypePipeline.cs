@@ -18,7 +18,7 @@ namespace HeroesOfMetalAge.EditorTools
     public static class PrototypePipeline
     {
         private const string PLAYER_PATH = "Builds/Windows/HeroesOfMetalAge.exe";
-        private const string BUNDLE_VERSION = "0.6.0";
+        private const string BUNDLE_VERSION = "0.7.0";
         private const int DEFAULT_SCREEN_WIDTH = 1920;
         private const int DEFAULT_SCREEN_HEIGHT = 1080;
         private const int LEGACY_INPUT_MANAGER = 0;

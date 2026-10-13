@@ -69,6 +69,26 @@ namespace HeroesOfMetalAge.Tests
         }
 
         [Test]
+        public void MissedStrike_DealsNoDamage()
+        {
+            // every roll is 0, below any positive miss chance, so every strike misses
+            Assume.That(catalog.Mission.Combat.MissChance, Is.GreaterThan(0));
+            BattleEngine battle = new BattleEngine(catalog, new FixedRandomSource(0), rules.NewCampaign(), catalog.Mission.Encounter(EncounterKind.Sentinel));
+            int totalHealth = battle.Combatants.Sum(combatant => combatant.TotalHealth);
+            BattleAi ai = new BattleAi();
+            BattleResolution result = null;
+            for (int turn = 0; turn < 50 && (result == null || result.Hits.Count == 0); turn++)
+            {
+                result = battle.Execute(ai.Choose(battle), battle.Active.IsPlayer);
+                Assert.IsTrue(result.Result.IsSuccess);
+            }
+
+            Assert.IsTrue(result.Hits.Count > 0, "the stacks met within 50 turns");
+            Assert.IsTrue(result.Hits.All(strike => strike.IsMiss && strike.Damage == 0 && strike.Casualties == 0));
+            Assert.AreEqual(totalHealth, battle.Combatants.Sum(combatant => combatant.TotalHealth));
+        }
+
+        [Test]
         public void SameSeed_ReplaysTheSameBattle()
         {
             Assert.AreEqual(PlayOut(7), PlayOut(7));

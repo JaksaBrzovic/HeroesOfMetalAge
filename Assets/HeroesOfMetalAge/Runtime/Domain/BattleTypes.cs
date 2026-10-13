@@ -29,11 +29,11 @@ namespace HeroesOfMetalAge.Domain
         public HexPosition Target { get; }
     }
 
-    /// <summary>One resolved hit, published after the command succeeded.</summary>
+    /// <summary>One resolved strike (a hit or a miss), published after the command succeeded.</summary>
     public readonly struct DamageEvent
     {
         public DamageEvent(int attackerCombatantId, int targetCombatantId, string attackerId, string targetId, int damage, int casualties,
-            bool isReceivedByPlayer, bool isRetaliation)
+            bool isReceivedByPlayer, bool isRetaliation, bool isRanged, bool isMiss)
         {
             AttackerCombatantId = attackerCombatantId;
             TargetCombatantId = targetCombatantId;
@@ -43,6 +43,8 @@ namespace HeroesOfMetalAge.Domain
             Casualties = casualties;
             IsReceivedByPlayer = isReceivedByPlayer;
             IsRetaliation = isRetaliation;
+            IsRanged = isRanged;
+            IsMiss = isMiss;
         }
 
         /// <summary>The stacks involved, so presentation can animate the right ones when both sides field the same unit.</summary>
@@ -56,6 +58,10 @@ namespace HeroesOfMetalAge.Domain
         /// <summary>True when the player's stack was hit.</summary>
         public bool IsReceivedByPlayer { get; }
         public bool IsRetaliation { get; }
+        /// <summary>True for a shot from a distance; a ranged unit fighting next to its target strikes in melee.</summary>
+        public bool IsRanged { get; }
+        /// <summary>The strike missed: no damage and no casualties.</summary>
+        public bool IsMiss { get; }
     }
 
     /// <summary>Result of one battle action: the command result and every hit in resolution order.</summary>

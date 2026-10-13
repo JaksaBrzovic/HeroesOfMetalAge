@@ -297,9 +297,16 @@ namespace HeroesOfMetalAge.Presentation
             }
 
             attacker.Lunge((target.Target - attacker.Target) * LUNGE_FRACTION);
+            Vector3 textPosition = target.Target + Vector3.up * (hexWidth * 0.35f);
+            if (hit.IsMiss)
+            {
+                NextDamageText().Show("MISS", context.Theme.Muted, textPosition);
+                return;
+            }
+
             target.Flash();
             Color color = hit.IsReceivedByPlayer ? context.Theme.Enemy : context.Theme.Gold;
-            NextDamageText().Show("-" + hit.Damage, color, target.Target + Vector3.up * (hexWidth * 0.35f));
+            NextDamageText().Show("-" + hit.Damage, color, textPosition);
             if (hit.Damage >= shakeDamageThreshold)
             {
                 pendingShake = Mathf.Max(pendingShake, 1f);

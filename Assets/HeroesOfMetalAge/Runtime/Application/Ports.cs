@@ -19,15 +19,19 @@ namespace HeroesOfMetalAge.Application
         float EffectsVolume { get; set; }
         float VoiceVolume { get; set; }
         bool IsMuted { get; set; }
-        /// <summary>True while the gallop layer leads the mix.</summary>
+        /// <summary>True while the hero rides and the riding loop plays.</summary>
         bool IsRiding { get; }
-        /// <summary>True while the battle layer leads the mix.</summary>
+        /// <summary>True while fighting (the battle music leads).</summary>
         bool IsFighting { get; }
 
         // review sounds without replaying the mission (development panel)
         void Audition(SoundCue cue);
         /// <summary>Plays one pass of a music layer as a preview.</summary>
         void AuditionLayer(MusicLayer layer);
+        /// <summary>Plays the beginning of a music track as a preview.</summary>
+        void AuditionMusic(MusicTrack track);
+        /// <summary>Plays the beginning of the riding loop as a preview.</summary>
+        void AuditionRidingLoop();
         void AuditionVoice(string unitId);
         void SavePreferences();
     }

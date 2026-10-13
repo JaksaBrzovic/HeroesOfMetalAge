@@ -45,12 +45,36 @@ namespace HeroesOfMetalAge.Tests
         {
         }
 
+        public void AuditionMusic(MusicTrack track)
+        {
+        }
+
+        public void AuditionRidingLoop()
+        {
+        }
+
         public void AuditionVoice(string unitId)
         {
         }
 
         public void SavePreferences()
         {
+        }
+    }
+
+    /// <summary>Random source that always returns the same value.</summary>
+    internal sealed class FixedRandomSource : IRandomSource
+    {
+        private readonly double value;
+
+        public FixedRandomSource(double value)
+        {
+            this.value = value;
+        }
+
+        public double NextValue()
+        {
+            return value;
         }
     }
 
@@ -75,7 +99,7 @@ namespace HeroesOfMetalAge.Tests
 
         public static GameSession NewSession(DefinitionCatalog catalog, ISaveStore store, Action<Exception> reportError = null)
         {
-            return new GameSession(catalog, store, new SeededRandomSource(1), 0.1f, 0.1f, reportError ?? (error => { }));
+            return new GameSession(catalog, store, new SeededRandomSource(1), 0.1f, 0.1f, 0.1f, 0.1f, reportError ?? (error => { }));
         }
     }
 }

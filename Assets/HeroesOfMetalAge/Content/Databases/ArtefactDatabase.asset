@@ -18,6 +18,7 @@ MonoBehaviour:
     description: The wardens' weapon, tempered in thunder.
     icon: {fileID: 0}
     slot: 0
+    rarity: 1
     attackBonus: 2
     defenseBonus: 0
     speedBonus: 0
@@ -26,6 +27,7 @@ MonoBehaviour:
     description: A charm bearing the clan's protective oath.
     icon: {fileID: 0}
     slot: 1
+    rarity: 0
     attackBonus: 0
     defenseBonus: 2
     speedBonus: 0
@@ -34,6 +36,43 @@ MonoBehaviour:
     description: The Black Banner's mark of relentless advance.
     icon: {fileID: 0}
     slot: 1
+    rarity: 1
     attackBonus: 0
     defenseBonus: 0
+    speedBonus: 1
+  - id: rusted-cleaver
+    displayName: Rusted Cleaver
+    description: A road-worn blade that still bites.
+    icon: {fileID: 0}
+    slot: 0
+    rarity: 0
+    attackBonus: 1
+    defenseBonus: 0
+    speedBonus: 0
+  - id: studded-wristband
+    displayName: Studded Wristband
+    description: Leather and iron rivets; it turns a glancing blow.
+    icon: {fileID: 0}
+    slot: 1
+    rarity: 0
+    attackBonus: 0
+    defenseBonus: 1
+    speedBonus: 0
+  - id: axe-of-the-first-riff
+    displayName: Axe of the First Riff
+    description: Forged when the first chord split the sky. Its edge still hums.
+    icon: {fileID: 0}
+    slot: 0
+    rarity: 2
+    attackBonus: 4
+    defenseBonus: 0
+    speedBonus: 1
+  - id: amulet-of-endless-feedback
+    displayName: Amulet of Endless Feedback
+    description: A shard of a burning amplifier that never stops ringing.
+    icon: {fileID: 0}
+    slot: 1
+    rarity: 2
+    attackBonus: 1
+    defenseBonus: 3
     speedBonus: 1

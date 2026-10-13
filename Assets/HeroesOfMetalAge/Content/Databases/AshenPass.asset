@@ -43,7 +43,6 @@ MonoBehaviour:
       count: 6
     rewardExperience: 0
     rewardGold: 0
-    rewardArtefactId: 
     battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
   - id: sentinel
     displayName: THE PASS WARDENS
@@ -56,7 +55,6 @@ MonoBehaviour:
       count: 10
     rewardExperience: 180
     rewardGold: 500
-    rewardArtefactId: fang-of-thunder
     battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
   - id: town
     displayName: ASHEN HOLD
@@ -70,8 +68,7 @@ MonoBehaviour:
     - unitId: ash-archer
       count: 5
     rewardExperience: 250
-    rewardGold: 0
-    rewardArtefactId: 
+    rewardGold: 300
     battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
   - id: boss
     displayName: THE BLACK BANNER
@@ -88,8 +85,9 @@ MonoBehaviour:
       count: 3
     rewardExperience: 450
     rewardGold: 900
-    rewardArtefactId: warborn-sigil
     battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
+  mapMusic: {fileID: 11400000, guid: a2d7c21ab5e37b34b83075de8fbdf453, type: 2}
+  townMusic: {fileID: 11400000, guid: 9a8672c4507648848abe74174be57351, type: 2}
   battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
   combatWidth: 10
   combatHeight: 7
@@ -101,5 +99,13 @@ MonoBehaviour:
   defenseDeltaMultiplier: 0.025
   maximumAttackDelta: 30
   maximumDefenseDelta: 28
-  travelStepSeconds: 0.15
+  missChance: 0.15
+  goldVariation: 0.25
+  artefactChance: 0.5
+  rareChance: 0.3
+  legendaryChance: 0.1
+  legendaryGuaranteeVictories: 4
+  travelStepSeconds: 1
   enemyTurnSeconds: 0.7
+  battleActionSeconds: 1.5
+  battleResultSeconds: 2

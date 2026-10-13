@@ -7,7 +7,7 @@ namespace HeroesOfMetalAge.Domain
     public sealed class CombatPolicy
     {
         public CombatPolicy(int width, int height, int enemyAttack, int enemyDefense, double defenseMultiplier, double rangedMeleeMultiplier,
-            double attackStep, double defenseStep, int maximumAttackDelta, int maximumDefenseDelta)
+            double attackStep, double defenseStep, int maximumAttackDelta, int maximumDefenseDelta, double missChance)
         {
             Width = width;
             Height = height;
@@ -19,6 +19,7 @@ namespace HeroesOfMetalAge.Domain
             DefenseStep = defenseStep;
             MaximumAttackDelta = maximumAttackDelta;
             MaximumDefenseDelta = maximumDefenseDelta;
+            MissChance = missChance;
         }
 
         public int Width { get; }
@@ -33,6 +34,34 @@ namespace HeroesOfMetalAge.Domain
         public double DefenseStep { get; }
         public int MaximumAttackDelta { get; }
         public int MaximumDefenseDelta { get; }
+        /// <summary>Chance in [0, 1) that a strike misses and deals no damage.</summary>
+        public double MissChance { get; }
+    }
+
+    /// <summary>
+    /// How battle rewards are rolled: gold always varies around the encounter's amount, at most one artefact drops and a
+    /// legendary one is guaranteed after a run of victories without one.
+    /// </summary>
+    public sealed class RewardPolicy
+    {
+        public RewardPolicy(double goldVariation, double artefactChance, double rareChance, double legendaryChance, int legendaryGuaranteeVictories)
+        {
+            GoldVariation = goldVariation;
+            ArtefactChance = artefactChance;
+            RareChance = rareChance;
+            LegendaryChance = legendaryChance;
+            LegendaryGuaranteeVictories = legendaryGuaranteeVictories;
+        }
+
+        /// <summary>Rolled gold is the encounter's gold times a factor in [1 - variation, 1 + variation].</summary>
+        public double GoldVariation { get; }
+        /// <summary>Chance that a victory drops an artefact at all.</summary>
+        public double ArtefactChance { get; }
+        /// <summary>Chance that a dropped artefact is rare; the rest after rare and legendary is common.</summary>
+        public double RareChance { get; }
+        public double LegendaryChance { get; }
+        /// <summary>Every this many victories bring at least one legendary artefact; 0 turns the guarantee off.</summary>
+        public int LegendaryGuaranteeVictories { get; }
     }
 
     /// <summary>The authored mission: map, encounters, economy and combat rules.</summary>
@@ -43,7 +72,8 @@ namespace HeroesOfMetalAge.Domain
 
         public MissionDefinition(string id, string name, string description, string heroId, string clanId, string clanName, string clanHeroName,
             int startingGold, int armySlots, int daysPerWeek, TerrainRules terrainRules, double ownedPriceMultiplier, int width, int height,
-            WorldPosition start, TerrainType[] terrain, CombatPolicy combat, IEnumerable<EncounterDefinition> encounters, IEnumerable<string> recruitmentIds)
+            WorldPosition start, TerrainType[] terrain, CombatPolicy combat, IEnumerable<EncounterDefinition> encounters, IEnumerable<string> recruitmentIds,
+            RewardPolicy rewards)
         {
             Id = id;
             Name = name;
@@ -64,6 +94,7 @@ namespace HeroesOfMetalAge.Domain
             Combat = combat;
             Encounters = encounters.ToList().AsReadOnly();
             RecruitmentIds = recruitmentIds.ToList().AsReadOnly();
+            Rewards = rewards;
             encountersByKind = Encounters.ToDictionary(encounter => encounter.Kind);
         }
 
@@ -86,6 +117,7 @@ namespace HeroesOfMetalAge.Domain
         public CombatPolicy Combat { get; }
         public IReadOnlyList<EncounterDefinition> Encounters { get; }
         public IReadOnlyList<string> RecruitmentIds { get; }
+        public RewardPolicy Rewards { get; }
 
         public TerrainType TerrainAt(WorldPosition position)
         {

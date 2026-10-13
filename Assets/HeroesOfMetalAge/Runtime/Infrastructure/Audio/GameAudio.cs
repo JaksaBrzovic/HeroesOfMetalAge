@@ -10,9 +10,11 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
 {
     /// <summary>
     /// Plays the game's audio through the MLin audio system. It listens to gameplay facts published by
-    /// <see cref="GameSession"/> after commands succeed and never decides gameplay. The ambient, gallop and battle layers
-    /// start together and are mixed by travel state; event sounds come from <see cref="AudioDatabaseScriptableObject"/>
-    /// and unit voices from the unit database.
+    /// <see cref="GameSession"/> after commands succeed and never decides gameplay. One music track leads at a time: the
+    /// mission's map music (quiet while the hero stands, full while he rides) or town music, the battle music, the victory
+    /// music once after the victory stinger, or the defeat theme. The ambient and gallop layers start together and
+    /// lead only when no track does (a mission without map music); the riding loop follows the ride, strikes play their swing and impact in sequence, event sounds come from
+    /// <see cref="AudioDatabaseScriptableObject"/> and unit voices from the unit database.
     /// </summary>
     public sealed class GameAudio : MonoBehaviour, IAudioControls
     {
@@ -26,12 +28,22 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
         private const float MAX_PREVIEW_SECONDS = 10f;
 
         private readonly Dictionary<string, SoundDefinition> unitVoices = new Dictionary<string, SoundDefinition>(StringComparer.Ordinal);
+        // strike sounds waiting for their time, in the order they were scheduled
+        private readonly List<ScheduledCue> scheduledCues = new List<ScheduledCue>();
         private AudioDatabaseScriptableObject database;
+        private MissionSettingsScriptableObject mission;
         private GameSession session;
         private SoundHandle[] layers = Array.Empty<SoundHandle>();
         private SoundHandle voice;
         private SoundHandle preview;
+        private SoundHandle riding;
+        private SoundHandle music;
+        private MusicTrack? currentTrack;
         private float previewStopTime;
+        private float nextStrikeTime;
+        // the victory music plays between these times (unscaled), unless a battle or defeat takes over
+        private float victoryStartTime;
+        private float victoryEndTime;
         private bool isMuted;
         private bool isInitialized;
 
@@ -66,9 +78,14 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
 
         public bool IsRiding { get; private set; }
         public bool IsFighting { get; private set; }
+        public bool IsDefeated { get; private set; }
+        public bool IsInTown { get; private set; }
+        /// <summary>The music track playing now, or null while the layers lead.</summary>
+        public MusicTrack? CurrentTrack => currentTrack;
 
         /// <exception cref="InvalidOperationException">Called a second time.</exception>
-        public void Initialize(AudioDatabaseScriptableObject audioDatabase, UnitDatabaseScriptableObject unitDatabase, GameSession gameSession)
+        public void Initialize(AudioDatabaseScriptableObject audioDatabase, UnitDatabaseScriptableObject unitDatabase,
+            MissionSettingsScriptableObject missionSettings, GameSession gameSession)
         {
             if (isInitialized)
             {
@@ -76,6 +93,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
             }
 
             database = audioDatabase;
+            mission = missionSettings;
             session = gameSession;
             foreach (UnitEntry unit in unitDatabase.Units)
             {
@@ -87,6 +105,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
 
             AudioSystem.Initialize(database.Settings);
             StartLayers();
+            ApplyState(session.Playback, true);
 
             session.CueRequested += HandleCueRequested;
             session.UnitVoiceRequested += HandleUnitVoiceRequested;
@@ -102,10 +121,21 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
 
         public void AuditionLayer(MusicLayer layer)
         {
-            SoundDefinition sound = database.Layer(layer);
-            preview.Stop();
-            preview = AudioSystem.Play(sound);
-            previewStopTime = Time.unscaledTime + PreviewSeconds(sound);
+            Preview(database.Layer(layer));
+        }
+
+        public void AuditionMusic(MusicTrack track)
+        {
+            SoundDefinition sound = MusicFor(track);
+            if (sound != null)
+            {
+                Preview(sound);
+            }
+        }
+
+        public void AuditionRidingLoop()
+        {
+            Preview(database.RidingLoop);
         }
 
         public void AuditionVoice(string unitId)
@@ -124,11 +154,51 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
             return unitVoices.TryGetValue(unitId, out SoundDefinition sound) ? sound : null;
         }
 
+        /// <summary>The cues a strike plays, in order: the swing or release, then the hit or miss, then a heavy hit if it was one.</summary>
+        internal IReadOnlyList<SoundCue> StrikeCues(DamageEvent hit)
+        {
+            List<SoundCue> cues = new List<SoundCue>(3);
+            if (hit.IsRanged)
+            {
+                cues.Add(SoundCue.ArrowFire);
+                cues.Add(hit.IsMiss ? SoundCue.ArrowMiss : SoundCue.ArrowHit);
+            }
+            else
+            {
+                cues.Add(SoundCue.SwordSwing);
+                cues.Add(hit.IsMiss ? SoundCue.SwordMiss : SoundCue.SwordHit);
+            }
+
+            if (!hit.IsMiss && hit.Damage >= database.HeavyHitThreshold)
+            {
+                cues.Add(SoundCue.HeavyHit);
+            }
+
+            return cues;
+        }
+
         private void Update()
         {
-            if (preview.IsPlaying && Time.unscaledTime >= previewStopTime)
+            float now = Time.unscaledTime;
+            if (preview.IsPlaying && now >= previewStopTime)
             {
                 preview.Stop(PREVIEW_STOP_FADE);
+            }
+
+            for (int i = 0; i < scheduledCues.Count; i++)
+            {
+                if (scheduledCues[i].Time <= now)
+                {
+                    Audition(scheduledCues[i].Cue);
+                    scheduledCues.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            // the victory music starts and ends on its own schedule
+            if (isInitialized)
+            {
+                ApplyMusic(false);
             }
         }
 
@@ -148,13 +218,23 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
                 layer.Stop();
             }
 
+            scheduledCues.Clear();
             preview.Stop();
             voice.Stop();
+            riding.Stop();
+            if (currentTrack.HasValue)
+            {
+                AudioSystem.StopMusic(0f);
+            }
         }
 
         private void HandleCueRequested(SoundCue cue)
         {
             Audition(cue);
+            if (cue == SoundCue.Victory)
+            {
+                QueueVictoryMusic();
+            }
         }
 
         private void HandleUnitVoiceRequested(string unitId)
@@ -164,24 +244,22 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
 
         private void HandlePlaybackChanged(PlaybackState state)
         {
-            IsRiding = state.IsRiding;
-            IsFighting = state.IsFighting;
-            ApplyLayerMix(database.LayerFadeSeconds);
+            ApplyState(state, false);
         }
 
+        // the swing starts at once (or after the previous strike of the same action), the impact follows it
         private void HandleDamageResolved(DamageEvent hit)
         {
-            SoundCue cue;
-            if (hit.IsReceivedByPlayer)
+            float start = Mathf.Max(Time.unscaledTime, nextStrikeTime);
+            float impact = start + (hit.IsRanged ? database.RangedImpactSeconds : database.MeleeImpactSeconds);
+            IReadOnlyList<SoundCue> cues = StrikeCues(hit);
+            scheduledCues.Add(new ScheduledCue(start, cues[0]));
+            for (int i = 1; i < cues.Count; i++)
             {
-                cue = SoundCue.Hurt;
-            }
-            else
-            {
-                cue = hit.Damage >= database.HeavyHitThreshold ? SoundCue.HeavyHit : SoundCue.Hit;
+                scheduledCues.Add(new ScheduledCue(impact, cues[i]));
             }
 
-            Audition(cue);
+            nextStrikeTime = start + database.StrikeSpacingSeconds;
         }
 
         // voices replace each other so a stack's call is never buried under the previous one
@@ -194,6 +272,79 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
 
             voice.Stop(VOICE_REPLACE_FADE);
             voice = AudioSystem.Play(sound);
+        }
+
+        private void ApplyState(PlaybackState state, bool isInstant)
+        {
+            IsRiding = state.IsRiding;
+            IsFighting = state.IsFighting;
+            IsDefeated = state.IsDefeated;
+            IsInTown = state.IsInTown;
+            if (IsFighting || IsDefeated)
+            {
+                victoryEndTime = 0f;
+            }
+
+            ApplyMusic(isInstant);
+            ApplyLayerMix(isInstant ? 0f : database.LayerFadeSeconds);
+            ApplyMapMusicLevel(isInstant ? 0f : database.MapMusicRideFadeSeconds);
+            ApplyRiding();
+        }
+
+        // the victory music waits for the stinger, then plays once; its fade-out overlaps the returning map or town music
+        private void QueueVictoryMusic()
+        {
+            float length = ClipSeconds(database.Music(MusicTrack.Victory));
+            victoryStartTime = Time.unscaledTime + database.VictoryMusicDelaySeconds;
+            victoryEndTime = victoryStartTime + Mathf.Max(0f, length - database.VictoryMusicFadeOutSeconds);
+        }
+
+        private SoundDefinition MusicFor(MusicTrack track)
+        {
+            switch (track)
+            {
+                case MusicTrack.Map:
+                    return mission.MapMusic;
+                case MusicTrack.Town:
+                    return mission.TownMusic;
+                default:
+                    return database.Music(track);
+            }
+        }
+
+        private MusicTrack? WantedTrack()
+        {
+            if (IsFighting)
+            {
+                return MusicTrack.Battle;
+            }
+
+            if (IsDefeated)
+            {
+                return MusicTrack.Defeat;
+            }
+
+            float now = Time.unscaledTime;
+            if (now < victoryEndTime)
+            {
+                // silence under the stinger, then the victory music
+                return now >= victoryStartTime ? MusicTrack.Victory : (MusicTrack?)null;
+            }
+
+            if (IsInTown && mission.TownMusic != null)
+            {
+                return MusicTrack.Town;
+            }
+
+            // a map music without its clip (a local file missing from this copy) leaves the map to the layers
+            return mission.MapMusic != null && mission.MapMusic.HasClips ? MusicTrack.Map : (MusicTrack?)null;
+        }
+
+        private void Preview(SoundDefinition sound)
+        {
+            preview.Stop();
+            preview = AudioSystem.Play(sound);
+            previewStopTime = Time.unscaledTime + PreviewSeconds(sound);
         }
 
         private void StartLayers()
@@ -218,25 +369,101 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
                 return;
             }
 
-            float ambient = IsFighting ? database.AmbientInBattle : IsRiding ? database.AmbientWhileRiding : database.AmbientAtRest;
-            float gallop = IsRiding && !IsFighting ? database.GallopMix : 0f;
-            float battle = IsFighting ? database.BattleMix : 0f;
+            bool isMusicLeading = currentTrack.HasValue;
+            float ambient = isMusicLeading ? database.AmbientUnderMusic : IsRiding ? database.AmbientWhileRiding : database.AmbientAtRest;
+            float gallop = IsRiding && !isMusicLeading ? database.GallopMix : 0f;
             layers[(int)MusicLayer.Ambient].SetVolume(ambient, fade);
             layers[(int)MusicLayer.Gallop].SetVolume(gallop, fade);
-            layers[(int)MusicLayer.Battle].SetVolume(battle, fade);
         }
 
-        private static float PreviewSeconds(SoundDefinition sound)
+        // battle, victory and defeat music start from the beginning; map and town music continue where they stopped when
+        // their SoundDefinition resumes its position
+        private void ApplyMusic(bool isInstant)
+        {
+            MusicTrack? wanted = WantedTrack();
+            if (wanted == currentTrack)
+            {
+                return;
+            }
+
+            float fade = isInstant ? 0f
+                : wanted == MusicTrack.Victory ? database.VictoryMusicFadeInSeconds
+                : currentTrack == MusicTrack.Victory ? database.VictoryMusicFadeOutSeconds
+                : database.LayerFadeSeconds;
+            currentTrack = wanted;
+            if (wanted.HasValue)
+            {
+                bool isRestarting = wanted.Value != MusicTrack.Map && wanted.Value != MusicTrack.Town;
+                music = AudioSystem.PlayMusic(MusicFor(wanted.Value), fade, isRestarting);
+                ApplyMapMusicLevel(0f);
+            }
+            else
+            {
+                AudioSystem.StopMusic(fade);
+                music = SoundHandle.Invalid;
+            }
+
+            ApplyLayerMix(isInstant ? 0f : database.LayerFadeSeconds);
+        }
+
+        // on top of its crossfade, the map music sits low while the hero stands and rises while he rides
+        private void ApplyMapMusicLevel(float fade)
+        {
+            if (currentTrack == MusicTrack.Map)
+            {
+                music.SetVolume(IsRiding ? 1f : database.MapMusicIdleLevel, fade);
+            }
+        }
+
+        private void ApplyRiding()
+        {
+            if (IsRiding && !riding.IsPlaying)
+            {
+                riding = AudioSystem.Play(database.RidingLoop, database.RidingFadeSeconds);
+            }
+            else if (!IsRiding)
+            {
+                riding.Stop(database.RidingFadeSeconds);
+            }
+        }
+
+        private static float ClipSeconds(SoundDefinition sound)
         {
             foreach (AudioClip clip in sound.Clips)
             {
                 if (clip != null)
                 {
-                    return Mathf.Min(clip.length, MAX_PREVIEW_SECONDS);
+                    return clip.length;
                 }
             }
 
             return 0f;
+        }
+
+        private static float PreviewSeconds(SoundDefinition sound)
+        {
+            float seconds = sound.IntroClip != null ? sound.IntroClip.length : 0f;
+            foreach (AudioClip clip in sound.Clips)
+            {
+                if (clip != null)
+                {
+                    return Mathf.Min(seconds + clip.length, MAX_PREVIEW_SECONDS);
+                }
+            }
+
+            return 0f;
+        }
+
+        private readonly struct ScheduledCue
+        {
+            public ScheduledCue(float time, SoundCue cue)
+            {
+                Time = time;
+                Cue = cue;
+            }
+
+            public float Time { get; }
+            public SoundCue Cue { get; }
         }
     }
 }

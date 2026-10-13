@@ -31,6 +31,14 @@ namespace HeroesOfMetalAge.Domain
         Obstacle
     }
 
+    /// <summary>How rare an artefact is when battle rewards are rolled.</summary>
+    public enum ArtefactRarity
+    {
+        Common,
+        Rare,
+        Legendary
+    }
+
     public enum EncounterKind
     {
         Friendly,
@@ -78,12 +86,14 @@ namespace HeroesOfMetalAge.Domain
 
     public sealed class ArtefactDefinition
     {
-        public ArtefactDefinition(string id, string name, string description, EquipmentSlot slot, int attackBonus, int defenseBonus, int speedBonus)
+        public ArtefactDefinition(string id, string name, string description, EquipmentSlot slot, ArtefactRarity rarity, int attackBonus,
+            int defenseBonus, int speedBonus)
         {
             Id = id;
             Name = name;
             Description = description;
             Slot = slot;
+            Rarity = rarity;
             AttackBonus = attackBonus;
             DefenseBonus = defenseBonus;
             SpeedBonus = speedBonus;
@@ -93,6 +103,7 @@ namespace HeroesOfMetalAge.Domain
         public string Name { get; }
         public string Description { get; }
         public EquipmentSlot Slot { get; }
+        public ArtefactRarity Rarity { get; }
         public int AttackBonus { get; }
         public int DefenseBonus { get; }
         public int SpeedBonus { get; }
@@ -135,7 +146,7 @@ namespace HeroesOfMetalAge.Domain
     public sealed class EncounterDefinition
     {
         public EncounterDefinition(string id, EncounterKind kind, WorldPosition position, string name, string description, IEnumerable<Troop> army,
-            int rewardExperience, int rewardGold, string rewardArtefactId)
+            int rewardExperience, int rewardGold)
         {
             Id = id;
             Kind = kind;
@@ -145,7 +156,6 @@ namespace HeroesOfMetalAge.Domain
             Army = army.ToList().AsReadOnly();
             RewardExperience = rewardExperience;
             RewardGold = rewardGold;
-            RewardArtefactId = rewardArtefactId;
         }
 
         public string Id { get; }
@@ -155,8 +165,7 @@ namespace HeroesOfMetalAge.Domain
         public string Description { get; }
         public IReadOnlyList<Troop> Army { get; }
         public int RewardExperience { get; }
+        /// <summary>Typical gold for winning; the rolled amount varies around it (see <see cref="RewardPolicy"/>).</summary>
         public int RewardGold { get; }
-        /// <summary>Artefact granted on victory; null or empty when there is none.</summary>
-        public string RewardArtefactId { get; }
     }
 }
