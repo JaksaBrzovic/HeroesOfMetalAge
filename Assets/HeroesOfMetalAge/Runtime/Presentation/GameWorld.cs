@@ -45,7 +45,7 @@ namespace HeroesOfMetalAge.Presentation
         private GameSession Session => hud.Context.Session;
 
         /// <exception cref="InvalidOperationException">A reference is missing on the World prefab or the map prefab.</exception>
-        public void Initialize(GameHud gameHud, AdventureMapView adventureMap, Sprite battleBackground)
+        public void Initialize(GameHud gameHud, AdventureMapView adventureMap)
         {
             if (worldCamera == null || maps == null || battlefield == null || adventureMap == null)
             {
@@ -55,7 +55,7 @@ namespace HeroesOfMetalAge.Presentation
             hud = gameHud;
             map = adventureMap;
             map.Initialize(hud.Context);
-            battlefield.Initialize(hud.Context, battleBackground);
+            battlefield.Initialize(hud.Context);
             followedHeroPosition = Session.Campaign.Position;
             LateUpdate();
         }

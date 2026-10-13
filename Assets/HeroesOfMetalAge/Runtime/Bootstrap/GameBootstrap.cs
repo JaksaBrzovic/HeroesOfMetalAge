@@ -50,7 +50,7 @@ namespace HeroesOfMetalAge.Bootstrap
             debugPanelPrefab = debugPrefab;
         }
 
-        /// <summary>Authored portraits and icons by ID for the presentation layer.</summary>
+        /// <summary>Authored portraits, icons, walk cycles and battlefield images by ID for the presentation layer.</summary>
         public static PresentationAssets CreatePresentationAssets(UnitDatabaseScriptableObject unitDatabase, ArtefactDatabaseScriptableObject artefactDatabase,
             HeroDataBaseScriptableObject heroDatabase, MissionSettingsScriptableObject missionSettings)
         {
@@ -58,7 +58,11 @@ namespace HeroesOfMetalAge.Bootstrap
                 unitDatabase.Units.ToDictionary(entry => entry.Id, entry => entry.Portrait),
                 heroDatabase.Heroes.ToDictionary(entry => entry.Id, entry => entry.Portrait),
                 artefactDatabase.Artefacts.ToDictionary(entry => entry.Id, entry => entry.Icon),
-                missionSettings.TownPortrait);
+                missionSettings.TownPortrait,
+                unitDatabase.Units.ToDictionary(entry => entry.Id, entry => new FigureAnimation(entry.WalkFrames, entry.WalkFramesPerSecond)),
+                heroDatabase.Heroes.ToDictionary(entry => entry.Id, entry => new FigureAnimation(entry.MapFrames, entry.MapFramesPerSecond)),
+                missionSettings.Encounters.ToDictionary(entry => entry.Id, entry => entry.BattleBackground),
+                missionSettings.BattleBackground);
         }
 
         private void Awake()
@@ -105,7 +109,7 @@ namespace HeroesOfMetalAge.Bootstrap
             }
 
             GameWorld world = Instantiate(worldPrefab);
-            world.Initialize(hud, Instantiate(mapPrefab, world.Maps), mission.BattleBackground);
+            world.Initialize(hud, Instantiate(mapPrefab, world.Maps));
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (debugPanelPrefab != null)

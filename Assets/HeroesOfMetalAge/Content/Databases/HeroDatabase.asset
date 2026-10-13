@@ -19,10 +19,20 @@ MonoBehaviour:
     faction: Iron Oath
     description: Warlord of the Iron Oath. A leader without a stronghold, riding
       toward the Ashen Pass.
-    portrait: {fileID: 0}
+    portrait: {fileID: 21300000, guid: a47e271fced37474ebaf3cc95b37fb6c, type: 3}
+    mapFrames:
+    - {fileID: 21300000, guid: a47e271fced37474ebaf3cc95b37fb6c, type: 3}
+    - {fileID: 21300000, guid: c543ff50bc926b949ac7ececa3a24fce, type: 3}
+    - {fileID: 21300000, guid: e08c0bcb5680e9943ae9548bc9b1a176, type: 3}
+    - {fileID: 21300000, guid: 4e83bb36292849b4cacb1e8f9166e6ec, type: 3}
+    - {fileID: 21300000, guid: ce4d9278fd5822848abc4e72c4804de1, type: 3}
+    - {fileID: 21300000, guid: f190c8459900ad6499963d11162fe123, type: 3}
+    - {fileID: 21300000, guid: 468c3101024f71141b6340b6dc066a5a, type: 3}
+    - {fileID: 21300000, guid: 47d816dd1d286864f8d2d4352aeaa442, type: 3}
+    mapFramesPerSecond: 11
     baseAttack: 2
     baseDefense: 2
-    dailyMovement: 16
+    dailyMovement: 1600
     experiencePerLevel: 300
     attackPerLevel: 1
     defenseLevelInterval: 2

@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c35623c9745534a91ed3e0980bff8c, type: 3}
+  m_Name: TerrainDatabase
+  m_EditorClassIdentifier: HeroesOfMetalAge.Infrastructure::HeroesOfMetalAge.Infrastructure.Content.TerrainDatabaseScriptableObject
+  terrains:
+  - terrain: 2
+    isPassable: 1
+    movementCost: 75
+  - terrain: 0
+    isPassable: 1
+    movementCost: 100
+  - terrain: 6
+    isPassable: 1
+    movementCost: 100
+  - terrain: 7
+    isPassable: 1
+    movementCost: 125
+  - terrain: 8
+    isPassable: 1
+    movementCost: 150
+  - terrain: 9
+    isPassable: 1
+    movementCost: 175
+  - terrain: 1
+    isPassable: 0
+    movementCost: 100
+  - terrain: 3
+    isPassable: 0
+    movementCost: 100
+  - terrain: 4
+    isPassable: 0
+    movementCost: 100
+  - terrain: 10
+    isPassable: 0
+    movementCost: 100
+  - terrain: 11
+    isPassable: 0
+    movementCost: 100
+  diagonalCostPercent: 141

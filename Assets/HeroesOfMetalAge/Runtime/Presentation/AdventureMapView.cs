@@ -27,6 +27,8 @@ namespace HeroesOfMetalAge.Presentation
         [Tooltip("Size of one cell on screen, in UI design pixels (the 1600x900 frame). 0 shows the image at its own pixel size.")]
         [Min(0f)]
         [SerializeField] private float displayPixelsPerCell;
+        [Tooltip("Off when the town is painted on the map image; its cell stays clickable.")]
+        [SerializeField] private bool showTownMarker = true;
 
         [Header("Content")]
         [SerializeField] private Transform route;
@@ -68,12 +70,17 @@ namespace HeroesOfMetalAge.Presentation
             terrainOverlay.enabled = false;
             hoverCell.gameObject.SetActive(false);
             heroMarker = Instantiate(markerPrefab, heroes);
+            FigureAnimation ride = context.Media.HeroAnimation(Session.Campaign.HeroId);
+            heroMarker.SetFrames(ride.Frames, ride.FramesPerSecond);
+            heroMarker.SetFacing(false, true);
             heroMarker.Place(CellCenter(Session.Campaign.Position));
             foreach (EncounterDefinition encounter in Session.Catalog.Mission.Encounters)
             {
                 WorldMarker marker = Instantiate(markerPrefab, MarkerParent(encounter.Kind));
                 marker.name = encounter.Name;
                 marker.Place(CellCenter(encounter.Position));
+                // armies wait facing the road from the west, where the hero comes from
+                marker.SetFacing(true, false);
                 encounterMarkers.Add(encounter.Id, marker);
             }
 
@@ -156,7 +163,7 @@ namespace HeroesOfMetalAge.Presentation
             foreach (EncounterDefinition encounter in Session.Catalog.Mission.Encounters)
             {
                 WorldMarker marker = encounterMarkers[encounter.Id];
-                bool isVisible = encounter.Kind == EncounterKind.Town || !campaign.IsCompleted(encounter.Id);
+                bool isVisible = encounter.Kind == EncounterKind.Town ? showTownMarker : !campaign.IsCompleted(encounter.Id);
                 UiBinding.SetVisible(marker.gameObject, isVisible);
                 if (!isVisible)
                 {
@@ -170,7 +177,10 @@ namespace HeroesOfMetalAge.Presentation
                 }
 
                 Color side = encounter.Kind == EncounterKind.Friendly ? context.Theme.Friendly : context.Theme.Enemy;
-                marker.Display(context.UnitIcon(encounter.Army[0].UnitId), side, BaseColor(side), ArmySize(encounter.Army).ToString());
+                string leaderId = encounter.Army[0].UnitId;
+                // authored art keeps its colours; placeholder icons show the side
+                Color tint = context.Media.Unit(leaderId) != null ? Color.white : side;
+                marker.Display(context.UnitIcon(leaderId), tint, BaseColor(side), ArmySize(encounter.Army).ToString());
             }
         }
 
@@ -200,6 +210,7 @@ namespace HeroesOfMetalAge.Presentation
             }
 
             int cost = 0;
+            WorldPosition previous = Session.Campaign.Position;
             for (int i = 0; i < routeSteps.Count; i++)
             {
                 SpriteRenderer step = routeSteps[i];
@@ -210,7 +221,8 @@ namespace HeroesOfMetalAge.Presentation
                     continue;
                 }
 
-                cost += World.Cost(steps[i]);
+                cost += World.StepCost(previous, steps[i]);
+                previous = steps[i];
                 step.transform.localPosition = CellCenter(steps[i]);
                 step.transform.localScale = Vector3.one * (i == steps.Count - 1 ? ROUTE_END_SIZE : ROUTE_STEP_SIZE);
                 // the part of the route that today's movement cannot pay for is shown in the enemy colour

@@ -219,7 +219,7 @@ namespace HeroesOfMetalAge.Application
                 return;
             }
 
-            if (Campaign.Movement < World.Cost(route[0]))
+            if (Campaign.Movement < World.StepCost(Campaign.Position, route[0]))
             {
                 Notify("Not enough movement. End the day [E].");
                 return;
@@ -256,7 +256,7 @@ namespace HeroesOfMetalAge.Application
 
             WorldPosition step = route[routeIndex];
             EncounterDefinition encounter = World.Site(Campaign, step);
-            if (Campaign.Movement < World.Cost(step))
+            if (Campaign.Movement < World.StepCost(Campaign.Position, step))
             {
                 Notify("Movement spent. End the day to continue.");
                 FinishTravel();

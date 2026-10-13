@@ -1,11 +1,15 @@
+using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
 namespace HeroesOfMetalAge.Presentation
 {
     /// <summary>
-    /// A figure on the map or battlefield: a coloured base, an icon and an optional stack count. It animates itself
-    /// (glide, lunge, hit flash, fade-out) from requests made by the views; it never decides anything about the game.
+    /// A figure standing on a map cell or hex: a ground shadow in its side's colour, the figure and an optional stack count.
+    /// It animates itself (walk cycle and facing while it moves, lunge, hit flash, fade-out) from requests made by the views;
+    /// it never decides anything about the game. Art of any size and pivot is scaled to the same height with its feet on the
+    /// ground line.
     /// </summary>
     public sealed class WorldMarker : MonoBehaviour
     {
@@ -15,15 +19,21 @@ namespace HeroesOfMetalAge.Presentation
         private const float ARRIVED_DISTANCE = 0.001f;
         private const float PULSE_SPEED = 5f;
         private const float PULSE_SCALE = 0.08f;
+        private const float FACING_THRESHOLD = 0.001f;
 
         [SerializeField] private SpriteRenderer baseRenderer;
         [SerializeField] private SpriteRenderer iconRenderer;
         [SerializeField] private TextMeshPro countText;
         [Tooltip("Ring shown around the figure whose turn it is.")]
         [SerializeField] private SpriteRenderer selectionRenderer;
-        [Tooltip("Largest side of the icon, in marker units (1 = one cell).")]
+        [Tooltip("Height of the figure, in marker units (1 = one cell).")]
         [Min(0.1f)]
-        [SerializeField] private float iconSize = 0.72f;
+        [SerializeField] private float iconHeight = 1.1f;
+        [Tooltip("Widest the figure may be, in marker units.")]
+        [Min(0.1f)]
+        [SerializeField] private float maxIconWidth = 1.3f;
+        [Tooltip("Where the feet stand, in marker units from the cell centre.")]
+        [SerializeField] private float feetHeight = -0.36f;
 
         private Vector3 position;
         private Vector3 target;
@@ -36,6 +46,14 @@ namespace HeroesOfMetalAge.Presentation
         private float fadeTime;
         private float pulseTime;
         private Vector3 selectionScale = Vector3.one;
+        private IReadOnlyList<Sprite> frames = Array.Empty<Sprite>();
+        private Sprite idleIcon;
+        private float framesPerSecond;
+        private float walkTime;
+        private bool isFacingLeft;
+        private bool defaultFacingLeft;
+        private bool keepsMotionFacing;
+        private bool hasFacing;
         private bool isFading;
 
         public Vector3 Target => target;
@@ -45,12 +63,13 @@ namespace HeroesOfMetalAge.Presentation
         /// <summary>True when the icon is actually drawn: active, with a sprite and not faded out.</summary>
         public bool HasVisibleIcon => gameObject.activeInHierarchy && iconRenderer.enabled && iconRenderer.sprite != null && iconRenderer.color.a > 0.01f;
 
+        /// <summary>Shows <paramref name="icon"/> while standing; a walk cycle set with <see cref="SetFrames"/> plays while moving.</summary>
         public void Display(Sprite icon, Color tint, Color baseColor, string count)
         {
-            if (iconRenderer.sprite != icon)
+            idleIcon = icon;
+            if (!IsMoving || frames.Count == 0)
             {
-                iconRenderer.sprite = icon;
-                FitIcon();
+                ShowSprite(icon);
             }
 
             iconTint = tint;
@@ -64,9 +83,28 @@ namespace HeroesOfMetalAge.Presentation
             ApplyColors();
         }
 
-        public void SetFlipped(bool isFlipped)
+        /// <summary>A right-facing walk cycle played while the figure moves; empty for still art.</summary>
+        public void SetFrames(IReadOnlyList<Sprite> walkFrames, float walkFramesPerSecond)
         {
-            iconRenderer.flipX = isFlipped;
+            frames = walkFrames ?? Array.Empty<Sprite>();
+            framesPerSecond = walkFramesPerSecond;
+        }
+
+        /// <summary>
+        /// Art faces right; <paramref name="faceLeft"/> mirrors it. While moving the figure faces where it goes; afterwards it
+        /// keeps that facing if <paramref name="keepMotionFacing"/>, else returns to the given one.
+        /// </summary>
+        public void SetFacing(bool faceLeft, bool keepMotionFacing)
+        {
+            defaultFacingLeft = faceLeft;
+            keepsMotionFacing = keepMotionFacing;
+            if (!IsMoving && (!keepMotionFacing || !hasFacing))
+            {
+                isFacingLeft = faceLeft;
+                iconRenderer.flipX = faceLeft;
+            }
+
+            hasFacing = true;
         }
 
         /// <summary>Shows a pulsing ring in <paramref name="color"/> while this figure is the one acting.</summary>
@@ -139,7 +177,9 @@ namespace HeroesOfMetalAge.Presentation
                 return;
             }
 
+            float stepX = target.x - position.x;
             position = Vector3.MoveTowards(position, target, speed * deltaTime);
+            Animate(stepX, deltaTime);
             Vector3 offset = Vector3.zero;
             if (lungeTime > 0f)
             {
@@ -183,16 +223,66 @@ namespace HeroesOfMetalAge.Presentation
         }
 
         // authored portraits and placeholder icons have different sizes; each is scaled to the same footprint
-        private void FitIcon()
+        // the walk cycle plays only while moving; the figure turns to where it goes and, unless told to keep that, turns back
+        private void Animate(float stepX, float deltaTime)
         {
-            if (iconRenderer.sprite == null)
+            if (IsMoving)
+            {
+                if (Mathf.Abs(stepX) > FACING_THRESHOLD)
+                {
+                    isFacingLeft = stepX < 0f;
+                }
+
+                if (frames.Count > 0)
+                {
+                    walkTime += deltaTime;
+                    ShowSprite(frames[(int)(walkTime * framesPerSecond) % frames.Count]);
+                }
+            }
+            else
+            {
+                walkTime = 0f;
+                if (!keepsMotionFacing)
+                {
+                    isFacingLeft = defaultFacingLeft;
+                }
+
+                ShowSprite(idleIcon);
+            }
+
+            iconRenderer.flipX = isFacingLeft;
+        }
+
+        private void ShowSprite(Sprite sprite)
+        {
+            if (iconRenderer.sprite == sprite)
             {
                 return;
             }
 
-            Vector2 size = iconRenderer.sprite.bounds.size;
-            float largest = Mathf.Max(size.x, size.y);
-            iconRenderer.transform.localScale = largest > 0f ? Vector3.one * (iconSize / largest) : Vector3.one;
+            iconRenderer.sprite = sprite;
+            FitIcon();
+        }
+
+        // art of any size and pivot is scaled to one height (within a maximum width) and stands with its feet on the ground line
+        private void FitIcon()
+        {
+            Sprite sprite = iconRenderer.sprite;
+            if (sprite == null)
+            {
+                return;
+            }
+
+            Bounds bounds = sprite.bounds;
+            if (bounds.size.x <= 0f || bounds.size.y <= 0f)
+            {
+                return;
+            }
+
+            float scale = Mathf.Min(iconHeight / bounds.size.y, maxIconWidth / bounds.size.x);
+            Transform icon = iconRenderer.transform;
+            icon.localScale = Vector3.one * scale;
+            icon.localPosition = new Vector3(-bounds.center.x * scale, feetHeight - bounds.min.y * scale, 0f);
         }
 
         private static Color WithAlpha(Color color, float alpha)

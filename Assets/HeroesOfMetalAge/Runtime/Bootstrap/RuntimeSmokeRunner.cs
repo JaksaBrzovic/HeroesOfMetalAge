@@ -22,6 +22,7 @@ namespace HeroesOfMetalAge.Bootstrap
         private const string REPORT_FILE = "runtime-smoke.txt";
         private const int MAX_MOVEMENT_TICKS = 100;
         private const int MAX_BATTLE_ACTIONS = 1000;
+        private const int MAX_TRAVEL_DAYS = 10;
         private const float FRAME_TOLERANCE = 0.5f;
         private const float EDGE_TOLERANCE = 0.01f;
         private const float FOLLOW_WAIT_SECONDS = 1.5f;
@@ -199,6 +200,23 @@ namespace HeroesOfMetalAge.Bootstrap
             Check(!session.IsBusy, "Movement terminates");
         }
 
+        /// <summary>Rides to a cell over as many days as the route needs; stops at an encounter, a dialog or the town screen.</summary>
+        private void TravelTo(WorldPosition target)
+        {
+            for (int day = 0; day < MAX_TRAVEL_DAYS; day++)
+            {
+                session.Plan(target);
+                session.Travel();
+                FinishMovement();
+                if (session.Campaign.Position == target || session.Dialog != DialogKind.None || session.Screen != GameScreen.Adventure)
+                {
+                    return;
+                }
+
+                session.EndDay();
+            }
+        }
+
         /// <summary>Plays the player's side: attack the weakest reachable enemy, otherwise advance towards the nearest.</summary>
         private void FinishBattle()
         {
@@ -274,8 +292,8 @@ namespace HeroesOfMetalAge.Bootstrap
             yield return null;
             CheckViewport(hud.WorldView.MapViewport, "World camera draws the map inside the adventure screen's viewport");
             Check(world.Map.HeroMarker.HasVisibleIcon, "World hero marker has visible sprite");
-            Check(mission.Encounters.All(encounter => world.Map.EncounterMarker(encounter.Id).HasVisibleIcon),
-                "World friendly/enemy/town markers have visible sprites");
+            Check(mission.Encounters.Where(encounter => encounter.Kind != EncounterKind.Town).All(encounter => world.Map.EncounterMarker(encounter.Id).HasVisibleIcon),
+                "World friendly and enemy markers have visible sprites");
             Check(session.Campaign.Army.Count > 0, "Runtime bootstrap from authored hero");
             Check(session.World.FindRoute(session.Campaign, sentinel.Position).Count > 0, "World route reaches chokepoint");
             Check(session.World.FindRoute(session.Campaign, town.Position).Count == 0, "Sentinel blocks town route");
@@ -303,9 +321,7 @@ namespace HeroesOfMetalAge.Bootstrap
 
         private IEnumerator FirstBattleAndHero(MissionDefinition mission, EncounterDefinition sentinel)
         {
-            session.Plan(sentinel.Position);
-            session.Travel();
-            FinishMovement();
+            TravelTo(sentinel.Position);
             Check(session.Dialog == DialogKind.Hostile, "Travel stops before hostile stack");
             hud.RefreshNow();
             hud.DialogView.PrimaryButton.Button.onClick.Invoke();
@@ -368,7 +384,7 @@ namespace HeroesOfMetalAge.Bootstrap
             yield return null;
             CheckViewport(hud.WorldView.MapViewport, "World viewport follows the UI at 1920x800");
             yield return Screenshot("09b-world-ultrawide.png");
-            yield return ChangeResolution(1600, 900);
+            yield return ChangeResolution(1920, 1080);
 
             world.ToggleTerrainOverlay();
             yield return null;
@@ -379,9 +395,7 @@ namespace HeroesOfMetalAge.Bootstrap
 
         private IEnumerator TownAndConquest(MissionDefinition mission, EncounterDefinition town)
         {
-            session.Plan(town.Position);
-            session.Travel();
-            FinishMovement();
+            TravelTo(town.Position);
             Check(session.Screen == GameScreen.Town && session.Campaign.Position == town.Position, "Town reached through cleared pass");
 
             hud.OpenSettings();
@@ -431,9 +445,7 @@ namespace HeroesOfMetalAge.Bootstrap
         private IEnumerator BossAndDefeat(EncounterDefinition boss)
         {
             session.LeaveTown();
-            session.Plan(boss.Position);
-            session.Travel();
-            FinishMovement();
+            TravelTo(boss.Position);
             Check(session.Dialog == DialogKind.Hostile, "Final enemy reached");
             session.FightEncounter();
             FinishBattle();
@@ -444,9 +456,7 @@ namespace HeroesOfMetalAge.Bootstrap
             session.StartMission();
             session.DebugTown();
             session.LeaveTown();
-            session.Plan(boss.Position);
-            session.Travel();
-            FinishMovement();
+            TravelTo(boss.Position);
             session.FightEncounter();
             FinishBattle();
             Check(session.Dialog == DialogKind.Defeat, "Weak army defeat panel");

@@ -99,6 +99,12 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public static void ValidateMission(MissionSettingsScriptableObject mission, HeroDataBaseScriptableObject heroes, HashSet<string> unitIds,
             HashSet<string> artefactIds)
         {
+            TerrainDatabaseScriptableObject terrain = mission.Terrain;
+            Require(terrain != null && AllPresent(terrain.Terrains), "The mission has no terrain database.");
+            Require(terrain.Terrains.Select(entry => entry.Terrain).Distinct().Count() == terrain.Terrains.Count, "Duplicate terrain types.");
+            Require(terrain.Terrains.Any(entry => entry.IsPassable && entry.Terrain != TerrainType.Blocked), "No terrain is passable.");
+            Require(terrain.Terrains.All(entry => entry.MovementCost > 0), "Terrain movement costs must be positive.");
+
             AdventureMapAuthoring map = mission.Map;
             Require(map != null, "The mission has no adventure map prefab.");
             Require(map.TerrainLogic != null && map.Background != null && map.MapImage != null,
@@ -110,8 +116,6 @@ namespace HeroesOfMetalAge.Infrastructure.Content
             bool isValidRules = InRange(mission.ArmySlots, 1, 7)
                 && mission.DaysPerWeek > 0
                 && mission.StartingGold >= 0
-                && mission.ForestMovementCost > 0
-                && mission.GroundMovementCost > 0
                 && mission.OwnedRecruitmentMultiplier > 0
                 && mission.OwnedRecruitmentMultiplier <= 1;
             Require(isValidRules, "Invalid mission rules.");

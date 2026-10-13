@@ -15,7 +15,7 @@ namespace HeroesOfMetalAge.Presentation
         private const float NOTICE_SECONDS = 5f;
         private const float HIT_SECONDS = 1.5f;
         private const string ADVENTURE_HELP = "CLICK TO PLAN / AGAIN OR SPACE TO RIDE / ARROWS OR DRAG TO LOOK AROUND / E END DAY / H HERO";
-        private const string BATTLE_HELP = "CLICK A BLUE HEX TO MOVE / CLICK AN ENEMY TO ATTACK / ARCHERS CAN SHOOT AT RANGE";
+        private const string BATTLE_HELP = "CLICK A BLUE HEX TO MOVE / CLICK AN ENEMY TO ATTACK / RANGED STACKS STRIKE FROM AFAR";
         private const string MENU_HELP = "ESC RETURN / F3 DEVELOPMENT PANEL / M MUTE";
 
         [SerializeField] private UiTheme theme;

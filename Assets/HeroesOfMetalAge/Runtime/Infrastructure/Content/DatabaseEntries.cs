@@ -18,6 +18,10 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [TextArea]
         [SerializeField] private string description;
         [SerializeField] private Sprite portrait;
+        [Tooltip("Right-facing walk cycle shown on the map and battlefield while the stack moves; empty for still art.")]
+        [SerializeField] private Sprite[] walkFrames = new Sprite[0];
+        [Min(1f)]
+        [SerializeField] private float walkFramesPerSecond = 8f;
         [Tooltip("Placeholder art used when no portrait is assigned: axe, bow or rider.")]
         [SerializeField] private string placeholderIcon = "axe";
         [Min(1)]
@@ -42,6 +46,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
 
         public string Id => id;
         public Sprite Portrait => portrait;
+        public IReadOnlyList<Sprite> WalkFrames => walkFrames;
+        public float WalkFramesPerSecond => walkFramesPerSecond;
 
         public SoundDefinition Voice
         {
@@ -148,12 +154,16 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [TextArea]
         [SerializeField] private string description;
         [SerializeField] private Sprite portrait;
+        [Tooltip("Right-facing ride cycle shown on the adventure map while the hero travels.")]
+        [SerializeField] private Sprite[] mapFrames = new Sprite[0];
+        [Min(1f)]
+        [SerializeField] private float mapFramesPerSecond = 11f;
         [Min(0)]
         [SerializeField] private int baseAttack;
         [Min(0)]
         [SerializeField] private int baseDefense;
         [Min(1)]
-        [SerializeField] private int dailyMovement = 16;
+        [SerializeField] private int dailyMovement = 1600;
         [Min(1)]
         [SerializeField] private int experiencePerLevel = 300;
         [Min(0)]
@@ -183,6 +193,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
             internal set => portrait = value;
         }
 
+        public IReadOnlyList<Sprite> MapFrames => mapFrames;
+        public float MapFramesPerSecond => mapFramesPerSecond;
         public int BaseAttack => baseAttack;
         public int BaseDefense => baseDefense;
         public int DailyMovement => dailyMovement;
@@ -215,6 +227,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [SerializeField] private int rewardGold;
         [Tooltip("Artefact granted on victory; leave empty for none.")]
         [SerializeField] private string rewardArtefactId;
+        [Tooltip("Battlefield image for this encounter; empty uses the mission's.")]
+        [SerializeField] private Sprite battleBackground;
 
         public string Id => id;
         public EncounterKind Kind => kind;
@@ -229,6 +243,7 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public int RewardExperience => rewardExperience;
         public int RewardGold => rewardGold;
         public string RewardArtefactId => rewardArtefactId;
+        public Sprite BattleBackground => battleBackground;
 
         public EncounterDefinition ToDefinition()
         {

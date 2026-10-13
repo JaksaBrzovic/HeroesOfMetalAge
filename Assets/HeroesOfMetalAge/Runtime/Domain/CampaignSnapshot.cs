@@ -23,7 +23,7 @@ namespace HeroesOfMetalAge.Domain
     [Serializable]
     public sealed class CampaignSnapshot
     {
-        public const int CURRENT_VERSION = 2;
+        public const int CURRENT_VERSION = 3;
 
         public int version;
         public int day;

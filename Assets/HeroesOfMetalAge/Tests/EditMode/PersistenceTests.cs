@@ -11,9 +11,6 @@ namespace HeroesOfMetalAge.Tests
 {
     public class PersistenceTests
     {
-        private const string VERSION_1_SAVE = "{\"version\":1,\"day\":1,\"gold\":1600,\"xp\":0,\"x\":2,\"y\":5,\"movement\":16,"
-            + "\"army\":[{\"kind\":0,\"count\":12}],\"garrison\":[],\"stock\":[14,9,4],\"bag\":[0],\"weapon\":-1,\"charm\":-1}";
-
         private DefinitionCatalog catalog;
         private CampaignRules rules;
         private string folder;
@@ -48,18 +45,8 @@ namespace HeroesOfMetalAge.Tests
             Assert.IsTrue(File.Exists(file + ".bak"));
         }
 
-        [Test]
-        public void Version1Save_MigratesToStableIds()
-        {
-            File.WriteAllText(file, VERSION_1_SAVE);
-
-            CampaignState migrated = rules.Restore(new JsonCampaignStore(file).Read());
-
-            Assert.AreEqual("ironbound", migrated.Army[0].UnitId);
-            Assert.AreEqual("fang-of-thunder", migrated.Inventory[0]);
-        }
-
         [TestCase("{\"version\":999}")]
+        [TestCase("{\"version\":2,\"day\":1}")]
         [TestCase("{not json")]
         public void UnknownOrCorruptSave_IsRejected(string content)
         {

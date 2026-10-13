@@ -24,11 +24,10 @@ MonoBehaviour:
   startingGold: 1600
   armySlots: 7
   daysPerWeek: 7
-  forestMovementCost: 2
-  groundMovementCost: 1
   ownedRecruitmentMultiplier: 0.55
   map: {fileID: 8507097743292139526, guid: 0baf0b2a643f39148832e2881d47c6a5, type: 3}
-  startingPosition: {x: 2, y: 5}
+  terrain: {fileID: 11400000, guid: 33418e1c302a9d14999b2563017f9af2, type: 2}
+  startingPosition: {x: 2, y: 14}
   recruitmentUnitIds:
   - ironbound
   - ash-archer
@@ -37,7 +36,7 @@ MonoBehaviour:
   - id: friendly
     displayName: THE WILLING
     kind: 0
-    position: {x: 4, y: 5}
+    position: {x: 13, y: 14}
     description: We heard the iron oath. Let us ride with you.
     army:
     - unitId: ash-archer
@@ -45,10 +44,11 @@ MonoBehaviour:
     rewardExperience: 0
     rewardGold: 0
     rewardArtefactId: 
+    battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
   - id: sentinel
     displayName: THE PASS WARDENS
     kind: 1
-    position: {x: 7, y: 5}
+    position: {x: 21, y: 15}
     description: The wardens block the only passage through the ridge and refuse
       to join.
     army:
@@ -57,10 +57,11 @@ MonoBehaviour:
     rewardExperience: 180
     rewardGold: 500
     rewardArtefactId: fang-of-thunder
+    battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
   - id: town
     displayName: ASHEN HOLD
     kind: 2
-    position: {x: 11, y: 5}
+    position: {x: 32, y: 13}
     description: The Ashen Clan will not surrender its ancestral forges. Defeat its
       defenders to claim the town.
     army:
@@ -71,10 +72,11 @@ MonoBehaviour:
     rewardExperience: 250
     rewardGold: 0
     rewardArtefactId: 
+    battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
   - id: boss
     displayName: THE BLACK BANNER
     kind: 3
-    position: {x: 15, y: 5}
+    position: {x: 44, y: 15}
     description: A stronger warhost awaits. Recruit at the town and equip your reward
       before challenging them.
     army:
@@ -87,7 +89,8 @@ MonoBehaviour:
     rewardExperience: 450
     rewardGold: 900
     rewardArtefactId: warborn-sigil
-  battleBackground: {fileID: 0}
+    battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
+  battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
   combatWidth: 10
   combatHeight: 7
   enemyAttack: 1

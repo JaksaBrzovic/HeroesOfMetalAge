@@ -42,7 +42,7 @@ namespace HeroesOfMetalAge.Domain
         private readonly Dictionary<EncounterKind, EncounterDefinition> encountersByKind;
 
         public MissionDefinition(string id, string name, string description, string heroId, string clanId, string clanName, string clanHeroName,
-            int startingGold, int armySlots, int daysPerWeek, int forestCost, int groundCost, double ownedPriceMultiplier, int width, int height,
+            int startingGold, int armySlots, int daysPerWeek, TerrainRules terrainRules, double ownedPriceMultiplier, int width, int height,
             WorldPosition start, TerrainType[] terrain, CombatPolicy combat, IEnumerable<EncounterDefinition> encounters, IEnumerable<string> recruitmentIds)
         {
             Id = id;
@@ -55,8 +55,7 @@ namespace HeroesOfMetalAge.Domain
             StartingGold = startingGold;
             ArmySlots = armySlots;
             DaysPerWeek = daysPerWeek;
-            ForestCost = forestCost;
-            GroundCost = groundCost;
+            TerrainRules = terrainRules;
             OwnedPriceMultiplier = ownedPriceMultiplier;
             Width = width;
             Height = height;
@@ -78,8 +77,7 @@ namespace HeroesOfMetalAge.Domain
         public int StartingGold { get; }
         public int ArmySlots { get; }
         public int DaysPerWeek { get; }
-        public int ForestCost { get; }
-        public int GroundCost { get; }
+        public TerrainRules TerrainRules { get; }
         /// <summary>Recruitment price multiplier once the player owns the town.</summary>
         public double OwnedPriceMultiplier { get; }
         public int Width { get; }

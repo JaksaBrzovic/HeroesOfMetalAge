@@ -40,13 +40,14 @@ namespace HeroesOfMetalAge.Domain
                 return false;
             }
 
-            TerrainType terrain = Terrain(position);
-            return terrain != TerrainType.Mountain && terrain != TerrainType.Water && terrain != TerrainType.Blocked;
+            return mission.TerrainRules.IsPassable(Terrain(position));
         }
 
-        public int Cost(WorldPosition position)
+        /// <summary>Movement points to step from <paramref name="from"/> into the neighbouring <paramref name="to"/>.</summary>
+        public int StepCost(WorldPosition from, WorldPosition to)
         {
-            return Terrain(position) == TerrainType.Forest ? mission.ForestCost : mission.GroundCost;
+            bool isDiagonal = from.X != to.X && from.Y != to.Y;
+            return mission.TerrainRules.StepCost(Terrain(to), isDiagonal);
         }
 
         /// <summary>The encounter at a position that still matters: towns always, other sites until resolved.</summary>
@@ -148,7 +149,7 @@ namespace HeroesOfMetalAge.Domain
                     }
 
                     int length = dx != 0 && dy != 0 ? DIAGONAL_LENGTH : STRAIGHT_LENGTH;
-                    RouteCost candidate = costs[current].Add(Cost(next), length, Deviation(next, from, destination));
+                    RouteCost candidate = costs[current].Add(StepCost(current, next), length, Deviation(next, from, destination));
                     if (costs.TryGetValue(next, out RouteCost known) && candidate.CompareTo(known) >= 0)
                     {
                         continue;

@@ -9,6 +9,10 @@ namespace HeroesOfMetalAge.Domain
         Charm
     }
 
+    /// <summary>
+    /// Terrain of a map cell. Values are stored in painted logic tiles, so existing values never change; new types go at the
+    /// end. Which types are passable and what they cost comes from <see cref="TerrainRules"/>.
+    /// </summary>
     public enum TerrainType
     {
         Grass,
@@ -17,7 +21,14 @@ namespace HeroesOfMetalAge.Domain
         Mountain,
         Water,
         /// <summary>Not painted on the map: impassable.</summary>
-        Blocked
+        Blocked,
+        Dirt,
+        Rough,
+        Sand,
+        Swamp,
+        Lava,
+        /// <summary>Rocks, ruins and other scenery the hero cannot ride through.</summary>
+        Obstacle
     }
 
     public enum EncounterKind

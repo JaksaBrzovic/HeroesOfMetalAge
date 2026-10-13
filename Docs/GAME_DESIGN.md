@@ -1,6 +1,6 @@
 # Heroes of Metal Age — Game Design Document
 
-Verzija: 0.3 · Ažurirano: 12. listopada 2026. · Jezik dokumenta: hrvatski
+Verzija: 0.4 · Ažurirano: 12. listopada 2026. · Jezik dokumenta: hrvatski
 
 Živi dokument dizajna cijele igre. Trenutno detaljno opisuje postojeći prototip i razdvaja ga od buduće vizije. Nepotvrđene odluke ostaju otvorene; ovaj dokument ne predstavlja tvrdnju da je cijela igra već definirana ili implementirana.
 
@@ -71,13 +71,18 @@ Postojeći sadržaj:
 
 ## 5. Adventure mapa i vrijeme
 
-**Implementirano:** kvadratna mreža 18 × 11; taktička borba koristi zasebnu heksagonalnu mrežu. Heroj počinje na koordinati (2, 5), dan 1, sa 16 movement pointsa.
+**Implementirano (0.6):** naslikana karta Ashen Passa (3200 × 1920 px) podijeljena je na kvadratnu mrežu 50 × 30 ćelija po 64 px; taktička borba koristi zasebnu heksagonalnu mrežu. Heroj počinje na zapadnom kraju puta (2, 14), dan 1, sa 1600 bodova kretanja. Model kretanja slijedi klasične strateške igre (Heroes 3), a vrijednosti su u TerrainDatabase.asset:
 
 | Teren | Cijena ulaska / ponašanje |
 |---|---|
-| Otvoreno tlo i cesta | 1 movement point |
-| Šuma | 2 movement pointsa |
-| Planina i voda | Blokirano |
+| Cesta (put) | 75 |
+| Trava, zemlja | 100 |
+| Pepeo, kamenjar | 125 |
+| Pijesak | 150 |
+| Močvara | 175 |
+| Šuma (stabla), planina i stijene, voda, lava, prepreke (ruševine) | Neprohodno za heroja na konju |
+
+Dijagonalni korak košta 1,41 puta više od ravnog. Među jednako skupim rutama bira se najkraća i najravnija.
 
 Postoji dijagonalno kretanje bez presijecanja blokiranih kutova. Klik odabire odredište i prikazuje rutu; drugi klik ili Space potvrđuje putovanje. Susret zaustavlja prolaz i zahtijeva interakciju. Trenutni interval koraka je 0,15 s, podesiv u misiji.
 
@@ -87,19 +92,23 @@ Fog of war, rudnici, skupljanje resursa na mapi, više heroja, proceduralne mape
 
 **Dogovoreni smjer (2026-10-12):** za početak koristiti jednu fiksnu ilustriranu pozadinu Ashen Passa, bez vizualnih tileova; logičku mrežu i prohodnost prilagoditi slici.
 
-**Implementirano (0.5):** mapa i bojište su world objekti, a UI ostaje uGUI. Mapa je slika podijeljena na kvadratne ćelije; broj piksela po ćeliji je postavka s gumbom Rebuild. Prohodnost se crta logičkim Tilemap slojem preko slike (Grass, Road, Forest, Water, Mountain), a neobojane ćelije su neprohodne. Mape smiju biti veće od ekrana: kamera prati heroja dok putuje, a strelice i povlačenje pomiču pogled; zum još nije implementiran. Trenutna slika mape je generirani placeholder napravljen iz starog grida, pa koordinate i prohodnost još odgovaraju prethodnoj verziji. Prava naslikana pozadina još nije uvezena.
+**Implementirano (0.5):** mapa i bojište su world objekti, a UI ostaje uGUI. Mapa je slika podijeljena na kvadratne ćelije; broj piksela po ćeliji je postavka s gumbom Rebuild. Prohodnost se crta logičkim Tilemap slojem preko slike (Grass, Road, Forest, Water, Mountain), a neobojane ćelije su neprohodne. Mape smiju biti veće od ekrana: kamera prati heroja dok putuje, a strelice i povlačenje pomiču pogled; zum još nije implementiran.
+
+**Implementirano (0.6):** uvezena je naslikana karta Map_1, obrezana na 3200 × 1920. Na Full HD prikazuje se piksel za piksel i pomiče se panom. Put vodi od zapadne doline preko dviju čistina, kroz uski planinski prolaz (Pass Wardens), do vrata Ashen Holda i dalje na veliku istočnu čistinu (Black Banner). Dvorac je naslikan na karti, pa grad nema zaseban marker. Logički sloj je prvi nacrt, napravljen automatskom klasifikacijom boja slike i ručnim ispravcima (put, prolaz, dvorac, voda); treba ga pregledati i doraditi paletom.
 
 ## 6. Susreti i prva misija: The Ashen Pass
 
-Početak: 1.600 golda, Kael, 12 Ironbounda, attack 2, defense 2.
+Početak: 1.600 golda, Kael, 12 Roadieja, attack 2, defense 2.
 
 | Redoslijed | Lokacija | Sadržaj | Rezultat / nagrada |
 |---|---|---|---|
-| 1 | The Willing (4, 5) | 6 Ash Archera želi se pridružiti | Besplatno pridruživanje |
-| 2 | The Pass Wardens (7, 5) | 10 Ironbounda blokira prolaz | 180 XP, 500 golda, Fang of Thunder |
-| 3 | Ashen Hold (11, 5) | Neutralni grad Ashen Clana | Kupnja tri vrste jedinica |
-| Opcionalno | Branitelji Ashen Holda | 13 Ironbounda + 5 Ash Archera | Vlasništvo grada, 250 XP |
-| 4 | The Black Banner (15, 5) | 18 Ironbounda + 9 Ash Archera + 3 Doom Ridera | 450 XP, 900 golda, Warborn Sigil; završetak misije |
+| 1 | The Willing (13, 14), čistina uz put | 6 Air Guitarista želi se pridružiti | Besplatno pridruživanje; opcionalno, ne blokira put |
+| 2 | The Pass Wardens (21, 15), planinski prolaz | 10 Roadieja blokira jedini prolaz | 180 XP, 500 golda, Fang of Thunder |
+| 3 | Ashen Hold (32, 13), ispred vrata | Neutralni grad Ashen Clana | Kupnja tri vrste jedinica |
+| Opcionalno | Branitelji Ashen Holda | 13 Roadieja + 5 Air Guitarista | Vlasništvo grada, 250 XP |
+| 4 | The Black Banner (44, 15), istočna čistina | 18 Roadieja + 9 Air Guitarista + 3 Doom Ridera | 450 XP, 900 golda, Warborn Sigil; završetak misije |
+
+Bitke u prolazu vode se na zelenoj dolini, a kod Ashen Holda i Black Bannera na infernalnoj pustoši. Put do istoka traje više dana.
 
 Prva misija uvodi pridruživanje, obaveznu borbu, opremanje nagrade, novačenje i jači završni izazov. Osvajanje grada dodatna je opcija. Nagrade se dodjeljuju jednom; zatvaranje ili ponovno prikazivanje panela ne smije ih duplicirati.
 
@@ -113,11 +122,13 @@ Aktualne vrijednosti iz UnitDatabase.asset:
 
 | Jedinica | HP | Damage | Attack | Defense | Speed | Neutralna cijena | Tjedni rast | Uloga |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
-| Ironbound | 18 | 3–5 | 5 | 4 | 4 | 70 | 14 | Melee pješaštvo |
-| Ash Archer | 13 | 3–6 | 6 | 3 | 5 | 110 | 9 | Ranged, pola štete u melee |
+| Roadie | 18 | 3–5 | 5 | 4 | 4 | 70 | 14 | Melee pješaštvo (s flight caseom) |
+| Air Guitarist | 13 | 3–6 | 6 | 3 | 5 | 110 | 9 | Ranged, pola štete u melee |
 | Doom Rider | 40 | 7–11 | 9 | 8 | 6 | 260 | 4 | Teška konjica |
 
-Svaka vrsta ima stabilni ID, naziv, opis, opcionalni portret i vlastiti zvuk glasa (SoundDefinition). Svi statovi i reference uređuju se u UnitDatabaseScriptableObject.
+Roadie je zamijenio Ironbounda, a Air Guitarist Ash Archera (prototip 0.6); statovi i interni ID-evi (`ironbound`, `ash-archer`) ostali su isti. Obojica imaju animaciju hoda od 8 frameova, a Doom Rider za sada koristi placeholder ikonu.
+
+Svaka vrsta ima stabilni ID, naziv, opis, opcionalni portret, opcionalnu animaciju hoda i vlastiti zvuk glasa (SoundDefinition). Svi statovi i reference uređuju se u UnitDatabaseScriptableObject.
 
 Air Guitarist i Roadie imaju izrađen konceptualni art u vanjskoj zbirci. Njihov status je **vizualni koncept**, bez potvrđenih combat statova, sposobnosti, cijene, tiera ili frakcije. Ne zamjenjuju postojeće jedinice bez dizajnerske odluke.
 
@@ -136,7 +147,7 @@ Akcije:
 - Defend: primljena šteta × 0,7.
 - Pass: završetak poteza bez akcije; nije odgoda inicijative.
 
-Melee meta uzvraća ako preživi i nije već uzvratila u toj rundi. Ranged napad na udaljenosti ne izaziva taj melee uzvrat. Ash Archer u melee radi štetu × 0,5. Prototip nema streljivo, zaklone, magiju ni posebne sposobnosti.
+Melee meta uzvraća ako preživi i nije već uzvratila u toj rundi. Ranged napad na udaljenosti ne izaziva taj melee uzvrat. Air Guitarist u melee radi štetu × 0,5. Prototip nema streljivo, zaklone, magiju ni posebne sposobnosti.
 
 Formula aktualnog damagea:
 
@@ -169,14 +180,14 @@ Artefakti imaju ID, naziv, opis, ikonu, kompatibilni slot i bonuse u ArtefactDat
 
 **Implementirano:** gold je jedini resurs. Početna količina i nagrade dolaze iz misije. Troši se na novačenje; nema definirane dnevne gradske zarade u ovom prototipu.
 
-Ashen Hold ima unaprijed pripremljenu ponudu tri vrste jedinica. Početna zaliha: 14 Ironbounda, 9 Archera, 4 Ridera. UI omogućuje odabir količine i MAX prema zalihi, zlatu i prihvatljivoj vojsci. Kupnja mora biti potpuna ili odbijena bez djelomičnog trošenja.
+Ashen Hold ima unaprijed pripremljenu ponudu tri vrste jedinica. Početna zaliha: 14 Roadieja, 9 Air Guitarista, 4 Ridera. UI omogućuje odabir količine i MAX prema zalihi, zlatu i prihvatljivoj vojsci. Kupnja mora biti potpuna ili odbijena bez djelomičnog trošenja.
 
 | Vlasništvo | Home / garnizon | Visiting | Cijene |
 |---|---|---|---|
 | Ashen Clan | Zaštićena klanska vojska | Igračev heroj i vojska | Osnovne cijene |
 | Igrač | Igračev garnizon, opcionalni home heroj | Igračev visiting heroj | ceil(osnovna cijena × 0,55) |
 
-Aktualne owned cijene: Ironbound 39, Archer 61, Rider 143. Osvajanje traži pobjedu nad braniteljima. U vlastitom gradu moguć je transfer cijelog stacka između redova, uz spajanje jednakih tipova i provjeru kapaciteta. Postavljanje Kaela kao home heroja spaja vojsku s home vojskom; prije novačenja i putovanja treba ga vratiti u visiting stanje.
+Aktualne owned cijene: Roadie 39, Air Guitarist 61, Rider 143. Osvajanje traži pobjedu nad braniteljima. U vlastitom gradu moguć je transfer cijelog stacka između redova, uz spajanje jednakih tipova i provjeru kapaciteta. Postavljanje Kaela kao home heroja spaja vojsku s home vojskom; prije novačenja i putovanja treba ga vratiti u visiting stanje.
 
 **Dogovoreni budući smjer:** neki vlasnici omogućuju ulaganje u građevine za povoljnije cijene; grad može biti preuzet borbom ili nagodbom; vlastiti grad omogućuje ulaganje u gradnju i povoljniju proizvodnju.
 
@@ -264,7 +275,7 @@ Dizajnerski kriteriji: jasan aktivni stack i dohvatljiva polja, prikaz golda i m
 
 ## 14. Spremanje i kontinuitet
 
-**Implementirano:** manual save/load i autosave u sigurnim stanjima nakon kretanja, kupnje, opreme i pobjeda. Save schema v2 koristi stabilne ID-eve; v1 se migrira. Zamjena koristi privremenu datoteku i .bak; neispravan load ne smije zamijeniti aktivnu kampanju.
+**Implementirano:** manual save/load i autosave u sigurnim stanjima nakon kretanja, kupnje, opreme i pobjeda. Save schema v3 koristi stabilne ID-eve; saveovi starijih verzija nastali su na staroj karti i odbijaju se (igra tada kreće novu misiju). Zamjena koristi privremenu datoteku i .bak; neispravan load ne smije zamijeniti aktivnu kampanju.
 
 Lokacija: `%USERPROFILE%/AppData/LocalLow/Iron Oath Studio/HeroesOfMetalAge/campaign.json`.
 
@@ -291,7 +302,7 @@ Kriteriji prve misije: pridruživanje, pobjeda na prolazu, opremanje nagrade, ku
 
 | Prioritet | Otvorena odluka | Zašto je potrebna |
 |---|---|---|
-| 1 | Roster: ostaju li Ironbound/Archer/Rider ili uvodimo metal arhetipove? | Određuje odnos nove grafike i gameplaya |
+| 1 | Roster: Roadie i Air Guitarist su uvedeni (prototip 0.6); koji metal arhetip zamjenjuje Doom Ridera i koje jedinice dolaze dalje? | Određuje odnos nove grafike i gameplaya |
 | 1 | Uloge Air Guitarista i Roadieja | Koncepti još nemaju pravila ni frakciju |
 | 1 | Konačan audio identitet i pragovi intenziteta | Središte korisničkog iskustva |
 | 2 | Opseg prve dovršene verzije | Broj misija, frakcija, heroja i jedinica |
@@ -312,5 +323,6 @@ Kriteriji prve misije: pridruživanje, pobjeda na prolazu, opremanje nagrade, ku
 | 2026-10-12 | 0.1 — hero screen | Izrađen hero screen koncept i zabilježen korisnikov budući raspored 10 equipment slotova; inventory 5 × 5 ostaje vizualni prijedlog | Vizualni pregled; bez promjena gameplaya, saveova ili Unity integracije/builda |
 | 2026-10-12 | 0.2 | Audio prebačen na MLin Audio System: cueovi kao SoundDefinition asseti, mixer kanali Music/Effects/Voice, ducking glazbe dok jedinica govori, sinkronizirani slojevi, utišavanje bez fokusa. F3 panel prebačen na uGUI. Kod refaktoriran bez promjene pravila igre | EditMode testovi i scenarij cijele misije u buildu |
 | 2026-10-12 | 0.3 | Mapa i bojište prebačeni u world space (URP 2D): slika mape (za sada generirani placeholder) s logičkim Tilemap slojem prohodnosti i podesivom veličinom ćelije (Rebuild), kamera koja prati heroja uz pan strelicama i povlačenjem, bojište kao fiksna slika s hex mrežom, animacije figura, brojevi štete i trešnja kamere. Pravila igre nepromijenjena | EditMode testovi i scenarij cijele misije u buildu |
+| 2026-10-12 | 0.4 | Full HD (1920 × 1080) kao ciljna i dizajn rezolucija; uvezena naslikana karta Map_1 (50 × 30 ćelija po 64 px) s prvim nacrtom logičkog sloja i susretima na putu; model kretanja kao u Heroes 3 (bodovi ×100, cijene po terenu, dijagonala ×1,41, šuma neprohodna); veći prozor karte; heroj na konju s animacijom; Roadie i Air Guitarist umjesto Ironbounda i Ash Archera; pozadine bojišta po susretu; stari saveovi više nisu kompatibilni | EditMode testovi i scenarij cijele misije u buildu na 1920 × 1080 |
 
 | 2026-10-12 | 0.1 — equipment art | Izrađeno 40 item ikona za 10 equipment slotova i 4 razine vizualne kvalitete; rare amulet dorađen radi kompletnog lanca; pripremljeni zasebni PNG-ovi i pregled | Vizualni pregled svih ikona; provjerene dimenzije i transparentni kutovi; bez gameplay statova ili Unity integracije/builda |

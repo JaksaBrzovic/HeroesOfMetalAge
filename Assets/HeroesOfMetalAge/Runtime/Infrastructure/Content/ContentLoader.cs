@@ -44,8 +44,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
             double ownedPriceMultiplier = Math.Round(mission.OwnedRecruitmentMultiplier, PRICE_MULTIPLIER_DECIMALS);
 
             return new MissionDefinition(mission.Id, mission.DisplayName, mission.Description, mission.HeroId, mission.ClanId, mission.ClanName,
-                mission.ClanHeroName, mission.StartingGold, mission.ArmySlots, mission.DaysPerWeek, mission.ForestMovementCost,
-                mission.GroundMovementCost, ownedPriceMultiplier, map.Width, map.Height, start, map.ReadTerrain(), combat,
+                mission.ClanHeroName, mission.StartingGold, mission.ArmySlots, mission.DaysPerWeek, mission.Terrain.ToRules(),
+                ownedPriceMultiplier, map.Width, map.Height, start, map.ReadTerrain(), combat,
                 mission.Encounters.Select(entry => entry.ToDefinition()), mission.RecruitmentUnitIds);
         }
     }

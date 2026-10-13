@@ -23,15 +23,13 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [SerializeField] private int armySlots = 7;
         [Min(1)]
         [SerializeField] private int daysPerWeek = 7;
-        [Min(1)]
-        [SerializeField] private int forestMovementCost = 2;
-        [Min(1)]
-        [SerializeField] private int groundMovementCost = 1;
         [Tooltip("Recruitment price multiplier once the player owns the town.")]
         [Range(0.01f, 1f)]
         [SerializeField] private float ownedRecruitmentMultiplier = 0.55f;
         [Tooltip("Adventure map prefab: map image, cell size and the terrain logic layer.")]
         [SerializeField] private AdventureMapAuthoring map;
+        [Tooltip("Passable terrain, movement costs and the diagonal step cost.")]
+        [SerializeField] private TerrainDatabaseScriptableObject terrain;
         [Tooltip("Cell from the top-left corner of the map; hover the map in the Scene view to read a cell's coordinates.")]
         [SerializeField] private Vector2Int startingPosition = new Vector2Int(2, 5);
         [SerializeField] private List<string> recruitmentUnitIds = new List<string>();
@@ -85,13 +83,17 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         }
 
         public int DaysPerWeek => daysPerWeek;
-        public int ForestMovementCost => forestMovementCost;
-        public int GroundMovementCost => groundMovementCost;
         public float OwnedRecruitmentMultiplier => ownedRecruitmentMultiplier;
         public AdventureMapAuthoring Map
         {
             get => map;
             internal set => map = value;
+        }
+
+        public TerrainDatabaseScriptableObject Terrain
+        {
+            get => terrain;
+            internal set => terrain = value;
         }
 
         public Vector2Int StartingPosition => startingPosition;

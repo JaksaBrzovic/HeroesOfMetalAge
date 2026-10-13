@@ -20,7 +20,8 @@ namespace HeroesOfMetalAge.Presentation
         private const float UNIT_HEXES_PER_SECOND = 6f;
         private const float LUNGE_FRACTION = 0.3f;
         private const float MARKER_BASE_BLEND = 0.45f;
-        private const float HEX_ALPHA = 0.5f;
+        private const float HEX_ALPHA = 0.6f;
+        private const float REACHABLE_HEX_ALPHA = 0.8f;
         private const float ACTIVE_HEX_ALPHA = 0.85f;
 
         [SerializeField] private SpriteRenderer background;
@@ -52,6 +53,7 @@ namespace HeroesOfMetalAge.Presentation
         private CanvasViewContext context;
         private SpriteRenderer[,] cells;
         private BattleEngine displayedBattle;
+        private Sprite prefabBackground;
         private int boardWidth;
         private int boardHeight;
         private float pendingShake;
@@ -70,7 +72,7 @@ namespace HeroesOfMetalAge.Presentation
         private GameSession Session => context.Session;
 
         /// <exception cref="InvalidOperationException">A reference is missing on the Battlefield prefab.</exception>
-        public void Initialize(CanvasViewContext viewContext, Sprite missionBackground)
+        public void Initialize(CanvasViewContext viewContext)
         {
             if (background == null || hexes == null || playerUnits == null || enemyUnits == null || effects == null || hexPrefab == null
                 || unitPrefab == null || damageTextPrefab == null)
@@ -79,10 +81,7 @@ namespace HeroesOfMetalAge.Presentation
             }
 
             context = viewContext;
-            if (missionBackground != null)
-            {
-                background.sprite = missionBackground;
-            }
+            prefabBackground = background.sprite;
 
             CombatPolicy policy = Session.Catalog.Mission.Combat;
             boardWidth = policy.Width;
@@ -217,6 +216,8 @@ namespace HeroesOfMetalAge.Presentation
         /// <summary>A new battle reuses the markers by combatant ID and places them without animating.</summary>
         private void AssignUnitMarkers(BattleEngine battle)
         {
+            Sprite battleground = context.Media.Battleground(Session.Encounter.Id);
+            background.sprite = battleground != null ? battleground : prefabBackground;
             foreach (WorldMarker previous in unitMarkers.Values)
             {
                 previous.gameObject.SetActive(false);
@@ -254,7 +255,9 @@ namespace HeroesOfMetalAge.Presentation
             marker.name = (combatant.IsPlayer ? "Player " : "Enemy ") + unit.Name;
             marker.Display(context.UnitIcon(combatant.UnitId), context.UnitTint(combatant.UnitId, combatant.IsPlayer), BaseColor(side),
                 combatant.Count.ToString());
-            marker.SetFlipped(!combatant.IsPlayer);
+            FigureAnimation animation = context.Media.UnitAnimation(combatant.UnitId);
+            marker.SetFrames(animation.Frames, animation.FramesPerSecond);
+            marker.SetFacing(!combatant.IsPlayer, false);
             marker.SetSelected(combatant == Session.Battle.Active, side);
             marker.MoveTo(HexCenter(combatant.Position), UNIT_HEXES_PER_SECOND * hexWidth);
         }
@@ -273,6 +276,8 @@ namespace HeroesOfMetalAge.Presentation
             if (canAct && battle.IsReachable(position))
             {
                 color = context.Theme.ReachableHexColor;
+                color.a = REACHABLE_HEX_ALPHA;
+                return color;
             }
             else
             {

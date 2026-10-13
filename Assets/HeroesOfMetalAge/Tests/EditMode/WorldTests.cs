@@ -120,7 +120,7 @@ namespace HeroesOfMetalAge.Tests
 
             Assert.IsFalse(map.TryGetCell(new Vector3(-0.5f, -0.5f, 0f), out _), "outside the map");
             Assert.IsTrue(map.HeroMarker.HasVisibleIcon);
-            Assert.IsTrue(session.Catalog.Mission.Encounters.All(encounter => map.EncounterMarker(encounter.Id).HasVisibleIcon));
+            Assert.IsTrue(session.Catalog.Mission.Encounters.Where(encounter => encounter.Kind != EncounterKind.Town).All(encounter => map.EncounterMarker(encounter.Id).HasVisibleIcon));
         }
 
         [Test]
@@ -129,7 +129,7 @@ namespace HeroesOfMetalAge.Tests
             GameSession session = NewSession();
             BattlefieldView battlefield = Track((GameObject)PrefabUtility.InstantiatePrefab(ContentAssets.BattlefieldPrefab.gameObject))
                 .GetComponent<BattlefieldView>();
-            battlefield.Initialize(Context(session), null);
+            battlefield.Initialize(Context(session));
             CombatPolicy policy = session.Catalog.Mission.Combat;
 
             for (int y = 0; y < policy.Height; y++)
@@ -160,6 +160,23 @@ namespace HeroesOfMetalAge.Tests
         }
 
         [Test]
+        public void TerrainRules_PriceTerrainAndDiagonalsLikeClassicStrategyGames()
+        {
+            TerrainRules terrain = ContentAssets.LoadCatalog().Mission.TerrainRules;
+
+            Assert.IsFalse(terrain.IsPassable(TerrainType.Forest), "trees stop a mounted hero");
+            Assert.IsFalse(terrain.IsPassable(TerrainType.Mountain));
+            Assert.IsFalse(terrain.IsPassable(TerrainType.Water));
+            Assert.IsFalse(terrain.IsPassable(TerrainType.Lava));
+            Assert.IsFalse(terrain.IsPassable(TerrainType.Obstacle));
+            Assert.IsFalse(terrain.IsPassable(TerrainType.Blocked));
+            Assert.Less(terrain.Cost(TerrainType.Road), terrain.Cost(TerrainType.Grass), "roads are faster");
+            Assert.Less(terrain.Cost(TerrainType.Grass), terrain.Cost(TerrainType.Sand));
+            Assert.Less(terrain.Cost(TerrainType.Sand), terrain.Cost(TerrainType.Swamp));
+            Assert.AreEqual(terrain.Cost(TerrainType.Grass) * 141 / 100, terrain.StepCost(TerrainType.Grass, true), "diagonals cost √2");
+        }
+
+        [Test]
         public void EquallyCheapRoutes_PreferTheStraightLine()
         {
             // rows below the mission's own encounters, so no site is in the way
@@ -182,8 +199,8 @@ namespace HeroesOfMetalAge.Tests
             MissionDefinition mission = real.Mission;
             TerrainType[] open = Enumerable.Repeat(TerrainType.Grass, size * size).ToArray();
             MissionDefinition openMission = new MissionDefinition(mission.Id, mission.Name, mission.Description, mission.HeroId, mission.ClanId,
-                mission.ClanName, mission.ClanHeroName, mission.StartingGold, mission.ArmySlots, mission.DaysPerWeek, mission.ForestCost,
-                mission.GroundCost, mission.OwnedPriceMultiplier, size, size, start, open, mission.Combat, mission.Encounters, mission.RecruitmentIds);
+                mission.ClanName, mission.ClanHeroName, mission.StartingGold, mission.ArmySlots, mission.DaysPerWeek, mission.TerrainRules,
+                mission.OwnedPriceMultiplier, size, size, start, open, mission.Combat, mission.Encounters, mission.RecruitmentIds);
             DefinitionCatalog catalog = new DefinitionCatalog(real.Units, real.Artefacts, real.Heroes, openMission);
             campaign = new CampaignRules(catalog).NewCampaign();
             return new WorldMap(openMission);

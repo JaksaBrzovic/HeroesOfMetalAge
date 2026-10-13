@@ -14,9 +14,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: HeroesOfMetalAge.Infrastructure::HeroesOfMetalAge.Infrastructure.Content.UnitDatabaseScriptableObject
   units:
   - id: ironbound
-    displayName: IRONBOUND
-    description: Axe infantry
-    portrait: {fileID: 0}
+    displayName: ROADIE
+    description: Stage-hardened brawler; swings his flight case like a battering
+      ram
+    portrait: {fileID: 21300000, guid: 22f5927ff444ef04380073d11f43108d, type: 3}
+    walkFrames:
+    - {fileID: 21300000, guid: 22f5927ff444ef04380073d11f43108d, type: 3}
+    - {fileID: 21300000, guid: 2c095b3fde3b2144b9d0b2c2cf5caf2b, type: 3}
+    - {fileID: 21300000, guid: 2d692cf7f56245c49b73c6a24226d505, type: 3}
+    - {fileID: 21300000, guid: d31e17d80cc5f484687d4bacd6c891cb, type: 3}
+    - {fileID: 21300000, guid: bc10dbe19a2164d44927d6a0ba52a749, type: 3}
+    - {fileID: 21300000, guid: 78a57b508746eec43b48799727432929, type: 3}
+    - {fileID: 21300000, guid: dd39a1c123ca1c54aa94531bb514d498, type: 3}
+    - {fileID: 21300000, guid: 9ca9f0e92506b404194f26ed458e72a4, type: 3}
+    walkFramesPerSecond: 8
     placeholderIcon: axe
     health: 18
     minimumDamage: 3
@@ -29,9 +40,19 @@ MonoBehaviour:
     ranged: 0
     voice: {fileID: 11400000, guid: d5789f3d02301864bb42a85ca6723c36, type: 2}
   - id: ash-archer
-    displayName: ASH ARCHER
-    description: Ranged / half damage in melee
-    portrait: {fileID: 0}
+    displayName: AIR GUITARIST
+    description: Ranged / riffs strike from afar, half damage in melee
+    portrait: {fileID: 21300000, guid: 53c52e4783e7b124b94153082243e9b2, type: 3}
+    walkFrames:
+    - {fileID: 21300000, guid: 53c52e4783e7b124b94153082243e9b2, type: 3}
+    - {fileID: 21300000, guid: b1c31bca95bf380409ea45a81163ffbc, type: 3}
+    - {fileID: 21300000, guid: 6149e6d3a6486b247ac586046070ef07, type: 3}
+    - {fileID: 21300000, guid: fff09c082adaa82409c61e3b45f3d81f, type: 3}
+    - {fileID: 21300000, guid: 0f151ae3ec7fe4348a55bc0bedd90bf0, type: 3}
+    - {fileID: 21300000, guid: 54aabc4a41ac9fe4ba11cc1e528b1fa0, type: 3}
+    - {fileID: 21300000, guid: d28371ea16aaa8c4b80c7f81174d186a, type: 3}
+    - {fileID: 21300000, guid: 432f57168e163054b95c1d90eeae76b7, type: 3}
+    walkFramesPerSecond: 8
     placeholderIcon: bow
     health: 13
     minimumDamage: 3
@@ -47,6 +68,8 @@ MonoBehaviour:
     displayName: DOOM RIDER
     description: Heavy cavalry
     portrait: {fileID: 0}
+    walkFrames: []
+    walkFramesPerSecond: 8
     placeholderIcon: rider
     health: 40
     minimumDamage: 7

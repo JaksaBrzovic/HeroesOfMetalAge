@@ -18,9 +18,9 @@ namespace HeroesOfMetalAge.EditorTools
     public static class PrototypePipeline
     {
         private const string PLAYER_PATH = "Builds/Windows/HeroesOfMetalAge.exe";
-        private const string BUNDLE_VERSION = "0.5.0";
-        private const int DEFAULT_SCREEN_WIDTH = 1600;
-        private const int DEFAULT_SCREEN_HEIGHT = 900;
+        private const string BUNDLE_VERSION = "0.6.0";
+        private const int DEFAULT_SCREEN_WIDTH = 1920;
+        private const int DEFAULT_SCREEN_HEIGHT = 1080;
         private const int LEGACY_INPUT_MANAGER = 0;
 
         /// <summary>Validates the content and regenerates Assets/Scenes/AshenPass.unity wired to the authored assets.</summary>
@@ -77,7 +77,7 @@ namespace HeroesOfMetalAge.EditorTools
             PlayerSettings.bundleVersion = BUNDLE_VERSION;
             PlayerSettings.defaultScreenWidth = DEFAULT_SCREEN_WIDTH;
             PlayerSettings.defaultScreenHeight = DEFAULT_SCREEN_HEIGHT;
-            PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
+            PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
             PlayerSettings.resizableWindow = true;
             PlayerSettings.runInBackground = true;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);

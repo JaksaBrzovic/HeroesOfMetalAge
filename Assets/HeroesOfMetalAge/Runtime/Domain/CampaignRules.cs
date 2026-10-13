@@ -266,7 +266,7 @@ namespace HeroesOfMetalAge.Domain
                 return CommandResult.Reject("Invalid movement step.");
             }
 
-            int cost = map.Cost(next);
+            int cost = map.StepCost(campaign.Position, next);
             if (campaign.Movement < cost)
             {
                 return CommandResult.Reject("Movement spent. End the day to continue.");

@@ -1,11 +1,11 @@
 # Heroes of Metal Age — architecture
 
-Status: prototype 0.5, Unity 6000.3.26f1, Windows, Universal Render Pipeline (2D Renderer). This document records only what is specific to this project: module map, ownership, contracts and decisions. General Unity coding and architecture conventions (naming, formatting, lifecycle, uGUI layout/input/performance, SOLID, testing levels) come from the shared Unity guidance and are not repeated here. Read together with `PROTOTYPE.md` and `AUDIO_DIRECTION.md`.
+Status: prototype 0.6, Unity 6000.3.26f1, Windows, Universal Render Pipeline (2D Renderer), target resolution Full HD (1920x1080, 16:9). This document records only what is specific to this project: module map, ownership, contracts and decisions. General Unity coding and architecture conventions (naming, formatting, lifecycle, uGUI layout/input/performance, SOLID, testing levels) come from the shared Unity guidance and are not repeated here. Read together with `PROTOTYPE.md` and `AUDIO_DIRECTION.md`.
 
 ## 1. Project requirements
 
 - **Content:** all designer-editable content and tuning live in ScriptableObject assets, so stats, text, images and sounds change in the Inspector without code. Runtime state and saves stay separate.
-- **UI:** the whole UI, including the F3 development panel, is prefab-authored uGUI with TextMeshPro. No runtime code uses IMGUI or builds controls.
+- **UI:** the whole UI, including the F3 development panel, is prefab-authored uGUI with TextMeshPro. No runtime code uses IMGUI or builds controls. The design resolution is 1920x1080, so at the target one UI unit and one map image pixel are one screen pixel.
 - **World:** the adventure map and the battlefield are world objects (sprites, a Tilemap logic layer, an orthographic camera) drawn inside viewports the UI leaves open. UI is UI; everything else is world.
 - **Scope:** sound-first, turn-based, single player. Multiplayer, ECS, network determinism and modding are not current requirements.
 
@@ -15,7 +15,7 @@ Paths are relative to `Assets/HeroesOfMetalAge/`. Each row is an assembly defini
 
 | Assembly | Contents | Known limits |
 |---|---|---|
-| `Runtime/Domain` (no engine refs) | Definitions and coordinates, `CampaignState`, `CampaignRules`, `WorldMap` pathfinding, `HexGrid`, `BattleEngine`, `DamageCalculator`, `BattleAi`, `CampaignSnapshot` | One hero, one town, one encounter of each kind |
+| `Runtime/Domain` (no engine refs) | Definitions and coordinates, `CampaignState`, `CampaignRules`, `WorldMap` pathfinding, `TerrainRules` (passability, movement costs, diagonal cost), `HexGrid`, `BattleEngine`, `DamageCalculator`, `BattleAi`, `CampaignSnapshot` | One hero, one town, one encounter of each kind |
 | `Runtime/Application` (no engine refs) | `GameSession` (commands, transitions, revisions, typed events), `SoundCue`/`MusicLayer` enums, ports `ISaveStore` and `IAudioControls` | Synchronous commands, no networking |
 | `Runtime/Presentation` | UI: `GameHud` router, one `CanvasScreenView` per screen, header/footer/notifications, `DebugPanelView`, `UiWidget`, `UiTheme`, `CanvasViewContext`. World: `GameWorld`, `WorldCamera`, `AdventureMapView`, `BattlefieldView`, `WorldMarker`, `FloatingText` | Placeholder art, no zoom |
 | `Runtime/Infrastructure` | Content databases, `AdventureMapAuthoring` and `TerrainTile` (map image and logic layer), `ContentValidator`, `ContentLoader`; `GameAudio`; `JsonCampaignStore` | No live content refresh or streaming |
@@ -49,11 +49,13 @@ The map prefab carries both `AdventureMapAuthoring` (Infrastructure: what the ru
 
 | Asset | Class | Holds |
 |---|---|---|
-| `Databases/UnitDatabase.asset` | `UnitDatabaseScriptableObject` | ID, name, description, portrait, health, damage range, attack/defense, speed, ranged, price, weekly growth, voice (`SoundDefinition`) |
+| `Databases/UnitDatabase.asset` | `UnitDatabaseScriptableObject` | ID, name, description, portrait, walk cycle, health, damage range, attack/defense, speed, ranged, price, weekly growth, voice (`SoundDefinition`) |
 | `Databases/ArtefactDatabase.asset` | `ArtefactDatabaseScriptableObject` | ID, name, description, icon, slot, attack/defense/speed bonus |
-| `Databases/HeroDatabase.asset` | `HeroDataBaseScriptableObject` | ID, name, portrait, faction/class, base stats, movement, progression, starting army |
+| `Databases/HeroDatabase.asset` | `HeroDataBaseScriptableObject` | ID, name, portrait, map ride cycle, faction/class, base stats, movement, progression, starting army |
 | `Databases/AudioDatabase.asset` | `AudioDatabaseScriptableObject` | Audio system settings; a `SoundDefinition` field per music layer and per `SoundCue`; layer mix, layer fade time, heavy-hit threshold |
-| `Databases/AshenPass.asset` | `MissionSettingsScriptableObject` | Map prefab, start and encounter cells (from the top-left), encounters and rewards, gold, town/faction, prices, battlefield image, combat tuning, pacing |
+| `Databases/AshenPass.asset` | `MissionSettingsScriptableObject` | Map prefab, terrain database, start and encounter cells (from the top-left), encounters with rewards and battlefield images, gold, town/faction, prices, default battlefield image, combat tuning, pacing |
+| `Databases/TerrainDatabase.asset` | `TerrainDatabaseScriptableObject` | Per terrain: passable or not and movement cost (road 75, grass/dirt 100, rough 125, sand 150, swamp 175; forest, mountain, water, lava, obstacle impassable); diagonal step cost 141 % |
+| `Units/*`, `Heroes/*`, `World/Battlefields/*` | Sprites | Walk cycles (Roadie, Air Guitarist), the hero's ride cycle and the green and infernal battlefield images |
 | `Maps/AshenPass/AshenPassMap.prefab`, `Maps/AshenPass/AshenPass.png` | `AdventureMapAuthoring` + `AdventureMapView` | Map image, pixels per cell, the painted terrain logic layer, display size |
 | `Maps/TerrainLogic/*.asset`, `Terrain Logic.prefab` | `TerrainTile`, Tile Palette | Grass, Road, Forest, Water, Mountain logic tiles and their palette |
 | `Rendering/UniversalRenderPipeline.asset`, `WorldRenderer2D.asset` | URP asset, 2D Renderer | Pipeline settings; sprites sort by Y (lower is in front) |
@@ -71,6 +73,7 @@ Views call `GameSession` methods: `Plan`, `Travel`, `EndDay`, `AcceptFriendly`, 
 ## 5. Game rules the architecture must preserve
 
 - Adventure grid (`WorldPosition`) and combat hexes (`HexPosition`) are separate value types. `WorldPosition` rows count from the top; Tilemap rows count from the bottom, converted only in `AdventureMapAuthoring.ReadTerrain` and `AdventureMapView`. Unpainted cells are `TerrainType.Blocked`. Pathfinding (a binary-heap Dijkstra, fast on maps of hundreds of cells per side) allows diagonals without corner cutting; among equally cheap routes it prefers the shortest on the map (diagonal ≈ 1.4 straight steps), then the one closest to the straight line, then row and column; travel stops before an unresolved encounter or when movement runs out.
+- Movement points are 1600 per day. A step costs the destination's terrain cost from `TerrainRules`, times 1.41 when diagonal; travel stops when the next step is not affordable.
 - `EndDay` restores movement and applies weekly growth on days 8, 15, 22…; loading a save never applies growth again.
 - Combat damage, retaliation (once per round), ranged half-damage in melee, defending (−30 %) and casualties are resolved by `BattleEngine` independently of animation. Randomness comes from an injected `IRandomSource`; tests use fixed seeds. `BattleAi` acts through the same validated actions as the player.
 - Victory rewards are granted once, even if the terminal action repeats. Defeat offers a retry from the pre-battle snapshot without persistent casualties.
@@ -79,7 +82,7 @@ Views call `GameSession` methods: `Plan`, `Travel`, `EndDay`, `AcceptFriendly`, 
 
 ## 6. UI and world composition
 
-**UI.** `GameUiRoot.prefab` (under `Prefabs/UI/`) owns the CanvasScaler (1600×900 design frame, Expand, letterboxed), the single EventSystem (legacy input module) and nested screen prefabs: `Adventure`, `Combat`, `Town`, `Hero`, `Dialog`, `Options`, `Header`, `Footer`, `Notifications`. `DebugPanel.prefab` is instantiated under the design frame only in the Editor and development builds. Four shared widgets live in `Widgets/`. Each view binds its controls through named, typed serialized fields (`titleText`, `rideButton`, `portraitImage`) and reports a missing reference by field name on startup. `Adventure` and `Combat` leave a `MapViewport` / `BattleViewport` RectTransform with no graphics, so the world shows through and clicks there reach it.
+**UI.** `GameUiRoot.prefab` (under `Prefabs/UI/`) owns the CanvasScaler (1920×1080 design frame, Expand, letterboxed), the single EventSystem (legacy input module) and nested screen prefabs: `Adventure`, `Combat`, `Town`, `Hero`, `Dialog`, `Options`, `Header`, `Footer`, `Notifications`. `DebugPanel.prefab` is instantiated under the design frame only in the Editor and development builds. Four shared widgets live in `Widgets/`. Each view binds its controls through named, typed serialized fields (`titleText`, `rideButton`, `portraitImage`) and reports a missing reference by field name on startup. `Adventure` and `Combat` leave a `MapViewport` / `BattleViewport` RectTransform with no graphics, so the world shows through and clicks there reach it.
 
 **World.** `Prefabs/World/World.prefab` (`GameWorld`) holds a background camera (clears the screen, carries the AudioListener), the world camera (`WorldCamera`), a global 2D light, `Maps` (the mission's map instance) and the nested `Battlefield.prefab`. Sorting layers: Background, Terrain, Route, Default, Units, Effects; figures use a SortingGroup and sort by Y.
 
@@ -94,7 +97,7 @@ AshenPassMap (AdventureMapAuthoring + AdventureMapView)     Battlefield (Battlef
 
 `GameWorld` shows the map on the Adventure screen and the battlefield in battle, points the world camera at the screen's viewport each frame (its pixel rect follows the UI at any resolution) and turns pointer and arrow input into `Plan`, `ShowHero` or `BattleAction`. World input obeys the UI's blocking: nothing while a dialog, options or the F3 panel is open, and nothing through UI controls (an EventSystem raycast at the pointer). On the map the camera size comes from the cell's display size (UI design pixels per cell), follows the hero while he travels, pans with arrows or a drag and is clamped to the map; on the battlefield it frames the board. Runtime only instantiates saved prefabs (markers, route steps, hexes, damage numbers). `CanvasViewContext` picks live sprites or theme placeholders with Unity null checks for both UI and world figures.
 
-Animations show resolved results and never decide gameplay: the hero glides from cell to cell (jumps of more than six cells are shown at once), the acting stack has a pulsing ring in its side's colour and a highlighted hex, stacks glide, lunge, flash and fade, damage numbers rise and hits at or above a threshold shake the camera. Battle animations are keyed by combatant ID from `DamageEvent`.
+Figures stand on their cell with a ground shadow in their side's colour; art of any size is scaled to one height with its feet on the ground line. Animations show resolved results and never decide gameplay: walk cycles play while a figure moves and it faces where it goes (battle stacks then face the enemy again, the hero keeps his last facing); the hero glides from cell to cell (jumps of more than six cells are shown at once), the acting stack has a pulsing ring in its side's colour and a highlighted hex, stacks glide, lunge, flash and fade, damage numbers rise and hits at or above a threshold shake the camera. Battle animations are keyed by combatant ID from `DamageEvent`.
 
 ## 7. Audio
 
@@ -102,7 +105,7 @@ Animations show resolved results and never decide gameplay: the hero glides from
 
 ## 8. Persistence
 
-`JsonCampaignStore` writes schema version 2 with stable string IDs to `campaign.json` under `Application.persistentDataPath`: temporary file, then `File.Replace` keeping a `.bak`. Version 1 saves migrate on read through explicit legacy ID maps. A load is fully validated (IDs, counts, ownership, positions) before it replaces the live session; a failure keeps both the session and the previous save. Autosave happens after travel, recruitment, equipment and victory. Tests and the smoke scenario use their own filenames.
+`JsonCampaignStore` writes schema version 3 with stable string IDs to `campaign.json` under `Application.persistentDataPath`: temporary file, then `File.Replace` keeping a `.bak`. Saves of earlier versions were made on the previous map with other movement points and are rejected rather than migrated; the game then starts a new mission. A load is fully validated (IDs, counts, ownership, positions) before it replaces the live session; a failure keeps both the session and the previous save. Autosave happens after travel, recruitment, equipment and victory. Tests and the smoke scenario use their own filenames.
 
 ## 9. Build and verification
 
@@ -126,6 +129,10 @@ Format: context, decision, tradeoff, validation, revisit trigger.
 
 **World presentation.** The map will be larger than the screen and needs effects, so it left the Canvas: a Canvas rebuilds on every moving element, has no camera, particles or 2D lights, and scrolling would need masks. The map and the battlefield are world objects behind viewports in the uGUI screens; the battlefield follows for effects and consistency. Tradeoff: two input paths (UI and world) that must agree on blocking, and a camera to keep aligned with the UI. Validated by world tests (cell and hex round trips) and the built-player scenario (clicks through the world, blocked clicks under modals, viewport alignment at several resolutions). Revisit only if the world needs 3D.
 
+**Movement model.** The painted map has many terrain types and needs penalties between whole cells, so movement follows classic strategy games: points ×100 (1600 per day), a cost per terrain in an authored terrain database, diagonals 1.41 times dearer and trees, mountains, water, lava and obstacles impassable for a mounted hero. Tradeoff: saves from before the change are incompatible. Validated by terrain-rule and routing tests and the whole-mission scenario. Revisit with terrain-specific hero skills or boats.
+
+**Full HD design.** The target is 1920x1080 at 16:9, so the UI reference resolution is 1920x1080 and map images are shown pixel for pixel there; other aspect ratios letterbox. Validated by the built-player scenario at 1920x1080, 1280x1024 and 1920x800.
+
 **Map authoring.** A painted image per map with a hand-painted Tilemap logic layer, rather than terrain rows in the mission asset; the cell size is a setting with a Rebuild that resamples what is painted. Tradeoff: the logic layer must be painted to match the image, and start/encounter cells must be checked after a cell-size change. Validated by the logic-layer and resample tests and content validation (`IsBuilt`, walkable start and encounters). Revisit when maps are built from visual tiles; the logic layer can then be derived from them.
 
 **URP.** Switched from the built-in pipeline before any world art exists, so nothing needed converting; the 2D Renderer brings 2D lights, sprite shaders and post-processing for the planned effects. Tradeoff: more render settings, URP-only shaders. Validated by the built-player screenshots. Revisit only for a platform requirement.
@@ -134,6 +141,6 @@ Format: context, decision, tradeoff, validation, revisit trigger.
 
 ## 11. Next steps
 
-Import the painted Ashen Pass map and battlefield images and paint the logic layer to match, wood/iron UI frames, camera zoom, the 10-slot equipment layout from the design document, configurable artefact effects, more mission/town/economy tuning moved into focused ScriptableObjects, bar-synchronized music changes once distinct tracks exist, and PlayMode tests. Keep every step playable and buildable, with one authoritative implementation per rule.
+Correct the first-draft logic layer of the Ashen Pass map by hand, wood/iron UI frames (9-slice), item icons, Doom Rider art, a town screen built on the Ashen Hold concept (needs a version without baked UI), camera zoom, the 10-slot equipment layout from the design document, configurable artefact effects, more mission/town/economy tuning moved into focused ScriptableObjects, bar-synchronized music changes once distinct tracks exist, and PlayMode tests. Keep every step playable and buildable, with one authoritative implementation per rule.
 
 Update this document when module boundaries, state ownership, the save format or content/audio contracts change.

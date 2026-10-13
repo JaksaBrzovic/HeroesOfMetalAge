@@ -13,8 +13,6 @@ namespace HeroesOfMetalAge.Presentation
     public sealed class WorldCanvasView : CanvasScreenView
     {
         [Header("Hero panel")]
-        [SerializeField] private TMP_Text titleText;
-        [SerializeField] private TMP_Text descriptionText;
         [SerializeField] private TMP_Text heroText;
         [SerializeField] private TMP_Text levelText;
         [SerializeField] private Image portraitImage;
@@ -37,8 +35,6 @@ namespace HeroesOfMetalAge.Presentation
         {
             HeroDefinition hero = Catalog.Hero(Campaign.HeroId);
             int dailyMovement = Rules.DailyMovement(Campaign);
-            UiBinding.SetText(titleText, Catalog.Mission.Name);
-            UiBinding.SetText(descriptionText, Catalog.Mission.Description);
             UiBinding.SetText(heroText, hero.Name);
             UiBinding.SetText(levelText, hero.ClassName + " / LEVEL " + Rules.Level(Campaign));
             UiBinding.SetSprite(portraitImage, Context.HeroIcon, Context.HeroTint);
@@ -52,8 +48,6 @@ namespace HeroesOfMetalAge.Presentation
 
         protected override void ValidateReferences()
         {
-            Require(titleText, nameof(titleText));
-            Require(descriptionText, nameof(descriptionText));
             Require(heroText, nameof(heroText));
             Require(levelText, nameof(levelText));
             Require(portraitImage, nameof(portraitImage));
