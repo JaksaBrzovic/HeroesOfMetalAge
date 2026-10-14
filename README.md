@@ -1,12 +1,12 @@
 AI-Native project developed by Jaksa Brzovic
 
 <!-- usage:start -->
-Claude Code time: 0 h 43 min of work over 3 sessions
+Claude Code time: 4 h 49 min of work over 5 sessions
 
 | Claude Code usage | Input | Output | Cache write 5m | Cache write 1h | Cache read | Web searches | Web fetches |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| claude-opus-5-5 | 418 | 205,870 | 0 | 648,462 | 37,967,947 | 0 | 0 |
-<!-- usage-data: {"models": {"claude-opus-5-5": {"cache_read": 37967947, "cache_write_1h": 648462, "cache_write_5m": 0, "input": 418, "output": 205870, "web_fetches": 0, "web_searches": 0}}, "seconds": 2596.644, "sessions": 3, "until": "2026-10-14T17:51:59+00:00"} -->
+| claude-opus-5-5 | 1,996 | 1,289,607 | 0 | 5,355,575 | 407,580,309 | 0 | 0 |
+<!-- usage-data: {"models": {"claude-opus-5-5": {"cache_read": 407580309, "cache_write_1h": 5355575, "cache_write_5m": 0, "input": 1996, "output": 1289607, "web_fetches": 0, "web_searches": 0}}, "seconds": 17382.857, "sessions": 5, "until": "2026-10-14T18:10:31+00:00"} -->
 <!-- usage:end -->
 
 Codex time (2026-10-09 – 2026-10-12, finished): 6 h 35 min of work over 5 sessions
