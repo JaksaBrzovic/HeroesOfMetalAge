@@ -1,3 +1,13 @@
+AI-Native project developed by Jaksa Brzovic
+
+<!-- usage:start -->
+Claude Code time: 0 h 38 min of work over 2 sessions
+
+| Claude Code usage | Input | Output | Cache write 5m | Cache write 1h | Cache read | Web searches | Web fetches |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| claude-opus-5-5 | 350 | 183,329 | 0 | 590,398 | 35,637,588 | 0 | 0 |
+<!-- usage:end -->
+
 # Heroes of Metal Age — prototype 0.7
 
 Unity **6000.3.26f1**, Windows x64, Mono, Universal Render Pipeline (2D Renderer). An original sound-driven turn-based strategy prototype inspired by classic adventure-map and tactical-combat games. Target resolution: Full HD (1920x1080, 16:9); the UI is designed at 1920x1080 and scales to other sizes.
