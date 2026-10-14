@@ -1,12 +1,19 @@
 AI-Native project developed by Jaksa Brzovic
 
 <!-- usage:start -->
-Claude Code time: 0 h 38 min of work over 2 sessions
+Claude Code time: 0 h 43 min of work over 3 sessions
 
 | Claude Code usage | Input | Output | Cache write 5m | Cache write 1h | Cache read | Web searches | Web fetches |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| claude-opus-5-5 | 350 | 183,329 | 0 | 590,398 | 35,637,588 | 0 | 0 |
+| claude-opus-5-5 | 418 | 205,870 | 0 | 648,462 | 37,967,947 | 0 | 0 |
+<!-- usage-data: {"models": {"claude-opus-5-5": {"cache_read": 37967947, "cache_write_1h": 648462, "cache_write_5m": 0, "input": 418, "output": 205870, "web_fetches": 0, "web_searches": 0}}, "seconds": 2596.644, "sessions": 3, "until": "2026-10-14T17:51:59+00:00"} -->
 <!-- usage:end -->
+
+Codex time (2026-10-09 – 2026-10-12, finished): 6 h 35 min of work over 5 sessions
+
+| Codex usage | Input (uncached) | Cached input | Output | of which reasoning |
+|---|---:|---:|---:|---:|
+| gpt-6.1-sol | 2,658,784 | 68,483,456 | 354,087 | 95,575 |
 
 # Heroes of Metal Age — prototype 0.7
 
