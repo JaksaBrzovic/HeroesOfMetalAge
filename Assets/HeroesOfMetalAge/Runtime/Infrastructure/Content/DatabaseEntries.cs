@@ -231,6 +231,9 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [SerializeField] private int rewardGold;
         [Tooltip("Battlefield image for this encounter; empty uses the mission's.")]
         [SerializeField] private Sprite battleBackground;
+        [Tooltip("Dialogue conversation played when the hero reaches this site: before the friendly or hostile dialog opens, or "
+            + "in the town from the garrison hero while the clan still holds it. Empty for none.")]
+        [SerializeField] private string arrivalConversationId;
 
         public string Id => id;
         public EncounterKind Kind => kind;
@@ -245,6 +248,12 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public int RewardExperience => rewardExperience;
         public int RewardGold => rewardGold;
         public Sprite BattleBackground => battleBackground;
+
+        public string ArrivalConversationId
+        {
+            get => arrivalConversationId;
+            internal set => arrivalConversationId = value;
+        }
 
         public EncounterDefinition ToDefinition()
         {

@@ -12,7 +12,8 @@ namespace HeroesOfMetalAge.EditorTools
 {
     /// <summary>
     /// Command-line entry points (Tools/Build.ps1): generate the bootstrap scene from the authored assets and build the
-    /// Windows player. The scene is the only generated asset; databases, maps and prefabs are authored and never rebuilt.
+    /// Windows player. The scene is the only generated asset; databases, maps and prefabs are authored and never rebuilt
+    /// (missing dialogue assets are seeded once, see <see cref="DialogueAssetSeeder"/>).
     /// The cameras come with the World prefab.
     /// </summary>
     public static class PrototypePipeline
@@ -29,15 +30,19 @@ namespace HeroesOfMetalAge.EditorTools
         public static void Setup()
         {
             ContentAssets.LoadCatalog();
+            DialogueAssetSeeder.CreateMissingAssets();
             RequireAsset(ContentAssets.RootPrefab, ContentAssets.UI_FOLDER + "/GameUiRoot.prefab");
             RequireAsset(ContentAssets.DebugPanelPrefab, ContentAssets.UI_FOLDER + "/Screens/DebugPanel.prefab");
             RequireAsset(ContentAssets.WorldPrefab, ContentAssets.WORLD_FOLDER + "/World.prefab");
+            RequireAsset(ContentAssets.Dialogue, ContentAssets.DIALOGUE_DATABASE_PATH);
+            RequireAsset(ContentAssets.DialogueOverlayPrefab, ContentAssets.DIALOGUE_OVERLAY_PATH);
 
             Directory.CreateDirectory(Path.GetDirectoryName(ContentAssets.SCENE_PATH));
             UnityEngine.SceneManagement.Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             GameBootstrap bootstrap = new GameObject("Heroes of Metal Age").AddComponent<GameBootstrap>();
             bootstrap.Configure(ContentAssets.Units, ContentAssets.Artefacts, ContentAssets.Heroes, ContentAssets.Audio, ContentAssets.Mission,
-                ContentAssets.RootPrefab, ContentAssets.WorldPrefab, ContentAssets.DebugPanelPrefab);
+                ContentAssets.Dialogue, ContentAssets.RootPrefab, ContentAssets.WorldPrefab, ContentAssets.DebugPanelPrefab,
+                ContentAssets.DialogueOverlayPrefab);
             EditorUtility.SetDirty(bootstrap);
             EditorSceneManager.SaveScene(scene, ContentAssets.SCENE_PATH);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ContentAssets.SCENE_PATH, true) };

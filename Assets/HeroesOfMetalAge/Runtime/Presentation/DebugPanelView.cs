@@ -66,6 +66,12 @@ namespace HeroesOfMetalAge.Presentation
             terrainButton.Bind(toggleTerrainOverlay);
         }
 
+        /// <summary>Adds a button for a development action owned elsewhere (the bootstrap adds dialogue previews).</summary>
+        public void AddAction(string label, Action action)
+        {
+            AddCueButton(label, action);
+        }
+
         public void Refresh()
         {
             bool canUseCampaign = session.Screen != GameScreen.Battle && !session.IsBusy && session.Dialog == DialogKind.None;

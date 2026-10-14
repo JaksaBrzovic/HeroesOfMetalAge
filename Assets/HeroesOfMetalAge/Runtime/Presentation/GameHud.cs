@@ -50,6 +50,7 @@ namespace HeroesOfMetalAge.Presentation
         private bool isDirty = true;
         private bool isSettingsOpen;
         private bool wasSettingsOpen;
+        private bool isDialogHeld;
         private DialogKind shownDialog;
         private GameObject selectionBeforeDialog;
         private GameObject selectionBeforeSettings;
@@ -112,6 +113,16 @@ namespace HeroesOfMetalAge.Presentation
         public void SetDebugVisible(bool isVisible)
         {
             IsDebugVisible = isVisible;
+            Invalidate();
+        }
+
+        /// <summary>
+        /// Keeps the encounter dialog hidden while something is presented before it, such as a spoken line. The session is
+        /// already in the dialog, so gameplay input stays blocked; the dialog appears and takes focus once released.
+        /// </summary>
+        public void SetDialogHeld(bool isHeld)
+        {
+            isDialogHeld = isHeld;
             Invalidate();
         }
 
@@ -264,7 +275,7 @@ namespace HeroesOfMetalAge.Presentation
             ShowScreen(combatView, session.Screen == GameScreen.Battle);
             ShowScreen(townView, session.Screen == GameScreen.Town);
             ShowScreen(heroView, session.Screen == GameScreen.Hero);
-            ShowScreen(dialogView, DialogCanvasView.Shows(session.Dialog));
+            ShowScreen(dialogView, DialogCanvasView.Shows(session.Dialog) && !isDialogHeld);
             ShowScreen(victoryView, session.Dialog == DialogKind.Victory);
             ShowScreen(rewardsView, session.Dialog == DialogKind.Rewards);
             ShowScreen(defeatView, session.Dialog == DialogKind.Defeat);
@@ -348,7 +359,8 @@ namespace HeroesOfMetalAge.Presentation
         /// <summary>Moves keyboard focus into an opening dialog or options and back to the previous control when they close.</summary>
         private void RestoreSelection(bool isModal)
         {
-            if (shownDialog != context.Session.Dialog)
+            // a held dialog takes focus when it appears
+            if (shownDialog != context.Session.Dialog && !isDialogHeld)
             {
                 if (isModal)
                 {

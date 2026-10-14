@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 063fbe6563bb4284babfc299377efffd, type: 3}
+  m_Name: DialogueDatabase
+  m_EditorClassIdentifier: HeroesOfMetalAge.Dialogue::HeroesOfMetalAge.Dialogue.DialogueDatabaseScriptableObject
+  charactersPerSecond: 80
+  speakers:
+  - id: kael
+    displayName: KAEL IRONSONG
+    portrait: {fileID: 21300000, guid: a47e271fced37474ebaf3cc95b37fb6c, type: 3}
+  - id: lord-varg
+    displayName: LORD VARG
+    portrait: {fileID: 0}
+  - id: air-guitarists
+    displayName: AIR GUITARISTS
+    portrait: {fileID: 21300000, guid: 53c52e4783e7b124b94153082243e9b2, type: 3}
+  - id: pass-wardens
+    displayName: PASS WARDENS
+    portrait: {fileID: 21300000, guid: 22f5927ff444ef04380073d11f43108d, type: 3}
+  - id: black-banner
+    displayName: THE BLACK BANNER
+    portrait: {fileID: 0}
+  conversations:
+  - id: ashen-pass-arrival
+    style: 0
+    lines:
+    - id: ashen-pass-arrival-01
+      speakerId: kael
+      text: The Ashen Pass. Every road east runs through this valley, and every road
+        here has a guard.
+      voiceOver: {fileID: 0}
+    - id: ashen-pass-arrival-02
+      speakerId: lord-varg
+      text: Turn back, bard. The Ashen Clan holds this pass, and the clan does not
+        sell passage.
+      voiceOver: {fileID: 0}
+    - id: ashen-pass-arrival-03
+      speakerId: kael
+      text: Then I will not buy it. Strings up, banners high!
+      voiceOver: {fileID: 0}
+  - id: kael-ready
+    style: 0
+    lines:
+    - id: kael-ready-01
+      speakerId: kael
+      text: Ready when you are.
+      voiceOver: {fileID: 0}
+  - id: friendly-arrival
+    style: 0
+    lines:
+    - id: friendly-arrival-01
+      speakerId: air-guitarists
+      text: Di si legeeendo, mi bi se tebi pridruzili
+      voiceOver: {fileID: 0}
+  - id: sentinel-arrival
+    style: 0
+    lines:
+    - id: sentinel-arrival-01
+      speakerId: pass-wardens
+      text: Preko nas mrtvih
+      voiceOver: {fileID: 0}
+  - id: town-arrival
+    style: 1
+    lines:
+    - id: town-arrival-01
+      speakerId: lord-varg
+      text: "Stranče, state your biznis"
+      voiceOver: {fileID: 0}
+  - id: boss-arrival
+    style: 1
+    lines:
+    - id: boss-arrival-01
+      speakerId: black-banner
+      text: Ti si looood
+      voiceOver: {fileID: 0}

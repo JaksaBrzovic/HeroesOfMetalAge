@@ -1,0 +1,10 @@
+{
+  "name": "HeroesOfMetalAge.Dialogue",
+  "rootNamespace": "HeroesOfMetalAge.Dialogue",
+  "references": [
+    "MLin.Audio",
+    "UnityEngine.UI",
+    "Unity.TextMeshPro"
+  ],
+  "noEngineReferences": false
+}

@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &170029299
+--- !u!1 &527606082
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 170029301}
-  - component: {fileID: 170029300}
+  - component: {fileID: 527606084}
+  - component: {fileID: 527606083}
   m_Layer: 0
   m_Name: Heroes of Metal Age
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &170029300
+--- !u!114 &527606083
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 170029299}
+  m_GameObject: {fileID: 527606082}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b10be66943574f548cdd4c10d57cbe19, type: 3}
@@ -153,16 +153,18 @@ MonoBehaviour:
   heroes: {fileID: 11400000, guid: 594996a58e5e7cf42a839a3cd39051b3, type: 2}
   audioDatabase: {fileID: 11400000, guid: 6205fff436004494e9ca9a0e5583b2eb, type: 2}
   mission: {fileID: 11400000, guid: 27c87a371ace26449b231e4aaa12301f, type: 2}
+  dialogueDatabase: {fileID: 11400000, guid: e291ea6dae8d44248a6b9cda2e21eccc, type: 2}
   uiPrefab: {fileID: 5288766737452384791, guid: 2c1653a75677a0b4999b0fc7dc01901f, type: 3}
   worldPrefab: {fileID: 1150860160331367576, guid: c42cc9c6c0a215a4fb7f3af004531e88, type: 3}
   debugPanelPrefab: {fileID: 1199435052972363032, guid: c6427983a0a23f845b4541c3e372633b, type: 3}
---- !u!4 &170029301
+  dialoguePrefab: {fileID: 4655510642808958657, guid: 8fe68feb22eb6854586b625a689925c0, type: 3}
+--- !u!4 &527606084
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 170029299}
+  m_GameObject: {fileID: 527606082}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -175,4 +177,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 170029301}
+  - {fileID: 527606084}

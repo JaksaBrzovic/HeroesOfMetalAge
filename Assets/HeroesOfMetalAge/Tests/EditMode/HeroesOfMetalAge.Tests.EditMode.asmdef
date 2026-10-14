@@ -6,6 +6,7 @@
     "HeroesOfMetalAge.Application",
     "HeroesOfMetalAge.Presentation",
     "HeroesOfMetalAge.Infrastructure",
+    "HeroesOfMetalAge.Dialogue",
     "HeroesOfMetalAge.Bootstrap",
     "HeroesOfMetalAge.Editor",
     "MLin.Audio",

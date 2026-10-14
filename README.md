@@ -48,6 +48,7 @@ Open `Assets/HeroesOfMetalAge/Content/Databases/` in Unity and select:
 - `HeroDatabase.asset`: hero name, portrait, map ride cycle, description, faction/class, base stats, movement points per day, progression and starting army.
 - `TerrainDatabase.asset`: which terrain is passable, the movement cost of each and the diagonal step cost.
 - `AudioDatabase.asset`: the sound for each game event, music layer and music track, the riding loop, the layer mix, strike timing and the heavy-hit threshold (see Audio above).
+- `DialogueDatabase.asset`: the dialogue typing speed, the speakers (ID, name, portrait) and the conversations (ID and lines: ID, speaker ID, text, optional voice-over SoundDefinition on the Voice channel). See Dialogue below.
 - `AshenPass.asset`: the map prefab, start and encounter cells, encounter armies, experience and typical gold, starting gold, town/faction, prices, the default and per-encounter battlefield images, combat tuning (including the miss chance), battle reward rolls and pacing (travel step, enemy turn, the pause after every battle action and the pause before the victory/defeat screen).
 
 Stable IDs are used by saves and cross-references. Reorder entries freely, but do not rename/remove IDs without migrating their references/saves. Stop and restart Play Mode or rebuild the player to pick up edited definitions. In-game New Mission uses the existing catalog snapshot. Portraits/icons are optional and use the placeholder art from `Content/UI/UiTheme.asset` when unassigned; the theme also holds the hex colours.
@@ -55,6 +56,23 @@ Stable IDs are used by saves and cross-references. Reorder entries freely, but d
 Runtime is split into Domain, Application, Presentation, Infrastructure and Bootstrap assemblies under `Assets/HeroesOfMetalAge/Runtime/`. Domain and Application have no Unity references. Views issue validated commands; audio and persistence are separate adapters. See `Docs/HOMA_ARCHITECTURE.md` for ownership, contracts and decisions.
 
 Saves (version 3) use stable IDs; successful replacements retain a `.bak` backup. Saves from earlier versions were made on the old map and are rejected; the game then starts a new mission. Tests and the smoke scenario never use the normal player campaign file.
+
+## Dialogue
+
+Dialogue can open at any time anywhere on the screen, in one of two styles chosen per conversation (`Style`):
+
+- **Portrait box**: a dialogue box with the speaker's portrait on the left and the name and text on the right.
+- **Speech balloon**: comic-strip style, small bubbles rise from the speaker to a cloud with the text; no portrait. (In comics a trail of small bubbles is the thought-balloon convention; a speech balloon usually has a pointed tail.)
+
+Text types fast, letter by letter; a click on the dialogue shows the whole line, the next click moves on, and it closes after the last line. A line may have a recorded voice-over.
+
+In the mission: reaching the Willing plays their portrait line before the join dialog appears, reaching the pass wardens plays theirs before the battle dialog, the Black Banner speaks in a balloon from its figure on the map before the battle dialog, and entering Ashen Hold while the clan holds it makes Lord Varg speak in a balloon from his garrison slot. Each encounter in `AshenPass.asset` names its conversation in `Arrival Conversation Id` (empty for none). Escape during an encounter line leaves the encounter as usual. The automated smoke scenario runs without these site conversations.
+
+- Content: `Content/Databases/DialogueDatabase.asset`. Add a speaker, then a conversation with its lines; a single remark is a conversation of one line. IDs must be unique; validation names any problem at startup.
+- Look: `Prefabs/UI/Widgets/DialogueBox.prefab` and `DialogueBalloon.prefab` (cloud and bubble sprites in `Content/UI/Sprites/`), both nested in `Prefabs/UI/DialogueOverlay.prefab`, its own Canvas above the game UI. Move the box in the overlay to change where it opens by default; on the balloon, `Balloon Offset` sets where the cloud sits from the speaker and `Pop Seconds` the speed of the bubbles popping in.
+- Code: `DialogueDirector.Play("conversation-id")` at the authored spot, `Play("conversation-id", new Vector2(x, y))` with x, y from 0 (left/bottom) to 1 (right/top), or `Play("conversation-id", someRectTransform)` at a UI element. For a balloon the position is the speaker's. `Completed` reports the conversation that was read to the end. The director is created by `GameBootstrap`; the dialogue assembly knows nothing else of the game.
+- F3 lists every conversation (`DIALOGUE ...`) and opens it at a random place.
+- `Tools > Heroes of Metal Age > Create missing dialogue assets` (`DialogueAssetSeeder`, also run by Generate scene) was a one-off tool that created the initial database and prefabs; it only creates missing assets and never overwrites them, so it does nothing while they exist. It can be deleted together with its call in `PrototypePipeline.Setup`.
 
 ## Adventure map and battlefield
 

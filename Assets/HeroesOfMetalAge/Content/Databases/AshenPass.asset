@@ -44,6 +44,7 @@ MonoBehaviour:
     rewardExperience: 0
     rewardGold: 0
     battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
+    arrivalConversationId: friendly-arrival
   - id: sentinel
     displayName: THE PASS WARDENS
     kind: 1
@@ -56,6 +57,7 @@ MonoBehaviour:
     rewardExperience: 180
     rewardGold: 500
     battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
+    arrivalConversationId: sentinel-arrival
   - id: town
     displayName: ASHEN HOLD
     kind: 2
@@ -70,6 +72,7 @@ MonoBehaviour:
     rewardExperience: 250
     rewardGold: 300
     battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
+    arrivalConversationId: town-arrival
   - id: boss
     displayName: THE BLACK BANNER
     kind: 3
@@ -86,6 +89,7 @@ MonoBehaviour:
     rewardExperience: 450
     rewardGold: 900
     battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
+    arrivalConversationId: boss-arrival
   mapMusic: {fileID: 11400000, guid: a2d7c21ab5e37b34b83075de8fbdf453, type: 2}
   townMusic: {fileID: 11400000, guid: 9a8672c4507648848abe74174be57351, type: 2}
   battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}

@@ -56,6 +56,11 @@ namespace HeroesOfMetalAge.Application
         public event Action<string> UnitVoiceRequested;
         public event Action<PlaybackState> PlaybackChanged;
         public event Action<DamageEvent> DamageResolved;
+        /// <summary>
+        /// The hero reached a site from the map: a friendly or hostile encounter (raised after its dialog opened) or the
+        /// town (after its screen opened). Not raised for development shortcuts.
+        /// </summary>
+        public event Action<EncounterDefinition> SiteReached;
 
         public DefinitionCatalog Catalog { get; }
         public CampaignRules Rules { get; }
@@ -217,6 +222,7 @@ namespace HeroesOfMetalAge.Application
                 if (site != null && site.Kind == EncounterKind.Town)
                 {
                     OpenTown();
+                    Publish(SiteReached, site);
                 }
 
                 return;
@@ -303,6 +309,7 @@ namespace HeroesOfMetalAge.Application
                 Dialog = encounter.Kind == EncounterKind.Friendly ? DialogKind.Friendly : DialogKind.Hostile;
                 Cue(encounter.Kind == EncounterKind.Friendly ? SoundCue.FriendlyEncounter : SoundCue.EnemyEncounter);
                 FinishTravel();
+                Publish(SiteReached, encounter);
                 return;
             }
 
@@ -318,6 +325,7 @@ namespace HeroesOfMetalAge.Application
             {
                 FinishTravel();
                 OpenTown();
+                Publish(SiteReached, encounter);
             }
         }
 

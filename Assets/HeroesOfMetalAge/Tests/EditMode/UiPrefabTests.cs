@@ -71,6 +71,33 @@ namespace HeroesOfMetalAge.Tests
         }
 
         [Test]
+        public void HeldEncounterDialog_StaysHiddenUntilReleased()
+        {
+            GameHud hud = (GameHud)PrefabUtility.InstantiatePrefab(root);
+            try
+            {
+                GameSession session = CampaignTestUtility.NewSession(ContentAssets.LoadCatalog(), new MemorySaveStore());
+                PresentationAssets media = GameBootstrap.CreatePresentationAssets(ContentAssets.Units, ContentAssets.Artefacts, ContentAssets.Heroes,
+                    ContentAssets.Mission);
+                hud.Initialize(session, new FakeAudioControls(), media);
+                Assert.IsTrue(hud.DialogView.gameObject.activeSelf, "the intro dialog shows");
+
+                hud.SetDialogHeld(true);
+                hud.RefreshNow();
+                Assert.IsFalse(hud.DialogView.gameObject.activeSelf, "held while something is said first");
+                Assert.IsFalse(hud.IsGameplayInputEnabled, "gameplay stays blocked under the held dialog");
+
+                hud.SetDialogHeld(false);
+                hud.RefreshNow();
+                Assert.IsTrue(hud.DialogView.gameObject.activeSelf);
+            }
+            finally
+            {
+                Object.DestroyImmediate(hud.gameObject);
+            }
+        }
+
+        [Test]
         public void WorldViewports_LetTheWorldShowThroughAndTakeNoClicks()
         {
             GameObject adventure = AssetDatabase.LoadAssetAtPath<GameObject>(ContentAssets.UI_FOLDER + "/Screens/Adventure.prefab");
@@ -151,7 +178,10 @@ namespace HeroesOfMetalAge.Tests
         public void PresentationCode_NeverBuildsOrDrawsUi()
         {
             string[] forbidden = { "OnGUI(", "GUI.DrawTexture", "GUILayout.", "new GameObject", "AddComponent<" };
-            foreach (string file in Directory.GetFiles("Assets/HeroesOfMetalAge/Runtime/Presentation", "*.cs"))
+            string[] files = Directory.GetFiles("Assets/HeroesOfMetalAge/Runtime/Presentation", "*.cs")
+                .Concat(Directory.GetFiles("Assets/HeroesOfMetalAge/Runtime/Dialogue", "*.cs"))
+                .ToArray();
+            foreach (string file in files)
             {
                 string code = File.ReadAllText(file);
                 foreach (string pattern in forbidden)

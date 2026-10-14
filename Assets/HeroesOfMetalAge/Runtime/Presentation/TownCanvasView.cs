@@ -42,6 +42,9 @@ namespace HeroesOfMetalAge.Presentation
         private readonly List<UiWidget> recruitmentCards = new List<UiWidget>();
         private int quantity = 1;
 
+        /// <summary>The garrison (home) hero's slot, where the garrison hero speaks from.</summary>
+        public RectTransform GarrisonHeroAnchor => homeHeroButton.Rect;
+
         private bool IsMaxQuantity => quantity == MAX_QUANTITY;
 
         public UiWidget RecruitmentCard(int index)
