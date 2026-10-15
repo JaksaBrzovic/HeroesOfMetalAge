@@ -289,6 +289,52 @@ namespace HeroesOfMetalAge.Tests
             Assert.AreEqual("Cloud", raycastImages[0].name);
         }
 
+        [Test]
+        public void ClickAway_ClosesBothStylesAsCompletedOnlyWhereTheConditionHolds()
+        {
+            NewDirector().Initialize(database, voice);
+            List<string> completed = new List<string>();
+            director.Completed += completed.Add;
+            bool isOnMap = false;
+            director.SetClickAwayCondition(() => isOnMap);
+
+            director.Play("greeting");
+            Assert.IsFalse(director.DismissArea.gameObject.activeSelf, "off the map a click away does nothing");
+
+            isOnMap = true;
+            director.Play("balloon");
+            Assert.IsTrue(director.DismissArea.gameObject.activeSelf, "on the map the full-screen dismiss area waits behind the dialogue");
+            director.DismissArea.onClick.Invoke();
+            Assert.IsFalse(director.IsPlaying);
+            Assert.IsFalse(director.SpeechBalloon.IsVisible);
+            Assert.IsFalse(director.DismissArea.gameObject.activeSelf, "nothing to dismiss once closed");
+            CollectionAssert.AreEqual(new[] { "balloon" }, completed, "a click away counts as read, so a held encounter dialog appears");
+
+            director.Play("greeting");
+            director.DismissArea.onClick.Invoke();
+            Assert.IsFalse(director.PortraitBox.IsVisible, "the portrait box closes the same way");
+            Assert.IsNull(voice.Playing, "and its voice-over stops");
+            CollectionAssert.AreEqual(new[] { "balloon", "greeting" }, completed);
+        }
+
+        [Test]
+        public void OverlayPrefab_DismissAreaCoversTheScreenBehindTheDialogue()
+        {
+            DialogueDirector prefab = ContentAssets.DialogueOverlayPrefab;
+            Button area = prefab.DismissArea;
+
+            Assert.IsNotNull(area, "run Tools > Heroes of Metal Age > Create missing dialogue assets");
+            Assert.IsFalse(area.gameObject.activeSelf, "inactive until a dialogue is open where a click away closes it");
+            Assert.AreSame(prefab.transform, area.transform.parent);
+            Assert.AreEqual(0, area.transform.GetSiblingIndex(), "drawn first, so the box and the balloon take their own clicks");
+            RectTransform rect = (RectTransform)area.transform;
+            Assert.AreEqual(Vector2.zero, rect.anchorMin);
+            Assert.AreEqual(Vector2.one, rect.anchorMax);
+            Image image = area.GetComponent<Image>();
+            Assert.IsTrue(image.raycastTarget);
+            Assert.AreEqual(0f, image.color.a, "invisible");
+        }
+
         private DialogueDirector NewDirector()
         {
             director = (DialogueDirector)PrefabUtility.InstantiatePrefab(ContentAssets.DialogueOverlayPrefab);

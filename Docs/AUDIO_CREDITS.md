@@ -23,4 +23,6 @@ Recorded sounds in `Assets/HeroesOfMetalAge/Content/Audio/Music/` and `Content/A
 
 **Not licensed for distribution:** `Music/spirit_horse_loop.wav` (the map music) is a seamless loop cut from an instrumental excerpt of "Spirit Horse of the Cherokee" by Manowar, a commercial recording under copyright. It is a temporary placeholder for private testing only and must be replaced by original or licensed music before any build is shared or published. The file (and its .meta) is in `.gitignore`: a fresh clone has no map music clip and the map plays the ambient and gallop layers instead.
 
+**Source not recorded:** `main_menu_hover.wav` (seconds 0-2 of "Highlander", the seagull) and `main_menu_new_game.wav` (seconds 260-263 of "Welcome Back", the scream) are excerpts supplied for the main menu's hover and New Game sounds. Their recordings and licences are not documented here; check them before any build is shared or published.
+
 The remaining clips in `Content/Audio/` (ambient and gallop layers, which now play only for a mission without map music, friendly, gold, equip, click, end of day, level and heavy hit) and the unit voices are original placeholder audio made for this prototype.

@@ -24,6 +24,9 @@ namespace HeroesOfMetalAge.Application
         /// <summary>True while fighting (the battle music leads).</summary>
         bool IsFighting { get; }
 
+        /// <summary>Plays an interface sound that belongs to no gameplay event, such as a main menu button's.</summary>
+        void Play(SoundCue cue);
+
         // review sounds without replaying the mission (development panel)
         void Audition(SoundCue cue);
         /// <summary>Plays one pass of a music layer as a preview.</summary>

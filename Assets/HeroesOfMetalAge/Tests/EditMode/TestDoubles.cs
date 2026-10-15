@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using HeroesOfMetalAge.Application;
 using HeroesOfMetalAge.Domain;
 
@@ -36,6 +37,12 @@ namespace HeroesOfMetalAge.Tests
         public bool IsMuted { get; set; }
         public bool IsRiding => false;
         public bool IsFighting => false;
+        public List<SoundCue> Played { get; } = new List<SoundCue>();
+
+        public void Play(SoundCue cue)
+        {
+            Played.Add(cue);
+        }
 
         public void Audition(SoundCue cue)
         {

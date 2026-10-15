@@ -14,7 +14,9 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
     /// mission's map music (quiet while the hero stands, full while he rides) or town music, the battle music, the victory
     /// music after the victory stinger for as long as the victory and rewards screens are open, or the defeat theme. The ambient and gallop layers start together and
     /// lead only when no track does (a mission without map music); the riding loop follows the ride, strikes play their swing and impact in sequence, event sounds come from
-    /// <see cref="AudioDatabaseScriptableObject"/> and unit voices from the unit database.
+    /// <see cref="AudioDatabaseScriptableObject"/> and unit voices from the unit database. The main menu has the map
+    /// music; after New Game the music and the layers fade out with the screen, stay silent on black and during the intro
+    /// (which plays the end-of-day sound) and fade in with the mission.
     /// </summary>
     public sealed class GameAudio : MonoBehaviour, IAudioControls
     {
@@ -33,6 +35,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
         private AudioDatabaseScriptableObject database;
         private MissionSettingsScriptableObject mission;
         private GameSession session;
+        private FrontEndFlow frontEnd;
         private SoundHandle[] layers = Array.Empty<SoundHandle>();
         private SoundHandle voice;
         private SoundHandle preview;
@@ -80,12 +83,14 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
         public bool IsDefeated { get; private set; }
         public bool IsInTown { get; private set; }
         public bool IsCelebrating { get; private set; }
+        /// <summary>True from New Game until the mission fades in: no music and no layers.</summary>
+        public bool IsSilenced { get; private set; }
         /// <summary>The music track playing now, or null while the layers lead.</summary>
         public MusicTrack? CurrentTrack => currentTrack;
 
         /// <exception cref="InvalidOperationException">Called a second time.</exception>
         public void Initialize(AudioDatabaseScriptableObject audioDatabase, UnitDatabaseScriptableObject unitDatabase,
-            MissionSettingsScriptableObject missionSettings, GameSession gameSession)
+            MissionSettingsScriptableObject missionSettings, GameSession gameSession, FrontEndFlow frontEndFlow)
         {
             if (isInitialized)
             {
@@ -95,6 +100,8 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
             database = audioDatabase;
             mission = missionSettings;
             session = gameSession;
+            frontEnd = frontEndFlow;
+            IsSilenced = IsSilentPhase(frontEnd.Phase);
             foreach (UnitEntry unit in unitDatabase.Units)
             {
                 if (unit.Voice != null)
@@ -111,12 +118,18 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
             session.UnitVoiceRequested += HandleUnitVoiceRequested;
             session.PlaybackChanged += HandlePlaybackChanged;
             session.DamageResolved += HandleDamageResolved;
+            frontEnd.PhaseChanged += HandleFrontEndPhaseChanged;
             isInitialized = true;
+        }
+
+        public void Play(SoundCue cue)
+        {
+            AudioSystem.Play(database.Sound(cue));
         }
 
         public void Audition(SoundCue cue)
         {
-            AudioSystem.Play(database.Sound(cue));
+            Play(cue);
         }
 
         public void AuditionLayer(MusicLayer layer)
@@ -212,6 +225,11 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
                 session.DamageResolved -= HandleDamageResolved;
             }
 
+            if (frontEnd != null)
+            {
+                frontEnd.PhaseChanged -= HandleFrontEndPhaseChanged;
+            }
+
             // the voices belong to this adapter; the authored clips and definitions are shared assets and stay untouched
             foreach (SoundHandle layer in layers)
             {
@@ -235,6 +253,28 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
             {
                 QueueVictoryMusic();
             }
+        }
+
+        // the fades follow the screen: out with the fade to black, in with the mission
+        private void HandleFrontEndPhaseChanged(FrontEndPhase phase)
+        {
+            if (phase == FrontEndPhase.Intro)
+            {
+                // placeholder intro: the end-of-day hourglass with its sound
+                Play(SoundCue.EndDay);
+            }
+
+            bool isSilenced = IsSilentPhase(phase);
+            if (isSilenced == IsSilenced)
+            {
+                return;
+            }
+
+            IsSilenced = isSilenced;
+            float fade = isSilenced ? frontEnd.FadeOutSeconds : frontEnd.FadeInSeconds;
+            ApplyMusic(false, fade);
+            ApplyLayerMix(fade);
+            ApplyRiding();
         }
 
         private void HandleUnitVoiceRequested(string unitId)
@@ -309,6 +349,11 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
 
         private MusicTrack? WantedTrack()
         {
+            if (IsSilenced)
+            {
+                return null;
+            }
+
             if (IsFighting)
             {
                 return MusicTrack.Battle;
@@ -363,6 +408,13 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
                 return;
             }
 
+            if (IsSilenced)
+            {
+                layers[(int)MusicLayer.Ambient].SetVolume(0f, fade);
+                layers[(int)MusicLayer.Gallop].SetVolume(0f, fade);
+                return;
+            }
+
             bool isMusicLeading = currentTrack.HasValue;
             float ambient = isMusicLeading ? database.AmbientUnderMusic : IsRiding ? database.AmbientWhileRiding : database.AmbientAtRest;
             float gallop = IsRiding && !isMusicLeading ? database.GallopMix : 0f;
@@ -372,7 +424,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
 
         // battle, victory and defeat music start from the beginning; map and town music continue where they stopped when
         // their SoundDefinition resumes its position
-        private void ApplyMusic(bool isInstant)
+        private void ApplyMusic(bool isInstant, float frontEndFade = -1f)
         {
             MusicTrack? wanted = WantedTrack();
             if (wanted == currentTrack)
@@ -381,6 +433,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
             }
 
             float fade = isInstant ? 0f
+                : frontEndFade >= 0f ? frontEndFade
                 : wanted == MusicTrack.Victory ? database.VictoryMusicFadeInSeconds
                 : currentTrack == MusicTrack.Victory ? database.VictoryMusicFadeOutSeconds
                 : database.LayerFadeSeconds;
@@ -397,7 +450,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
                 music = SoundHandle.Invalid;
             }
 
-            ApplyLayerMix(isInstant ? 0f : database.LayerFadeSeconds);
+            ApplyLayerMix(isInstant ? 0f : frontEndFade >= 0f ? frontEndFade : database.LayerFadeSeconds);
         }
 
         // on top of its crossfade, the map music sits low while the hero stands and rises while he rides
@@ -411,14 +464,19 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
 
         private void ApplyRiding()
         {
-            if (IsRiding && !riding.IsPlaying)
+            if (IsRiding && !IsSilenced && !riding.IsPlaying)
             {
                 riding = AudioSystem.Play(database.RidingLoop, database.RidingFadeSeconds);
             }
-            else if (!IsRiding)
+            else if (!IsRiding || IsSilenced)
             {
                 riding.Stop(database.RidingFadeSeconds);
             }
+        }
+
+        private static bool IsSilentPhase(FrontEndPhase phase)
+        {
+            return phase == FrontEndPhase.FadingOut || phase == FrontEndPhase.Black || phase == FrontEndPhase.Intro;
         }
 
         private static float PreviewSeconds(SoundDefinition sound)

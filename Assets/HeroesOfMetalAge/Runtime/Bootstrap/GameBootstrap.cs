@@ -32,6 +32,7 @@ namespace HeroesOfMetalAge.Bootstrap
         [SerializeField] private AudioDatabaseScriptableObject audioDatabase;
         [SerializeField] private MissionSettingsScriptableObject mission;
         [SerializeField] private DialogueDatabaseScriptableObject dialogueDatabase;
+        [SerializeField] private FrontEndSettingsScriptableObject frontEndSettings;
         [SerializeField] private GameHud uiPrefab;
         [Tooltip("World root: cameras, the battlefield and the parent of the mission's adventure map.")]
         [SerializeField] private GameWorld worldPrefab;
@@ -39,11 +40,14 @@ namespace HeroesOfMetalAge.Bootstrap
         [SerializeField] private DebugPanelView debugPanelPrefab;
         [Tooltip("Dialogue box overlay with its own Canvas, drawn above the game UI.")]
         [SerializeField] private DialogueDirector dialoguePrefab;
+        [Tooltip("Main menu, black fade and intro, drawn above everything else.")]
+        [SerializeField] private FrontEndView frontEndPrefab;
 
         /// <summary>Used by the scene generator to wire the authored assets.</summary>
         public void Configure(UnitDatabaseScriptableObject unitDatabase, ArtefactDatabaseScriptableObject artefactDatabase,
             HeroDataBaseScriptableObject heroDatabase, AudioDatabaseScriptableObject audio, MissionSettingsScriptableObject missionSettings,
-            DialogueDatabaseScriptableObject dialogue, GameHud hudPrefab, GameWorld world, DebugPanelView debugPrefab, DialogueDirector dialogueOverlay)
+            DialogueDatabaseScriptableObject dialogue, GameHud hudPrefab, GameWorld world, DebugPanelView debugPrefab, DialogueDirector dialogueOverlay,
+            FrontEndSettingsScriptableObject frontEnd, FrontEndView frontEndOverlay)
         {
             units = unitDatabase;
             artefacts = artefactDatabase;
@@ -55,6 +59,8 @@ namespace HeroesOfMetalAge.Bootstrap
             worldPrefab = world;
             debugPanelPrefab = debugPrefab;
             dialoguePrefab = dialogueOverlay;
+            frontEndSettings = frontEnd;
+            frontEndPrefab = frontEndOverlay;
         }
 
         /// <summary>Authored portraits, icons, walk cycles and battlefield images by ID for the presentation layer.</summary>
@@ -96,9 +102,9 @@ namespace HeroesOfMetalAge.Bootstrap
 
         private void Compose()
         {
-            if (uiPrefab == null || worldPrefab == null || dialoguePrefab == null)
+            if (uiPrefab == null || worldPrefab == null || dialoguePrefab == null || frontEndPrefab == null || frontEndSettings == null)
             {
-                throw new InvalidOperationException("GameUiRoot, World or DialogueOverlay prefab is not configured on GameBootstrap.");
+                throw new InvalidOperationException("GameUiRoot, World, DialogueOverlay or FrontEnd prefab or the front end settings are not configured on GameBootstrap.");
             }
 
             DefinitionCatalog catalog = ContentLoader.Load(units, artefacts, heroes, audioDatabase, mission);
@@ -109,14 +115,18 @@ namespace HeroesOfMetalAge.Bootstrap
             IRandomSource random = new SeededRandomSource(isSmokeTest ? SMOKE_TEST_SEED : Environment.TickCount);
             GameSession session = new GameSession(catalog, store, random, mission.TravelStepSeconds, mission.EnemyTurnSeconds,
                 mission.BattleActionSeconds, mission.BattleResultSeconds, mission.EndDaySeconds, Debug.LogException);
+            // the automated scenario drives the mission itself, so it starts without the main menu
+            FrontEndFlow frontEnd = new FrontEndFlow(frontEndSettings.FadeOutSeconds, frontEndSettings.BlackSeconds, frontEndSettings.IntroSeconds,
+                frontEndSettings.FadeInSeconds, !isSmokeTest);
 
             GameAudio audio = gameObject.AddComponent<GameAudio>();
-            audio.Initialize(audioDatabase, units, mission, session);
+            audio.Initialize(audioDatabase, units, mission, session, frontEnd);
 
             PresentationAssets media = CreatePresentationAssets(units, artefacts, heroes, mission);
             GameHud hud = Instantiate(uiPrefab);
             hud.Initialize(session, audio, media);
             hud.IsDrivingSession = !isSmokeTest;
+            hud.IsSuspended = !frontEnd.IsPlaying;
 
             AdventureMapView mapPrefab = mission.Map.GetComponent<AdventureMapView>();
             if (mapPrefab == null)
@@ -130,11 +140,27 @@ namespace HeroesOfMetalAge.Bootstrap
             // after the game audio, which initializes the audio system the voice-overs play through
             DialogueDirector dialogue = Instantiate(dialoguePrefab);
             dialogue.Initialize(dialogueDatabase, new AudioSystemDialogueVoice());
+            // on the map a click anywhere closes the dialogue; elsewhere (the town) the screen's buttons stay usable
+            dialogue.SetClickAwayCondition(() => session.Screen == GameScreen.Adventure && frontEnd.IsPlaying && !hud.IsSettingsOpen && !hud.IsDebugVisible);
             // the automated scenario expects encounter dialogs at once, so it runs without the site conversations
             if (!isSmokeTest)
             {
                 gameObject.AddComponent<SiteDialogueCues>().Initialize(session, hud, dialogue, SiteConversations(mission), world.ScreenPoint);
             }
+
+            FrontEndView frontEndView = Instantiate(frontEndPrefab);
+            frontEndView.Initialize(frontEnd, audio);
+            // the flow, the session and the HUD live as long as this composition root, so the handler is never removed
+            frontEnd.PhaseChanged += phase =>
+            {
+                // New Game starts a fresh mission while the screen is black
+                if (phase == FrontEndPhase.Black)
+                {
+                    session.Restart();
+                }
+
+                hud.IsSuspended = phase != FrontEndPhase.Playing;
+            };
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (debugPanelPrefab != null)

@@ -13,7 +13,7 @@ namespace HeroesOfMetalAge.EditorTools
     /// <summary>
     /// One-off bootstrap tool: it created the initial dialogue database and the DialogueBox, DialogueBalloon and
     /// DialogueOverlay prefabs, which are now committed, authored assets edited by hand. It only creates assets that are
-    /// missing (and adds the balloon to an overlay that has none); it never changes anything that exists, so it has nothing
+    /// missing (and adds the balloon or the click-away dismiss area to an overlay that has none); it never changes anything that exists, so it has nothing
     /// to do while they exist. Safe to delete together with its call in
     /// <see cref="PrototypePipeline.Setup"/> and the mentions in README.md and Docs/HOMA_ARCHITECTURE.md.
     /// </summary>
@@ -63,9 +63,17 @@ namespace HeroesOfMetalAge.EditorTools
             {
                 CreateOverlayPrefab();
             }
-            else if (ContentAssets.DialogueOverlayPrefab.SpeechBalloon == null)
+            else
             {
-                AddBalloonToOverlay();
+                if (ContentAssets.DialogueOverlayPrefab.SpeechBalloon == null)
+                {
+                    AddBalloonToOverlay();
+                }
+
+                if (ContentAssets.DialogueOverlayPrefab.DismissArea == null)
+                {
+                    AddDismissAreaToOverlay();
+                }
             }
 
             AssetDatabase.SaveAssets();
@@ -172,16 +180,53 @@ namespace HeroesOfMetalAge.EditorTools
             GameObject box = (GameObject)PrefabUtility.InstantiatePrefab(ContentAssets.DialogueBoxPrefab.gameObject, frame.transform);
             box.SetActive(false);
             DialogueBalloonView balloon = InstantiateBalloon(frame.transform);
+            Button dismissArea = CreateDismissArea(overlay.transform);
 
             DialogueDirector director = overlay.AddComponent<DialogueDirector>();
             SerializedObject serialized = new SerializedObject(director);
             serialized.FindProperty("designFrame").objectReferenceValue = frame.transform;
             serialized.FindProperty("portraitBox").objectReferenceValue = box.GetComponent<DialogueBoxView>();
             serialized.FindProperty("speechBalloon").objectReferenceValue = balloon;
+            serialized.FindProperty("dismissArea").objectReferenceValue = dismissArea;
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
             PrefabUtility.SaveAsPrefabAsset(overlay, ContentAssets.DIALOGUE_OVERLAY_PATH);
             Object.DestroyImmediate(overlay);
+        }
+
+        // the overlay was authored before a click away closed the dialogue: add the invisible full-screen button behind it
+        private static void AddDismissAreaToOverlay()
+        {
+            GameObject overlay = PrefabUtility.LoadPrefabContents(ContentAssets.DIALOGUE_OVERLAY_PATH);
+            try
+            {
+                DialogueDirector director = overlay.GetComponent<DialogueDirector>();
+                SerializedObject serialized = new SerializedObject(director);
+                serialized.FindProperty("dismissArea").objectReferenceValue = CreateDismissArea(overlay.transform);
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(overlay, ContentAssets.DIALOGUE_OVERLAY_PATH);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(overlay);
+            }
+        }
+
+        // covers the whole screen (letterbox included) under the design frame, so the dialogue itself still takes its clicks
+        private static Button CreateDismissArea(Transform overlay)
+        {
+            GameObject area = NewRect("DismissArea", overlay);
+            Stretch((RectTransform)area.transform, Vector2.zero, Vector2.zero);
+            area.transform.SetAsFirstSibling();
+            Image image = area.AddComponent<Image>();
+            image.color = new Color(0f, 0f, 0f, 0f);
+            Button button = area.AddComponent<Button>();
+            button.transition = Selectable.Transition.None;
+            Navigation navigation = button.navigation;
+            navigation.mode = Navigation.Mode.None;
+            button.navigation = navigation;
+            area.SetActive(false);
+            return button;
         }
 
         // the overlay was authored before the speech balloon existed: nest the balloon next to the box and wire it

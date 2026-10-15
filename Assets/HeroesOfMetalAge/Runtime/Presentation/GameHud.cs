@@ -53,12 +53,26 @@ namespace HeroesOfMetalAge.Presentation
         private bool isSettingsOpen;
         private bool wasSettingsOpen;
         private bool isDialogHeld;
+        private bool isSuspended;
         private DialogKind shownDialog;
         private GameObject selectionBeforeDialog;
         private GameObject selectionBeforeSettings;
 
         /// <summary>False while an automated scenario drives the session itself.</summary>
         public bool IsDrivingSession { get; set; } = true;
+        /// <summary>
+        /// True while the main menu or the transition into the mission covers the game: no keyboard commands, no clicks
+        /// and the session does not advance.
+        /// </summary>
+        public bool IsSuspended
+        {
+            get => isSuspended;
+            set
+            {
+                isSuspended = value;
+                Invalidate();
+            }
+        }
         public bool IsDebugVisible { get; private set; }
         public bool IsSettingsOpen => isSettingsOpen;
         public RectTransform DesignFrame => designFrame;
@@ -172,7 +186,7 @@ namespace HeroesOfMetalAge.Presentation
                 return;
             }
 
-            if (IsDrivingSession)
+            if (IsDrivingSession && !isSuspended)
             {
                 HandleKeyboard();
             }
@@ -321,10 +335,10 @@ namespace HeroesOfMetalAge.Presentation
         // a hidden overlay is not enough: the layers below must also stop taking clicks
         private void RefreshInputBlocking(bool isModal)
         {
-            bool isContentEnabled = !isModal && !isSettingsOpen && !IsDebugVisible;
+            bool isContentEnabled = !isModal && !isSettingsOpen && !IsDebugVisible && !isSuspended;
             contentGroup.interactable = isContentEnabled;
             contentGroup.blocksRaycasts = isContentEnabled;
-            bool isDialogEnabled = !isSettingsOpen && !IsDebugVisible;
+            bool isDialogEnabled = !isSettingsOpen && !IsDebugVisible && !isSuspended;
             dialogGroup.interactable = isDialogEnabled;
             dialogGroup.blocksRaycasts = isDialogEnabled;
         }

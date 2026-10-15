@@ -22,12 +22,15 @@ namespace HeroesOfMetalAge.EditorTools
         public const string DIALOGUE_OVERLAY_PATH = UI_FOLDER + "/DialogueOverlay.prefab";
         public const string DIALOGUE_BALLOON_PATH = UI_FOLDER + "/Widgets/DialogueBalloon.prefab";
         public const string END_DAY_OVERLAY_PATH = UI_FOLDER + "/Screens/EndDayOverlay.prefab";
+        public const string FRONT_END_PATH = UI_FOLDER + "/FrontEnd.prefab";
+        public const string FRONT_END_SETTINGS_PATH = DATABASE_FOLDER + "/FrontEnd.asset";
 
         public static UnitDatabaseScriptableObject Units => Load<UnitDatabaseScriptableObject>(DATABASE_FOLDER + "/UnitDatabase.asset");
         public static ArtefactDatabaseScriptableObject Artefacts => Load<ArtefactDatabaseScriptableObject>(DATABASE_FOLDER + "/ArtefactDatabase.asset");
         public static HeroDataBaseScriptableObject Heroes => Load<HeroDataBaseScriptableObject>(DATABASE_FOLDER + "/HeroDatabase.asset");
         public static AudioDatabaseScriptableObject Audio => Load<AudioDatabaseScriptableObject>(DATABASE_FOLDER + "/AudioDatabase.asset");
         public static MissionSettingsScriptableObject Mission => Load<MissionSettingsScriptableObject>(DATABASE_FOLDER + "/AshenPass.asset");
+        public static FrontEndSettingsScriptableObject FrontEnd => Load<FrontEndSettingsScriptableObject>(FRONT_END_SETTINGS_PATH);
         public static DialogueDatabaseScriptableObject Dialogue => Load<DialogueDatabaseScriptableObject>(DIALOGUE_DATABASE_PATH);
         public static AudioSystemSettings AudioSettings => Load<AudioSystemSettings>(AUDIO_FOLDER + "/GameAudioSettings.asset");
         public static UiTheme Theme => Load<UiTheme>(THEME_PATH);
@@ -37,6 +40,7 @@ namespace HeroesOfMetalAge.EditorTools
         public static DialogueBalloonView DialogueBalloonPrefab => Load<DialogueBalloonView>(DIALOGUE_BALLOON_PATH);
         public static DialogueDirector DialogueOverlayPrefab => Load<DialogueDirector>(DIALOGUE_OVERLAY_PATH);
         public static EndDayView EndDayOverlayPrefab => Load<EndDayView>(END_DAY_OVERLAY_PATH);
+        public static FrontEndView FrontEndPrefab => Load<FrontEndView>(FRONT_END_PATH);
         public static GameWorld WorldPrefab => Load<GameWorld>(WORLD_FOLDER + "/World.prefab");
         public static BattlefieldView BattlefieldPrefab => Load<BattlefieldView>(WORLD_FOLDER + "/Battlefield.prefab");
         public static WorldMarker MarkerPrefab => Load<WorldMarker>(WORLD_FOLDER + "/WorldMarker.prefab");

@@ -72,6 +72,12 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [Tooltip("The end-of-day sequence: the hourglass turns and the next day begins.")]
         [SerializeField] private SoundDefinition endDay;
 
+        [Header("Main menu")]
+        [Tooltip("The pointer moves onto the New Game button.")]
+        [SerializeField] private SoundDefinition mainMenuHover;
+        [Tooltip("New Game is clicked; plays over the fade to black.")]
+        [SerializeField] private SoundDefinition mainMenuNewGame;
+
         [Header("Strikes")]
         [SerializeField] private SoundDefinition swordSwing;
         [SerializeField] private SoundDefinition swordHit;
@@ -158,6 +164,10 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                     return click;
                 case SoundCue.EndDay:
                     return endDay;
+                case SoundCue.MainMenuHover:
+                    return mainMenuHover;
+                case SoundCue.MainMenuNewGame:
+                    return mainMenuNewGame;
                 case SoundCue.SwordSwing:
                     return swordSwing;
                 case SoundCue.SwordHit:

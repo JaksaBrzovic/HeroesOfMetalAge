@@ -267,7 +267,9 @@ Prijedlog standarda: transparentna pozadina, jednak scale/pivot/baseline, bez re
 
 **Implementirano:** svi produkcijski ekrani koriste Canvas/uGUI, TextMeshPro i spremljene prefabe. I F3 razvojni panel je uGUI prefab; IMGUI se više ne koristi.
 
-Ekrani: adventure, susret, combat, town, hero/inventory/equipment, victory, defeat, options i obavijesti/HUD.
+Ekrani: main menu, adventure, susret, combat, town, hero/inventory/equipment, victory, defeat, options i obavijesti/HUD.
+
+**Main menu (implementirano):** pozadina u temi svijeta i glazba mape. New Game je ruka na desnoj strani: hover napinje biceps, klik diže metal rogove, zatim fade to black slike i zvuka, nekoliko sekundi crnila, intro (zasad placeholder: pješčani sat s kraja dana) i fade in u misiju. Load Game, Credits i Quit su zasad placeholderi koji imaju samo hover i zvuk klika. Dijalog (portrait box ili balon) na mapi zatvara se klikom bilo gdje.
 
 Adventure slojevi: Environment (Grass/Road/Forest/Mountain/Water), Heroes, Enemies, Friendly Units, Towns i Route. Combat ima odvojene heksove i Player/Enemy Units.
 
@@ -338,6 +340,7 @@ Kriteriji prve misije: pridruživanje, pobjeda na prolazu, opremanje nagrade, ku
 | 2026-10-13 | 0.7 | Pauza od 1,5 s nakon svake akcije u borbi (Battle Action Seconds) | EditMode testovi i scenarij cijele misije u buildu |
 | 2026-10-13 | 0.7 | Glazba mape i grada po misiji (overworld, Market Day; underworld tema pripremljena za buduću podzemnu mapu); pauza od 2 s prije ekrana pobjede/poraza (Battle Result Seconds) | EditMode testovi i scenarij cijele misije u buildu |
 | 2026-10-13 | 0.7 | Snimljeni zvukovi za borbu (intro i petlja), poraz, kopita, mač i strijelu (zamah/pogodak/promašaj), susrete, pobjedu i legendary item; ekrani Victory, Rewards i Defeat; nasumične nagrade (uvijek gold, najviše jedan artefakt, rarity, zajamčen legendary najkasnije svake četvrte pobjede); promašaji u borbi | EditMode testovi i scenarij cijele misije u buildu |
+| 2026-10-15 | 0.7 | Main menu s animiranim New Game gumbom (hover/klik animacije i zvukovi), fade to black, crnilo, placeholder intro i fade in u misiju; dijalog na mapi zatvara se klikom bilo gdje | Kompilacija svih assemblyja izvan Editora; EditMode testovi i scenarij još nisu pokrenuti |
 | 2026-10-12 | 0.4 | Full HD (1920 × 1080) kao ciljna i dizajn rezolucija; uvezena naslikana karta Map_1 (50 × 30 ćelija po 64 px) s prvim nacrtom logičkog sloja i susretima na putu; model kretanja kao u Heroes 3 (bodovi ×100, cijene po terenu, dijagonala ×1,41, šuma neprohodna); veći prozor karte; heroj na konju s animacijom; Roadie i Air Guitarist umjesto Ironbounda i Ash Archera; pozadine bojišta po susretu; stari saveovi više nisu kompatibilni | EditMode testovi i scenarij cijele misije u buildu na 1920 × 1080 |
 
 | 2026-10-12 | 0.1 — equipment art | Izrađeno 40 item ikona za 10 equipment slotova i 4 razine vizualne kvalitete; rare amulet dorađen radi kompletnog lanca; pripremljeni zasebni PNG-ovi i pregled | Vizualni pregled svih ikona; provjerene dimenzije i transparentni kutovi; bez gameplay statova ili Unity integracije/builda |

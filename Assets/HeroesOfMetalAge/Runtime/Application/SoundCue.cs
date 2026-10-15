@@ -15,6 +15,10 @@ namespace HeroesOfMetalAge.Application
         Click,
         /// <summary>The end-of-day sequence (the hourglass) starts.</summary>
         EndDay,
+        /// <summary>The pointer moves onto the main menu's New Game button.</summary>
+        MainMenuHover,
+        /// <summary>New Game is clicked in the main menu.</summary>
+        MainMenuNewGame,
         SwordSwing,
         SwordHit,
         SwordMiss,

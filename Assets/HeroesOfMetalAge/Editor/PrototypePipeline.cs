@@ -13,7 +13,8 @@ namespace HeroesOfMetalAge.EditorTools
     /// <summary>
     /// Command-line entry points (Tools/Build.ps1): generate the bootstrap scene from the authored assets and build the
     /// Windows player. The scene is the only generated asset; databases, maps and prefabs are authored and never rebuilt
-    /// (missing dialogue and end-of-day assets are seeded once, see <see cref="DialogueAssetSeeder"/> and <see cref="EndDayAssetSeeder"/>).
+    /// (missing dialogue, end-of-day and main menu assets are seeded once, see <see cref="DialogueAssetSeeder"/>,
+    /// <see cref="EndDayAssetSeeder"/> and <see cref="MainMenuAssetSeeder"/>).
     /// The cameras come with the World prefab.
     /// </summary>
     public static class PrototypePipeline
@@ -32,18 +33,21 @@ namespace HeroesOfMetalAge.EditorTools
             ContentAssets.LoadCatalog();
             DialogueAssetSeeder.CreateMissingAssets();
             EndDayAssetSeeder.CreateMissingAssets();
+            MainMenuAssetSeeder.CreateMissingAssets();
             RequireAsset(ContentAssets.RootPrefab, ContentAssets.UI_FOLDER + "/GameUiRoot.prefab");
             RequireAsset(ContentAssets.DebugPanelPrefab, ContentAssets.UI_FOLDER + "/Screens/DebugPanel.prefab");
             RequireAsset(ContentAssets.WorldPrefab, ContentAssets.WORLD_FOLDER + "/World.prefab");
             RequireAsset(ContentAssets.Dialogue, ContentAssets.DIALOGUE_DATABASE_PATH);
             RequireAsset(ContentAssets.DialogueOverlayPrefab, ContentAssets.DIALOGUE_OVERLAY_PATH);
+            RequireAsset(ContentAssets.FrontEnd, ContentAssets.FRONT_END_SETTINGS_PATH);
+            RequireAsset(ContentAssets.FrontEndPrefab, ContentAssets.FRONT_END_PATH);
 
             Directory.CreateDirectory(Path.GetDirectoryName(ContentAssets.SCENE_PATH));
             UnityEngine.SceneManagement.Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             GameBootstrap bootstrap = new GameObject("Heroes of Metal Age").AddComponent<GameBootstrap>();
             bootstrap.Configure(ContentAssets.Units, ContentAssets.Artefacts, ContentAssets.Heroes, ContentAssets.Audio, ContentAssets.Mission,
                 ContentAssets.Dialogue, ContentAssets.RootPrefab, ContentAssets.WorldPrefab, ContentAssets.DebugPanelPrefab,
-                ContentAssets.DialogueOverlayPrefab);
+                ContentAssets.DialogueOverlayPrefab, ContentAssets.FrontEnd, ContentAssets.FrontEndPrefab);
             EditorUtility.SetDirty(bootstrap);
             EditorSceneManager.SaveScene(scene, ContentAssets.SCENE_PATH);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ContentAssets.SCENE_PATH, true) };
