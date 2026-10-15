@@ -12,7 +12,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
     /// Plays the game's audio through the MLin audio system. It listens to gameplay facts published by
     /// <see cref="GameSession"/> after commands succeed and never decides gameplay. One music track leads at a time: the
     /// mission's map music (quiet while the hero stands, full while he rides) or town music, the battle music, the victory
-    /// music once after the victory stinger, or the defeat theme. The ambient and gallop layers start together and
+    /// music after the victory stinger for as long as the victory and rewards screens are open, or the defeat theme. The ambient and gallop layers start together and
     /// lead only when no track does (a mission without map music); the riding loop follows the ride, strikes play their swing and impact in sequence, event sounds come from
     /// <see cref="AudioDatabaseScriptableObject"/> and unit voices from the unit database.
     /// </summary>
@@ -41,9 +41,8 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
         private MusicTrack? currentTrack;
         private float previewStopTime;
         private float nextStrikeTime;
-        // the victory music plays between these times (unscaled), unless a battle or defeat takes over
+        // the victory music starts at this time (unscaled), after the stinger
         private float victoryStartTime;
-        private float victoryEndTime;
         private bool isMuted;
         private bool isInitialized;
 
@@ -80,6 +79,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
         public bool IsFighting { get; private set; }
         public bool IsDefeated { get; private set; }
         public bool IsInTown { get; private set; }
+        public bool IsCelebrating { get; private set; }
         /// <summary>The music track playing now, or null while the layers lead.</summary>
         public MusicTrack? CurrentTrack => currentTrack;
 
@@ -195,7 +195,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
                 }
             }
 
-            // the victory music starts and ends on its own schedule
+            // the victory music starts on its own schedule, after the stinger
             if (isInitialized)
             {
                 ApplyMusic(false);
@@ -280,23 +280,18 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
             IsFighting = state.IsFighting;
             IsDefeated = state.IsDefeated;
             IsInTown = state.IsInTown;
-            if (IsFighting || IsDefeated)
-            {
-                victoryEndTime = 0f;
-            }
-
+            IsCelebrating = state.IsCelebrating;
             ApplyMusic(isInstant);
             ApplyLayerMix(isInstant ? 0f : database.LayerFadeSeconds);
             ApplyMapMusicLevel(isInstant ? 0f : database.MapMusicRideFadeSeconds);
             ApplyRiding();
         }
 
-        // the victory music waits for the stinger, then plays once; its fade-out overlaps the returning map or town music
+        // the victory music waits for the stinger; it loops until the rewards screen closes, and its fade-out overlaps the
+        // returning map or town music
         private void QueueVictoryMusic()
         {
-            float length = ClipSeconds(database.Music(MusicTrack.Victory));
             victoryStartTime = Time.unscaledTime + database.VictoryMusicDelaySeconds;
-            victoryEndTime = victoryStartTime + Mathf.Max(0f, length - database.VictoryMusicFadeOutSeconds);
         }
 
         private SoundDefinition MusicFor(MusicTrack track)
@@ -324,11 +319,10 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
                 return MusicTrack.Defeat;
             }
 
-            float now = Time.unscaledTime;
-            if (now < victoryEndTime)
+            if (IsCelebrating)
             {
                 // silence under the stinger, then the victory music
-                return now >= victoryStartTime ? MusicTrack.Victory : (MusicTrack?)null;
+                return Time.unscaledTime >= victoryStartTime ? MusicTrack.Victory : (MusicTrack?)null;
             }
 
             if (IsInTown && mission.TownMusic != null)
@@ -425,19 +419,6 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
             {
                 riding.Stop(database.RidingFadeSeconds);
             }
-        }
-
-        private static float ClipSeconds(SoundDefinition sound)
-        {
-            foreach (AudioClip clip in sound.Clips)
-            {
-                if (clip != null)
-                {
-                    return clip.length;
-                }
-            }
-
-            return 0f;
         }
 
         private static float PreviewSeconds(SoundDefinition sound)

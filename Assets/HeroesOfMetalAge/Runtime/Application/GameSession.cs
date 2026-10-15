@@ -21,21 +21,27 @@ namespace HeroesOfMetalAge.Application
         private readonly float enemyTurnSeconds;
         private readonly float battleActionSeconds;
         private readonly float battleResultSeconds;
+        private readonly float endDaySeconds;
+        // the steps still ahead of the hero; a step leaves the list when he enters its cell
         private readonly List<WorldPosition> route = new List<WorldPosition>();
         private readonly List<string> battleLog = new List<string>();
-        private int routeIndex;
         // a session-wide streak (kept across new missions and loads, never saved) so the legendary guarantee is reachable
         // within the short first mission while it is being tested
         private int victoriesWithoutLegendary;
         private float timer;
+        private float endDayTimer;
         private bool isTraveling;
+        // the player picked a new destination during the ride: the hero stops when he has entered the cell he is riding into
+        private bool isStopRequested;
+        private bool isEndingDay;
         private WorldPosition? plannedDestination;
 
         /// <param name="battleActionSeconds">Pause after every battle action before the next one (either army) can act.</param>
         /// <param name="battleResultSeconds">Pause on the battlefield after the last blow before the victory or defeat screen opens.</param>
+        /// <param name="endDaySeconds">Length of the end-of-day sequence; the new day begins when it ends.</param>
         /// <param name="reportError">Receives unexpected failures (listener exceptions, IO); gameplay continues.</param>
         public GameSession(DefinitionCatalog catalog, ISaveStore save, IRandomSource random, float travelStepSeconds, float enemyTurnSeconds,
-            float battleActionSeconds, float battleResultSeconds, Action<Exception> reportError)
+            float battleActionSeconds, float battleResultSeconds, float endDaySeconds, Action<Exception> reportError)
         {
             Catalog = catalog;
             this.save = save;
@@ -45,6 +51,7 @@ namespace HeroesOfMetalAge.Application
             this.enemyTurnSeconds = enemyTurnSeconds;
             this.battleActionSeconds = battleActionSeconds;
             this.battleResultSeconds = battleResultSeconds;
+            this.endDaySeconds = endDaySeconds;
             Rules = new CampaignRules(catalog);
             World = new WorldMap(catalog.Mission);
             Campaign = Rules.NewCampaign();
@@ -71,6 +78,7 @@ namespace HeroesOfMetalAge.Application
         public VictorySummary Victory { get; private set; }
         public GameScreen Screen { get; private set; } = GameScreen.Adventure;
         public DialogKind Dialog { get; private set; } = DialogKind.Intro;
+        /// <summary>The planned or ridden route without the cells the hero has already entered.</summary>
         public IReadOnlyList<WorldPosition> Route { get; }
         public IReadOnlyList<string> BattleLog { get; }
         public string Notice { get; private set; } = string.Empty;
@@ -81,16 +89,21 @@ namespace HeroesOfMetalAge.Application
         public DamageEvent LastHit { get; private set; }
         /// <summary>Seconds the hero takes for one map step while riding.</summary>
         public float TravelStepSeconds => travelStepSeconds;
+        public bool IsTraveling => isTraveling;
+        /// <summary>True while the end-of-day sequence runs; the day changes when it ends.</summary>
+        public bool IsEndingDay => isEndingDay;
+        /// <summary>0 when the end-of-day sequence starts, 1 when the new day begins.</summary>
+        public float EndDayProgress => isEndingDay && endDaySeconds > 0f ? 1f - Math.Max(0f, endDayTimer) / endDaySeconds : 1f;
         /// <summary>What the music should follow now; <see cref="PlaybackChanged"/> reports every change.</summary>
         public PlaybackState Playback { get; private set; }
         public bool HasSave => save.Exists;
         public string SaveLocation => save.Location;
 
         /// <summary>
-        /// True while the hero travels, the enemy is taking its turn, the pause after a battle action runs or a decided battle
-        /// waits for its result screen; player commands wait.
+        /// True while the hero travels, the day is ending, the enemy is taking its turn, the pause after a battle action runs
+        /// or a decided battle waits for its result screen; player commands wait.
         /// </summary>
-        public bool IsBusy => isTraveling || IsEnemyTurn || IsBattlePaused || IsBattleResultPending;
+        public bool IsBusy => isTraveling || isEndingDay || IsEnemyTurn || IsBattlePaused || IsBattleResultPending;
 
         private bool IsEnemyTurn => Screen == GameScreen.Battle && Dialog == DialogKind.None && Battle != null && Battle.Active != null && !Battle.Active.IsPlayer;
         private bool IsBattlePaused => Screen == GameScreen.Battle && Dialog == DialogKind.None && timer > 0;
@@ -110,6 +123,17 @@ namespace HeroesOfMetalAge.Application
         {
             if (Dialog != DialogKind.None)
             {
+                return;
+            }
+
+            if (isEndingDay)
+            {
+                endDayTimer -= Math.Max(0, deltaTime);
+                if (endDayTimer <= 0)
+                {
+                    BeginNewDay();
+                }
+
                 return;
             }
 
@@ -207,10 +231,20 @@ namespace HeroesOfMetalAge.Application
         #endregion
 
         #region TRAVEL
-        /// <summary>First click plans a route; clicking the same destination again starts the ride.</summary>
+        /// <summary>
+        /// First click plans a route; clicking the same destination again starts the ride. During the ride a click picks a
+        /// new destination: the hero stops in the cell he is riding into with the new route planned, and clicking the new
+        /// destination again before he stops lets him ride on without stopping.
+        /// </summary>
         public void Plan(WorldPosition target)
         {
             Revision++;
+            if (isTraveling && Screen == GameScreen.Adventure && Dialog == DialogKind.None)
+            {
+                Redirect(target);
+                return;
+            }
+
             if (!CanRunCampaignCommand || Screen != GameScreen.Adventure)
             {
                 return;
@@ -247,6 +281,13 @@ namespace HeroesOfMetalAge.Application
         public void Travel()
         {
             Revision++;
+            // confirms a destination picked during the ride before the hero stopped
+            if (isTraveling && isStopRequested && route.Count > 0)
+            {
+                isStopRequested = false;
+                return;
+            }
+
             if (!CanRunCampaignCommand || Screen != GameScreen.Adventure || route.Count == 0)
             {
                 return;
@@ -265,15 +306,35 @@ namespace HeroesOfMetalAge.Application
             }
 
             isTraveling = true;
-            routeIndex = 0;
+            isStopRequested = false;
             timer = 0;
             RefreshPlayback();
         }
 
+        /// <summary>Starts the end-of-day sequence; the day changes when it ends (see <see cref="Tick"/>).</summary>
         public void EndDay()
         {
             Revision++;
-            if (!CanRunCampaignCommand || !Accept(Rules.EndDay(Campaign, out bool isNewWeek)))
+            if (!CanRunCampaignCommand)
+            {
+                return;
+            }
+
+            isEndingDay = true;
+            endDayTimer = endDaySeconds;
+            Cue(SoundCue.EndDay);
+            if (endDayTimer <= 0)
+            {
+                BeginNewDay();
+            }
+        }
+
+        private void BeginNewDay()
+        {
+            Revision++;
+            isEndingDay = false;
+            endDayTimer = 0;
+            if (!Accept(Rules.EndDay(Campaign, out bool isNewWeek)))
             {
                 return;
             }
@@ -281,19 +342,54 @@ namespace HeroesOfMetalAge.Application
             route.Clear();
             plannedDestination = null;
             Notify(isNewWeek ? "A new week begins. Town recruitment stocks have grown." : "Day " + Campaign.Day + ". Your movement is restored.");
-            Cue(isNewWeek ? SoundCue.Friendly : SoundCue.Click);
+            if (isNewWeek)
+            {
+                Cue(SoundCue.Friendly);
+            }
+
             Save(false);
+        }
+
+        // the cell being ridden into is already the hero's position, so the new route starts there
+        private void Redirect(WorldPosition target)
+        {
+            if (isStopRequested && plannedDestination.HasValue && plannedDestination.Value == target && route.Count > 0)
+            {
+                isStopRequested = false;
+                return;
+            }
+
+            isStopRequested = true;
+            plannedDestination = target;
+            route.Clear();
+            if (target == Campaign.Position)
+            {
+                return;
+            }
+
+            route.AddRange(World.FindRoute(Campaign, target));
+            Cue(SoundCue.Click);
+            if (route.Count == 0)
+            {
+                Notify("No route. Mountains, water and unresolved encounters block travel.");
+            }
         }
 
         private void TravelStep()
         {
-            if (routeIndex >= route.Count)
+            if (isStopRequested)
+            {
+                StopTravel();
+                return;
+            }
+
+            if (route.Count == 0)
             {
                 FinishTravel();
                 return;
             }
 
-            WorldPosition step = route[routeIndex];
+            WorldPosition step = route[0];
             EncounterDefinition encounter = World.Site(Campaign, step);
             if (Campaign.Movement < World.StepCost(Campaign.Position, step))
             {
@@ -319,7 +415,7 @@ namespace HeroesOfMetalAge.Application
                 return;
             }
 
-            routeIndex++;
+            route.RemoveAt(0);
             timer = travelStepSeconds;
             if (encounter != null)
             {
@@ -331,9 +427,16 @@ namespace HeroesOfMetalAge.Application
 
         private void FinishTravel()
         {
-            isTraveling = false;
             route.Clear();
             plannedDestination = null;
+            StopTravel();
+        }
+
+        // keeps the route and destination, so a destination picked during the ride stays planned
+        private void StopTravel()
+        {
+            isTraveling = false;
+            isStopRequested = false;
             RefreshPlayback();
             Save(false);
         }
@@ -489,6 +592,8 @@ namespace HeroesOfMetalAge.Application
             }
 
             Dialog = DialogKind.None;
+            // the victory music, looping while the victory and rewards screens are open, fades out now
+            RefreshPlayback();
             if (Victory.HasLeveledUp)
             {
                 Cue(SoundCue.LevelUp);
@@ -725,6 +830,9 @@ namespace HeroesOfMetalAge.Application
 
         private void ResetTransientState()
         {
+            isStopRequested = false;
+            isEndingDay = false;
+            endDayTimer = 0;
             route.Clear();
             plannedDestination = null;
             Battle = null;
@@ -761,7 +869,7 @@ namespace HeroesOfMetalAge.Application
             // the hero screen belongs to where the hero stands, so opening it keeps the town or map music
             bool isInTown = Screen == GameScreen.Town || (Screen == GameScreen.Hero && HomeScreen() == GameScreen.Town);
             PlaybackState state = new PlaybackState(isTraveling, Screen == GameScreen.Battle && Dialog == DialogKind.None, Dialog == DialogKind.Defeat,
-                isInTown);
+                isInTown, Dialog == DialogKind.Victory || Dialog == DialogKind.Rewards);
             if (state.Equals(Playback))
             {
                 return;

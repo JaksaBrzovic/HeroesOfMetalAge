@@ -21,7 +21,7 @@ MonoBehaviour:
   volumeVariation: 0
   pitch: 1
   pitchVariation: 0
-  loop: 0
+  loop: 1
   priority: 0
   cooldown: 0
   maxInstances: 1

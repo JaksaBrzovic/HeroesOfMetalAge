@@ -13,6 +13,8 @@ namespace HeroesOfMetalAge.Application
         LegendaryItem,
         Equip,
         Click,
+        /// <summary>The end-of-day sequence (the hourglass) starts.</summary>
+        EndDay,
         SwordSwing,
         SwordHit,
         SwordMiss,
@@ -39,7 +41,7 @@ namespace HeroesOfMetalAge.Application
         Town,
         /// <summary>Battle intro followed by the battle loop.</summary>
         Battle,
-        /// <summary>Played once after the victory stinger.</summary>
+        /// <summary>Loops after the victory stinger while the victory and rewards screens are open.</summary>
         Victory,
         Defeat
     }

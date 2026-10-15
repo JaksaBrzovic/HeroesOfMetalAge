@@ -156,6 +156,7 @@ namespace HeroesOfMetalAge.Tests
 
             SoundDefinition battle = audio.Music(MusicTrack.Battle);
             Assert.IsTrue(battle.Loop && battle.IntroClip != null, "battle music plays its intro once, then loops");
+            Assert.IsTrue(audio.Music(MusicTrack.Victory).Loop, "victory music loops until the rewards screen closes");
             Assert.IsTrue(audio.RidingLoop != null && audio.RidingLoop.Loop && audio.RidingLoop.OutputGroup.name == GameAudio.EFFECTS_CHANNEL,
                 "riding loop loops on Effects");
         }

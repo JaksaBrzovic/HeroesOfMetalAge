@@ -13,7 +13,7 @@ namespace HeroesOfMetalAge.EditorTools
     /// <summary>
     /// Command-line entry points (Tools/Build.ps1): generate the bootstrap scene from the authored assets and build the
     /// Windows player. The scene is the only generated asset; databases, maps and prefabs are authored and never rebuilt
-    /// (missing dialogue assets are seeded once, see <see cref="DialogueAssetSeeder"/>).
+    /// (missing dialogue and end-of-day assets are seeded once, see <see cref="DialogueAssetSeeder"/> and <see cref="EndDayAssetSeeder"/>).
     /// The cameras come with the World prefab.
     /// </summary>
     public static class PrototypePipeline
@@ -31,6 +31,7 @@ namespace HeroesOfMetalAge.EditorTools
         {
             ContentAssets.LoadCatalog();
             DialogueAssetSeeder.CreateMissingAssets();
+            EndDayAssetSeeder.CreateMissingAssets();
             RequireAsset(ContentAssets.RootPrefab, ContentAssets.UI_FOLDER + "/GameUiRoot.prefab");
             RequireAsset(ContentAssets.DebugPanelPrefab, ContentAssets.UI_FOLDER + "/Screens/DebugPanel.prefab");
             RequireAsset(ContentAssets.WorldPrefab, ContentAssets.WORLD_FOLDER + "/World.prefab");

@@ -99,7 +99,7 @@ namespace HeroesOfMetalAge.Tests
 
         public static GameSession NewSession(DefinitionCatalog catalog, ISaveStore store, Action<Exception> reportError = null)
         {
-            return new GameSession(catalog, store, new SeededRandomSource(1), 0.1f, 0.1f, 0.1f, 0.1f, reportError ?? (error => { }));
+            return new GameSession(catalog, store, new SeededRandomSource(1), 0.1f, 0.1f, 0.1f, 0.1f, 0.1f, reportError ?? (error => { }));
         }
     }
 }

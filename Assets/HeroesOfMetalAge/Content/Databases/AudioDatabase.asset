@@ -34,6 +34,7 @@ MonoBehaviour:
   legendaryItem: {fileID: 11400000, guid: 98e177ce77ee95f4ebbb51a1dd35a1e6, type: 2}
   equip: {fileID: 11400000, guid: d73a09ccd0d721b4a81a31c8f256e17c, type: 2}
   click: {fileID: 11400000, guid: 9ce26dbaa004d064b81614bbde94d07a, type: 2}
+  endDay: {fileID: 11400000, guid: 5094501b3f6341a7ba7b9a1707921749, type: 2}
   swordSwing: {fileID: 11400000, guid: 7bb6718beb4b4254fafade334c783d2f, type: 2}
   swordHit: {fileID: 11400000, guid: 1472276dcf6027b489cbd2bd98c15965, type: 2}
   swordMiss: {fileID: 11400000, guid: 59a0016fff061694381cc4f73821d482, type: 2}

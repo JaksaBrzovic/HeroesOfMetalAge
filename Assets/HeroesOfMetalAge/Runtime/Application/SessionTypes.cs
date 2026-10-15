@@ -28,12 +28,13 @@ namespace HeroesOfMetalAge.Application
     /// <summary>Where the player is, for the music tracks and layers and the riding loop.</summary>
     public readonly struct PlaybackState : IEquatable<PlaybackState>
     {
-        public PlaybackState(bool isRiding, bool isFighting, bool isDefeated, bool isInTown)
+        public PlaybackState(bool isRiding, bool isFighting, bool isDefeated, bool isInTown, bool isCelebrating)
         {
             IsRiding = isRiding;
             IsFighting = isFighting;
             IsDefeated = isDefeated;
             IsInTown = isInTown;
+            IsCelebrating = isCelebrating;
         }
 
         public bool IsRiding { get; }
@@ -42,10 +43,13 @@ namespace HeroesOfMetalAge.Application
         public bool IsDefeated { get; }
         /// <summary>True on the town screen and on the hero screen of a hero stationed in the town.</summary>
         public bool IsInTown { get; }
+        /// <summary>True while the victory or rewards screen of a won battle is open.</summary>
+        public bool IsCelebrating { get; }
 
         public bool Equals(PlaybackState other)
         {
-            return IsRiding == other.IsRiding && IsFighting == other.IsFighting && IsDefeated == other.IsDefeated && IsInTown == other.IsInTown;
+            return IsRiding == other.IsRiding && IsFighting == other.IsFighting && IsDefeated == other.IsDefeated && IsInTown == other.IsInTown
+                && IsCelebrating == other.IsCelebrating;
         }
 
         public override bool Equals(object obj)
@@ -55,7 +59,7 @@ namespace HeroesOfMetalAge.Application
 
         public override int GetHashCode()
         {
-            return (IsRiding ? 1 : 0) | (IsFighting ? 2 : 0) | (IsDefeated ? 4 : 0) | (IsInTown ? 8 : 0);
+            return (IsRiding ? 1 : 0) | (IsFighting ? 2 : 0) | (IsDefeated ? 4 : 0) | (IsInTown ? 8 : 0) | (IsCelebrating ? 16 : 0);
         }
     }
 

@@ -28,6 +28,8 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private NotificationsView notifications;
         [SerializeField] private CanvasGroup contentGroup;
         [SerializeField] private CanvasGroup dialogGroup;
+        [Tooltip("Hourglass shown in the middle of the screen while the day ends.")]
+        [SerializeField] private EndDayView endDayView;
 
         [Header("Screens")]
         [SerializeField] private WorldCanvasView worldView;
@@ -68,6 +70,7 @@ namespace HeroesOfMetalAge.Presentation
         public VictoryCanvasView VictoryView => victoryView;
         public RewardsCanvasView RewardsView => rewardsView;
         public DefeatCanvasView DefeatView => defeatView;
+        public EndDayView EndDayView => endDayView;
         public EventSystem Events => eventSystem;
         public CanvasGroup ContentGroup => contentGroup;
         public CanvasViewContext Context => context;
@@ -79,7 +82,7 @@ namespace HeroesOfMetalAge.Presentation
         public void Initialize(GameSession session, IAudioControls audio, PresentationAssets media)
         {
             if (theme == null || designFrame == null || eventSystem == null || header == null || footer == null || notifications == null
-                || contentGroup == null || dialogGroup == null || victoryView == null || rewardsView == null || defeatView == null)
+                || contentGroup == null || dialogGroup == null || victoryView == null || rewardsView == null || defeatView == null || endDayView == null)
             {
                 throw new InvalidOperationException($"GameHud on '{name}' has unassigned references. Assign them in the GameUiRoot prefab.");
             }
@@ -88,6 +91,7 @@ namespace HeroesOfMetalAge.Presentation
             header.Initialize(session.ShowHero, OpenSettings);
             footer.Initialize();
             notifications.Initialize();
+            endDayView.Initialize();
             settingsView.SetOwner(this);
             foreach (CanvasScreenView view in new CanvasScreenView[] { worldView, combatView, townView, heroView, dialogView, victoryView, rewardsView, defeatView, settingsView })
             {
@@ -174,6 +178,7 @@ namespace HeroesOfMetalAge.Presentation
             }
 
             UpdateNotifications();
+            UpdateEndDay();
         }
 
         private void LateUpdate()
@@ -267,6 +272,20 @@ namespace HeroesOfMetalAge.Presentation
             bool isNoticeVisible = Time.unscaledTime < noticeUntil;
             bool isHitVisible = Time.unscaledTime < hitUntil && session.Screen == GameScreen.Battle && session.Dialog == DialogKind.None;
             notifications.SetVisibility(isNoticeVisible, isHitVisible);
+        }
+
+        // the hourglass follows the session's progress every frame while the day ends
+        private void UpdateEndDay()
+        {
+            GameSession session = context.Session;
+            if (session.IsEndingDay)
+            {
+                endDayView.Show(session.EndDayProgress);
+            }
+            else
+            {
+                endDayView.Hide();
+            }
         }
 
         private void RefreshScreens(GameSession session, bool isModal)

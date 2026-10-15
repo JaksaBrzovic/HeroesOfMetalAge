@@ -113,3 +113,4 @@ MonoBehaviour:
   enemyTurnSeconds: 0.7
   battleActionSeconds: 1.5
   battleResultSeconds: 2
+  endDaySeconds: 3

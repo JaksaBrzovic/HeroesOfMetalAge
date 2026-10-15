@@ -102,6 +102,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                 Require(sound != null && sound.HasClips, "Missing music or clips for track " + track);
             }
 
+            // it plays for as long as the victory and rewards screens stay open
+            Require(audio.Music(MusicTrack.Victory).Loop, "The victory music must loop.");
             Require(audio.RidingLoop != null && audio.RidingLoop.HasClips && audio.RidingLoop.Loop, "The riding loop must have looping clips.");
         }
 

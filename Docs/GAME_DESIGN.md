@@ -232,6 +232,7 @@ Prijedlog produkcije: kompatibilne snimljene petlje, više varijanti lickova, or
 
 | Asset | Lokacija u vanjskoj zbirci | Status |
 |---|---|---|
+| Main menu — mračni jahač | assets/ui/main-menu/dark-rider-main-menu-v1-1920x1080.png | Konceptualna pozadina menija: mišićavi jahač skrivenog lica na crnom konju, fantasy krajolik i udaljeni dvorac; kompozicijska referenca Heroes III i slikarski smjer Franka Frazette. Full HD izvoz 1920 × 1080 interpoliran iz generiranog izvornika 1672 × 941, koji je također sačuvan. Bez teksta/gumba, gameplay uloge ili Unity integracije; izrađeno 2026-10-14 |
 | Heroj na konju, udesno | assets/hero_horse_right | 4 PNG framea i sheet |
 | Heroj na konju, udesno | assets/hero_horse_right_8frames; kopija: C:/Users/jaksa/Downloads/HOMA_ART/Hero_Horse_WorldMap_Walk_Right_8Frames | Konceptualna animacija: 8 RGBA frameova 444 × 444 i sheet; predloženo 90 ms/frame. Kopija svih frameova, sheeta i README-a provjerena 2026-10-12; nije ovim korakom integrirano u Unity |
 | Air Guitarist | assets/air-guitarist | Koncept, više 8-frame walk varijanti, sheetovi i GIF previewi |

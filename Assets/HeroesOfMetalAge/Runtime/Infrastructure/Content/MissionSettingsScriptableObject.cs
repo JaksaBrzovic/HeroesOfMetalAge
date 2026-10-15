@@ -97,6 +97,9 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [Tooltip("Seconds the battlefield stays on screen after the last blow before the victory or defeat screen opens.")]
         [Min(0f)]
         [SerializeField] private float battleResultSeconds = 2f;
+        [Tooltip("Length of the end-of-day sequence (hourglass and sound); the new day begins when it ends.")]
+        [Min(0f)]
+        [SerializeField] private float endDaySeconds = 3f;
 
         public string Id => id;
         public string DisplayName => displayName;
@@ -154,5 +157,6 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public float EnemyTurnSeconds => enemyTurnSeconds;
         public float BattleActionSeconds => battleActionSeconds;
         public float BattleResultSeconds => battleResultSeconds;
+        public float EndDaySeconds => endDaySeconds;
     }
 }

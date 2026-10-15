@@ -67,7 +67,8 @@ namespace HeroesOfMetalAge.Presentation
 
         /// <summary>
         /// A click at a screen point, as the pointer would make it: ignored outside the world view, over UI controls or while
-        /// gameplay input is blocked. The hero's own cell opens the hero; another cell plans or rides; a hex moves or attacks.
+        /// gameplay input is blocked. The hero's own cell opens the hero; another cell plans or rides; during the ride any cell
+        /// picks a new destination (the hero's own cell stops him); a hex moves or attacks.
         /// </summary>
         /// <returns>True when the click reached a map cell or hex.</returns>
         public bool HandleClick(Vector2 screenPoint)
@@ -80,7 +81,7 @@ namespace HeroesOfMetalAge.Presentation
             Vector3 point = worldCamera.ScreenToWorld(screenPoint);
             if (Session.Screen == GameScreen.Adventure && map.TryGetCell(point, out WorldPosition cell))
             {
-                if (cell == Session.Campaign.Position)
+                if (cell == Session.Campaign.Position && !Session.IsTraveling)
                 {
                     Session.ShowHero();
                 }

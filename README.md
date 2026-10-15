@@ -1,12 +1,12 @@
 AI-Native project developed by Jaksa Brzovic
 
 <!-- usage:start -->
-Claude Code time: 4 h 49 min of work over 5 sessions
+Claude Code time: 5 h 6 min of work over 6 sessions
 
 | Claude Code usage | Input | Output | Cache write 5m | Cache write 1h | Cache read | Web searches | Web fetches |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| claude-opus-5-5 | 1,996 | 1,289,607 | 0 | 5,355,575 | 407,580,309 | 0 | 0 |
-<!-- usage-data: {"models": {"claude-opus-5-5": {"cache_read": 407580309, "cache_write_1h": 5355575, "cache_write_5m": 0, "input": 1996, "output": 1289607, "web_fetches": 0, "web_searches": 0}}, "seconds": 17382.857, "sessions": 5, "until": "2026-10-14T18:10:31+00:00"} -->
+| claude-opus-5-5 | 2,140 | 1,364,152 | 0 | 5,582,526 | 423,818,682 | 0 | 0 |
+<!-- usage-data: {"models": {"claude-opus-5-5": {"cache_read": 423818682, "cache_write_1h": 5582526, "cache_write_5m": 0, "input": 2140, "output": 1364152, "web_fetches": 0, "web_searches": 0}}, "seconds": 18407.252, "sessions": 6, "until": "2026-10-15T12:09:09+00:00"} -->
 <!-- usage:end -->
 
 Codex time (2026-10-09 – 2026-10-12, finished): 6 h 35 min of work over 5 sessions
@@ -27,7 +27,7 @@ The living [Game Design Document](Docs/GAME_DESIGN.md) describes the game vision
 
 Run `Builds/Windows/HeroesOfMetalAge.exe`, or `Play.cmd` at the project root. No Unity Editor is required to play.
 
-Click a map cell to preview the route, then click it again or press Space to travel. The hero rides on roads, dirt, grass and other open ground; trees, mountains, water, lava and obstacles stop him. Each cell costs movement points (road 75, grass and dirt 100, ash and rough ground 125, sand 150, swamp 175; diagonal steps 1.41 times as much) from 1600 per day. Arrow keys or dragging the map (left, right or middle button) look around; the camera follows the hero while he rides. Click the hero to open him. E ends the day. H opens the hero. Escape opens options or returns from town/hero. M mutes. F3 opens the development panel (audition every sound, campaign shortcuts).
+Click a map cell to preview the route, then click it again or press Space to travel. The part of a new route that today's movement cannot pay for is red, and cells the hero has entered leave the route. Clicking another cell while he rides picks a new destination: he stops in the cell he is riding into with the new route planned, and clicking the new destination again (or Space) before he stops lets him ride on without stopping. The hero rides on roads, dirt, grass and other open ground; trees, mountains, water, lava and obstacles stop him. Each cell costs movement points (road 75, grass and dirt 100, ash and rough ground 125, sand 150, swamp 175; diagonal steps 1.41 times as much) from 1600 per day. Arrow keys or dragging the map (left, right or middle button) look around; the camera follows the hero while he rides. Click the hero to open him. E ends the day: an hourglass turns in the middle of the screen for three seconds with its sound, then the new day begins. H opens the hero. Escape opens options or returns from town/hero. M mutes. F3 opens the development panel (audition every sound, campaign shortcuts).
 
 Mission: ride east along the road through the Ashen Pass valley, welcome six Air Guitarists at the clearing, defeat the pass wardens in the mountain pass, enter Ashen Hold and recruit troops, then defeat the Black Banner. Inspect the hero and equip the Fang of Thunder after the first victory.
 
@@ -90,6 +90,7 @@ In the mission: reaching the Willing plays their portrait line before the join d
 - Code: `DialogueDirector.Play("conversation-id")` at the authored spot, `Play("conversation-id", new Vector2(x, y))` with x, y from 0 (left/bottom) to 1 (right/top), or `Play("conversation-id", someRectTransform)` at a UI element. For a balloon the position is the speaker's. `Completed` reports the conversation that was read to the end. The director is created by `GameBootstrap`; the dialogue assembly knows nothing else of the game.
 - F3 lists every conversation (`DIALOGUE ...`) and opens it at a random place.
 - `Tools > Heroes of Metal Age > Create missing dialogue assets` (`DialogueAssetSeeder`, also run by Generate scene) was a one-off tool that created the initial database and prefabs; it only creates missing assets and never overwrites them, so it does nothing while they exist. It can be deleted together with its call in `PrototypePipeline.Setup`.
+- `Tools > Heroes of Metal Age > Create missing end-of-day assets` (`EndDayAssetSeeder`, also run by Generate scene) was a one-off tool that created the `EndDayOverlay` prefab (the hourglass, from the sprites in `Content/UI/Sprites/EndDay/`) and nested it into `GameUiRoot`; it only creates the prefab when it is missing and only nests it when `GameHud` has no end-of-day view, so it does nothing while they exist. It can be deleted together with its call in `PrototypePipeline.Setup`.
 
 ## Adventure map and battlefield
 

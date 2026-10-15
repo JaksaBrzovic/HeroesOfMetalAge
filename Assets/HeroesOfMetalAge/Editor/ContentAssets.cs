@@ -21,6 +21,7 @@ namespace HeroesOfMetalAge.EditorTools
         public const string DIALOGUE_BOX_PATH = UI_FOLDER + "/Widgets/DialogueBox.prefab";
         public const string DIALOGUE_OVERLAY_PATH = UI_FOLDER + "/DialogueOverlay.prefab";
         public const string DIALOGUE_BALLOON_PATH = UI_FOLDER + "/Widgets/DialogueBalloon.prefab";
+        public const string END_DAY_OVERLAY_PATH = UI_FOLDER + "/Screens/EndDayOverlay.prefab";
 
         public static UnitDatabaseScriptableObject Units => Load<UnitDatabaseScriptableObject>(DATABASE_FOLDER + "/UnitDatabase.asset");
         public static ArtefactDatabaseScriptableObject Artefacts => Load<ArtefactDatabaseScriptableObject>(DATABASE_FOLDER + "/ArtefactDatabase.asset");
@@ -35,6 +36,7 @@ namespace HeroesOfMetalAge.EditorTools
         public static DialogueBoxView DialogueBoxPrefab => Load<DialogueBoxView>(DIALOGUE_BOX_PATH);
         public static DialogueBalloonView DialogueBalloonPrefab => Load<DialogueBalloonView>(DIALOGUE_BALLOON_PATH);
         public static DialogueDirector DialogueOverlayPrefab => Load<DialogueDirector>(DIALOGUE_OVERLAY_PATH);
+        public static EndDayView EndDayOverlayPrefab => Load<EndDayView>(END_DAY_OVERLAY_PATH);
         public static GameWorld WorldPrefab => Load<GameWorld>(WORLD_FOLDER + "/World.prefab");
         public static BattlefieldView BattlefieldPrefab => Load<BattlefieldView>(WORLD_FOLDER + "/Battlefield.prefab");
         public static WorldMarker MarkerPrefab => Load<WorldMarker>(WORLD_FOLDER + "/WorldMarker.prefab");

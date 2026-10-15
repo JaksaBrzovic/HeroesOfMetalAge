@@ -26,14 +26,14 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [Tooltip("Plays while fighting: the intro clip once, then the looping battle theme.")]
         [FormerlySerializedAs("battleLayer")]
         [SerializeField] private SoundDefinition battleMusic;
-        [Tooltip("Plays once after the victory stinger, then the map or town music returns.")]
+        [Tooltip("Loops after the victory stinger while the victory and rewards screens are open; when they close it fades out and the map or town music returns.")]
         [SerializeField] private SoundDefinition victoryMusic;
         [Tooltip("Seconds from the victory stinger to the start of the victory music (about the stinger's length).")]
         [Min(0f)]
         [SerializeField] private float victoryMusicDelaySeconds = 1.5f;
         [Min(0f)]
         [SerializeField] private float victoryMusicFadeInSeconds = 2.5f;
-        [Tooltip("The victory music fades out over its last seconds while the map or town music fades back in.")]
+        [Tooltip("Seconds the victory music takes to fade out after the rewards screen closes, while the map or town music fades back in.")]
         [Min(0f)]
         [SerializeField] private float victoryMusicFadeOutSeconds = 4f;
         [Tooltip("Plays while the defeat screen is open.")]
@@ -69,6 +69,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [SerializeField] private SoundDefinition legendaryItem;
         [SerializeField] private SoundDefinition equip;
         [SerializeField] private SoundDefinition click;
+        [Tooltip("The end-of-day sequence: the hourglass turns and the next day begins.")]
+        [SerializeField] private SoundDefinition endDay;
 
         [Header("Strikes")]
         [SerializeField] private SoundDefinition swordSwing;
@@ -154,6 +156,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                     return equip;
                 case SoundCue.Click:
                     return click;
+                case SoundCue.EndDay:
+                    return endDay;
                 case SoundCue.SwordSwing:
                     return swordSwing;
                 case SoundCue.SwordHit:

@@ -108,7 +108,7 @@ namespace HeroesOfMetalAge.Bootstrap
             JsonCampaignStore store = new JsonCampaignStore(Path.Combine(UnityEngine.Application.persistentDataPath, saveFile));
             IRandomSource random = new SeededRandomSource(isSmokeTest ? SMOKE_TEST_SEED : Environment.TickCount);
             GameSession session = new GameSession(catalog, store, random, mission.TravelStepSeconds, mission.EnemyTurnSeconds,
-                mission.BattleActionSeconds, mission.BattleResultSeconds, Debug.LogException);
+                mission.BattleActionSeconds, mission.BattleResultSeconds, mission.EndDaySeconds, Debug.LogException);
 
             GameAudio audio = gameObject.AddComponent<GameAudio>();
             audio.Initialize(audioDatabase, units, mission, session);

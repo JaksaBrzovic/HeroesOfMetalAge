@@ -26,6 +26,7 @@ namespace HeroesOfMetalAge.Bootstrap
         private const float FRAME_TOLERANCE = 0.5f;
         private const float EDGE_TOLERANCE = 0.01f;
         private const float FOLLOW_WAIT_SECONDS = 1.5f;
+        private const float END_DAY_PEEK_SECONDS = 1.2f;
 
         private readonly List<string> results = new List<string>();
         private GameSession session;
@@ -200,6 +201,25 @@ namespace HeroesOfMetalAge.Bootstrap
             Check(!session.IsBusy, "Movement terminates");
         }
 
+        /// <summary>
+        /// Starts riding towards the sentinel, clicks the start cell after the first step and checks that the hero stops in the
+        /// next cell with the new route planned and the entered cells gone from the route.
+        /// </summary>
+        private IEnumerator RedirectDuringRide(EncounterDefinition sentinel)
+        {
+            WorldPosition start = session.Campaign.Position;
+            session.Plan(sentinel.Position);
+            List<WorldPosition> planned = session.Route.ToList();
+            session.Travel();
+            session.Tick(0f);
+            Check(session.Campaign.Position == planned[0] && session.Route.SequenceEqual(planned.Skip(1)), "The ride drops the cells the hero entered from the route");
+            yield return ShowCell(start);
+            Check(world.HandleClick(world.ScreenPoint(start)) && session.IsTraveling, "A map click during the ride picks a new destination");
+            FinishMovement();
+            Check(session.Campaign.Position == planned[0] && session.Route.Count > 0 && session.Route.Last() == start,
+                "The hero stops in the next cell with the new route planned");
+        }
+
         /// <summary>Rides to a cell over as many days as the route needs; stops at an encounter, a dialog or the town screen.</summary>
         private void TravelTo(WorldPosition target)
         {
@@ -213,8 +233,15 @@ namespace HeroesOfMetalAge.Bootstrap
                     return;
                 }
 
-                session.EndDay();
+                EndDay();
             }
+        }
+
+        /// <summary>Ends the day and lets the end-of-day sequence run to the new day.</summary>
+        private void EndDay()
+        {
+            session.EndDay();
+            FinishMovement();
         }
 
         /// <summary>Plays the player's side: attack the weakest reachable enemy, otherwise advance towards the nearest.</summary>
@@ -324,6 +351,7 @@ namespace HeroesOfMetalAge.Bootstrap
 
         private IEnumerator FirstBattleAndHero(MissionDefinition mission, EncounterDefinition sentinel)
         {
+            yield return RedirectDuringRide(sentinel);
             TravelTo(sentinel.Position);
             Check(session.Dialog == DialogKind.Hostile, "Travel stops before hostile stack");
             hud.RefreshNow();
@@ -443,10 +471,21 @@ namespace HeroesOfMetalAge.Bootstrap
             Check(session.Buy("ironbound", 10) && session.Buy("ash-archer", 5) && session.Buy("doom-rider", 3), "Town recruitment commands");
             yield return Screenshot("04-town.png");
 
+            int day = session.Campaign.Day;
+            session.EndDay();
+            session.Tick(END_DAY_PEEK_SECONDS);
+            yield return null;
+            Check(session.IsEndingDay && session.Campaign.Day == day && hud.EndDayView.gameObject.activeInHierarchy,
+                "Ending the day shows the hourglass before the day changes");
+            yield return Screenshot("04b-end-day.png");
+            FinishMovement();
+            yield return null;
+            Check(session.Campaign.Day == day + 1 && !hud.EndDayView.gameObject.activeInHierarchy, "The new day begins when the hourglass ends");
+
             int stock = session.Campaign.Stock("ironbound");
             for (int i = 0; i < mission.DaysPerWeek; i++)
             {
-                session.EndDay();
+                EndDay();
             }
 
             Check(session.Campaign.Stock("ironbound") == stock + session.Catalog.Unit("ironbound").WeeklyGrowth, "Weekly refresh in runtime");
