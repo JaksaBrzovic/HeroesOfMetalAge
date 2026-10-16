@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using HeroesOfMetalAge.Application;
 using HeroesOfMetalAge.EditorTools;
@@ -28,9 +29,9 @@ namespace HeroesOfMetalAge.Tests
         }
 
         [Test]
-        public void Flow_FadesOutWaitsOnBlackPlaysTheIntroAndFadesIn()
+        public void Flow_FadesOutWaitsOnBlackPlaysTheVersesAndTitleAndBurns()
         {
-            FrontEndFlow flow = new FrontEndFlow(1f, 2f, 3f, 1f, true);
+            FrontEndFlow flow = new FrontEndFlow(1f, 2f, TwoStanzas(), 3f, 10f, true);
             List<FrontEndPhase> phases = new List<FrontEndPhase>();
             flow.PhaseChanged += phases.Add;
 
@@ -49,19 +50,29 @@ namespace HeroesOfMetalAge.Tests
             Assert.AreEqual(FrontEndPhase.Black, flow.Phase);
             Assert.AreEqual(1f, flow.Blackness);
             flow.Tick(2f);
-            Assert.AreEqual(FrontEndPhase.Intro, flow.Phase);
-            flow.Tick(1.5f);
-            Assert.AreEqual(0.5f, flow.Progress, 1e-4f);
+            Assert.AreEqual(FrontEndPhase.Verses, flow.Phase);
+            flow.Tick(8f);
+            Assert.AreEqual(FrontEndPhase.Verses, flow.Phase, "the verses take as long as the script");
+            Assert.AreEqual(8f, flow.Elapsed, 1e-4f);
+            flow.Tick(1.3f);
+            Assert.AreEqual(FrontEndPhase.Title, flow.Phase);
+            Assert.AreEqual(1f, flow.Elapsed, 1e-3f, "the rest of a long frame carries into the next phase");
             Assert.AreEqual(1f, flow.Blackness, "the intro plays on black");
-            flow.Tick(1.75f);
-            Assert.AreEqual(FrontEndPhase.FadingIn, flow.Phase);
-            Assert.AreEqual(0.75f, flow.Blackness, 1e-4f, "the rest of a long frame carries into the next phase");
-            Assert.IsFalse(flow.IsPlaying, "no input while the mission fades in");
 
-            flow.Tick(1f);
+            flow.Tick(2f);
+            Assert.AreEqual(FrontEndPhase.Burning, flow.Phase);
+            flow.Tick(1.5f);
+            Assert.AreEqual(0.5f, flow.Blackness, 1e-3f, "the black burns away");
+            Assert.IsFalse(flow.IsPlaying, "no input while the screen burns");
+
+            flow.Tick(1.5f);
             Assert.IsTrue(flow.IsPlaying);
             Assert.AreEqual(0f, flow.Blackness);
-            CollectionAssert.AreEqual(new[] { FrontEndPhase.FadingOut, FrontEndPhase.Black, FrontEndPhase.Intro, FrontEndPhase.FadingIn, FrontEndPhase.Playing },
+            CollectionAssert.AreEqual(new[]
+                {
+                    FrontEndPhase.FadingOut, FrontEndPhase.Black, FrontEndPhase.Verses, FrontEndPhase.Title, FrontEndPhase.Burning,
+                    FrontEndPhase.Playing
+                },
                 phases);
             Assert.IsFalse(flow.StartNewGame());
         }
@@ -69,12 +80,59 @@ namespace HeroesOfMetalAge.Tests
         [Test]
         public void Flow_ZeroDurationsFinishAtOnceAndAutomatedRunsSkipTheMenu()
         {
-            FrontEndFlow flow = new FrontEndFlow(0f, 0f, 0f, 0f, true);
+            FrontEndFlow flow = new FrontEndFlow(0f, 0f, IntroScript.None, 0f, 0f, true);
             flow.StartNewGame();
             flow.Tick(0f);
             Assert.IsTrue(flow.IsPlaying);
 
-            Assert.IsTrue(new FrontEndFlow(1f, 1f, 1f, 1f, false).IsPlaying);
+            Assert.IsTrue(new FrontEndFlow(1f, 1f, TwoStanzas(), 1f, 1f, false).IsPlaying);
+        }
+
+        [Test]
+        public void IntroScript_TypesLinesLetterByLetterHoldsFadesAndPausesBetweenStanzas()
+        {
+            IntroScript script = TwoStanzas();
+
+            Assert.AreEqual(1, script.VisibleCharacters(0, 0, 0f), "the first letter shows as the line starts");
+            Assert.AreEqual(3, script.VisibleCharacters(0, 0, 0.25f), "ten letters per second");
+            Assert.AreEqual(5, script.VisibleCharacters(0, 0, 0.6f));
+            Assert.AreEqual(0, script.VisibleCharacters(0, 1, 1.4f), "the next line waits for the pause after the first");
+            Assert.AreEqual(1, script.VisibleCharacters(0, 1, 1.5f));
+            Assert.AreEqual(5, script.VisibleCharacters(0, 1, 3.9f));
+
+            Assert.AreEqual(0, script.StanzaAt(3.9f));
+            Assert.AreEqual(1f, script.StanzaAlpha(0, 3.9f), "the typed stanza holds");
+            Assert.AreEqual(0.5f, script.StanzaAlpha(0, 4.25f), 1e-4f, "then fades out");
+            Assert.AreEqual(-1, script.StanzaAt(5f), "black between the stanzas");
+            Assert.AreEqual(1, script.StanzaAt(5.5f));
+            Assert.AreEqual(1, script.VisibleCharacters(1, 0, 5.5f));
+            Assert.AreEqual(-1, script.StanzaAt(8f), "black before the title");
+            Assert.AreEqual(8.3f, script.VersesSeconds, 1e-4f);
+
+            Assert.AreEqual(3f, script.TitleSeconds, 1e-4f);
+            Assert.AreEqual(0.5f, script.TitleAlpha(1f), 1e-4f, "the title fades in slowly");
+            Assert.AreEqual(1f, script.TitleAlpha(2.5f));
+            Assert.AreEqual(2, script.MaxLines);
+            Assert.Throws<ArgumentOutOfRangeException>(() => new IntroScript(new IntroStanza[0], "", 0f, 0f, 0f, 0f, 0f));
+        }
+
+        [Test]
+        public void IntroContent_HasTheThreeStanzasAndTheTitle()
+        {
+            IntroScript script = ContentAssets.FrontEnd.CreateIntroScript();
+
+            Assert.AreEqual(3, script.Stanzas.Count);
+            Assert.AreEqual("As the day breaks, he is already awake", script.Stanzas[0].Lines[0].Text);
+            Assert.AreEqual("A stream of life", script.Stanzas[1].Lines[2].Text);
+            IntroStanza last = script.Stanzas[2];
+            Assert.AreEqual("But first", last.Lines[0].Text);
+            Assert.AreEqual(3f, last.Lines[0].PauseAfterSeconds, "a long pause before He must uncover");
+            Assert.AreEqual("He must uncover", last.Lines[1].Text);
+            Assert.AreEqual(5f, script.Stanzas[0].HoldSeconds);
+            Assert.AreEqual(5f, script.Stanzas[1].HoldSeconds);
+            Assert.AreEqual(2f, last.HoldSeconds);
+            Assert.AreEqual("The Secret of Metal", script.Title);
+            Assert.LessOrEqual(script.MaxLines, ContentAssets.FrontEndPrefab.Intro.LineTexts.Count, "every stanza fits the prefab's line texts");
         }
 
         [Test]
@@ -137,7 +195,7 @@ namespace HeroesOfMetalAge.Tests
         public void MainMenu_NewGameStartsTheFlowWithItsSoundsAndHidesTheMenu()
         {
             FrontEndView frontEnd = NewFrontEnd();
-            FrontEndFlow flow = new FrontEndFlow(1f, 1f, 1f, 1f, true);
+            FrontEndFlow flow = new FrontEndFlow(1f, 1f, TwoStanzas(), 3f, 1f, true);
             FakeAudioControls audio = new FakeAudioControls();
             frontEnd.Initialize(flow, audio);
             MainMenuView menu = frontEnd.MainMenu;
@@ -156,11 +214,64 @@ namespace HeroesOfMetalAge.Tests
             flow.Tick(1.5f);
             frontEnd.Refresh();
             Assert.IsFalse(menu.gameObject.activeSelf, "the menu is gone on black");
+            Assert.IsFalse(frontEnd.Intro.gameObject.activeSelf);
+        }
+
+        [Test]
+        public void Intro_TypesTheStanzasShowsTheTitleAndBurnsTheCurtain()
+        {
+            FrontEndView frontEnd = NewFrontEnd();
+            FrontEndFlow flow = new FrontEndFlow(0f, 0f, TwoStanzas(), 3f, 1f, true);
+            frontEnd.Initialize(flow, new FakeAudioControls());
+            IntroView intro = frontEnd.Intro;
+
+            flow.StartNewGame();
+            flow.Tick(0.25f);
+            frontEnd.Refresh();
+            Assert.AreEqual(FrontEndPhase.Verses, flow.Phase);
+            Assert.IsTrue(intro.gameObject.activeSelf);
+            Assert.IsFalse(frontEnd.Fade.gameObject.activeSelf, "the curtain takes over from the fade");
+            Assert.IsTrue(intro.Curtain.raycastTarget, "the curtain swallows clicks");
+            Assert.AreEqual(1f, intro.Curtain.color.a, "the curtain is whole");
+            Assert.AreEqual("abcde", intro.LineTexts[0].text, "the whole stanza is laid out at once");
+            Assert.AreEqual(3, intro.LineTexts[0].maxVisibleCharacters);
+            Assert.AreEqual("fghij", intro.LineTexts[1].text);
+            Assert.AreEqual(0, intro.LineTexts[1].maxVisibleCharacters);
+            for (int i = 2; i < intro.LineTexts.Count; i++)
+            {
+                Assert.IsFalse(intro.LineTexts[i].gameObject.activeSelf, "a shorter stanza hides the unused lines");
+            }
+
+            Assert.IsFalse(intro.TitleText.gameObject.activeSelf);
+
+            flow.Tick(4f);
+            frontEnd.Refresh();
+            Assert.AreEqual(0.5f, intro.Verses.alpha, 1e-4f, "the stanza fades out");
             flow.Tick(1f);
             frontEnd.Refresh();
-            Assert.IsTrue(frontEnd.Intro.gameObject.activeSelf, "the placeholder intro hourglass plays");
-            flow.Tick(2f);
+            Assert.IsFalse(intro.Verses.gameObject.activeSelf, "black between the stanzas");
+            flow.Tick(0.5f);
             frontEnd.Refresh();
+            Assert.AreEqual("klm", intro.LineTexts[0].text);
+            Assert.IsFalse(intro.LineTexts[1].gameObject.activeSelf);
+
+            flow.Tick(3.55f);
+            frontEnd.Refresh();
+            Assert.AreEqual(FrontEndPhase.Title, flow.Phase);
+            Assert.IsFalse(intro.Verses.gameObject.activeSelf);
+            Assert.IsTrue(intro.TitleText.gameObject.activeSelf);
+            Assert.AreEqual("TITLE", intro.TitleText.text);
+            Assert.AreEqual(0.5f, intro.TitleText.alpha, 1e-3f, "the title fades in");
+
+            flow.Tick(2.5f);
+            frontEnd.Refresh();
+            Assert.AreEqual(FrontEndPhase.Burning, flow.Phase);
+            Assert.AreEqual(1f, intro.TitleText.alpha, "the title burns with the curtain");
+            Assert.AreEqual(5f / 6f, intro.Curtain.color.a, 1e-3f, "the curtain's alpha tells the burn material how much is left");
+
+            flow.Tick(3f);
+            frontEnd.Refresh();
+            Assert.IsTrue(flow.IsPlaying);
             Assert.IsFalse(frontEnd.gameObject.activeSelf, "the front end is hidden while playing");
         }
 
@@ -177,8 +288,6 @@ namespace HeroesOfMetalAge.Tests
             Assert.AreEqual(new Vector2(1920f, 1080f), scaler.referenceResolution);
             Assert.AreEqual(CanvasScaler.ScreenMatchMode.Expand, scaler.screenMatchMode);
 
-            Assert.AreEqual(ContentAssets.END_DAY_OVERLAY_PATH, AssetDatabase.GetAssetPath(PrefabUtility.GetCorrespondingObjectFromSource(prefab.Intro)),
-                "the intro is the nested end-of-day hourglass");
             MainMenuView menu = prefab.MainMenu;
             foreach (UiWidget placeholder in new[] { menu.LoadGameButton, menu.CreditsButton, menu.QuitButton })
             {
@@ -196,13 +305,31 @@ namespace HeroesOfMetalAge.Tests
         }
 
         [Test]
-        public void Audio_FadesOutAfterNewGameAndReturnsWithTheMission()
+        public void IntroPrefab_BurnsTheCurtainWithTheTextsCutOut()
+        {
+            IntroView intro = ContentAssets.FrontEndPrefab.Intro;
+
+            Assert.IsNotNull(intro, "run Tools > Heroes of Metal Age > Create missing main menu assets");
+            Assert.AreSame(ContentAssets.IntroBurnMaterial, intro.Curtain.material);
+            Assert.AreEqual(ContentAssets.INTRO_BURN_SHADER, intro.Curtain.material.shader.name);
+            Mask mask = intro.Curtain.GetComponent<Mask>();
+            Assert.IsNotNull(mask, "the Mask cuts the title out of the burnt holes");
+            Assert.IsTrue(mask.showMaskGraphic);
+            Assert.IsTrue(intro.TitleText.transform.IsChildOf(intro.Curtain.transform));
+            RectTransform curtain = intro.Curtain.rectTransform;
+            Assert.AreEqual(Vector2.zero, curtain.anchorMin, "the curtain covers the whole screen");
+            Assert.AreEqual(Vector2.one, curtain.anchorMax);
+            Assert.Greater(curtain.GetSiblingIndex(), ContentAssets.FrontEndPrefab.Fade.transform.GetSiblingIndex(), "the curtain draws over the fade");
+        }
+
+        [Test]
+        public void Audio_FadesOutAfterNewGameAndReturnsWithTheTitle()
         {
             GameObject host = new GameObject("front end audio test");
             try
             {
                 GameSession session = CampaignTestUtility.NewSession(ContentAssets.LoadCatalog(), new MemorySaveStore());
-                FrontEndFlow flow = new FrontEndFlow(1f, 1f, 1f, 1f, true);
+                FrontEndFlow flow = new FrontEndFlow(1f, 1f, TwoStanzas(), 1f, 10f, true);
                 GameAudio adapter = host.AddComponent<GameAudio>();
                 adapter.Initialize(ContentAssets.Audio, ContentAssets.Units, ContentAssets.Mission, session, flow);
                 MusicTrack? map = ContentAssets.Mission.MapMusic.HasClips ? MusicTrack.Map : (MusicTrack?)null;
@@ -211,14 +338,14 @@ namespace HeroesOfMetalAge.Tests
                 flow.StartNewGame();
                 Assert.IsTrue(adapter.IsSilenced);
                 Assert.IsNull(adapter.CurrentTrack, "the music fades out with the screen");
-                flow.Tick(2.5f);
-                Assert.AreEqual(FrontEndPhase.Intro, flow.Phase);
-                Assert.IsNull(adapter.CurrentTrack, "silence on black and during the intro");
+                flow.Tick(10f);
+                Assert.AreEqual(FrontEndPhase.Verses, flow.Phase);
+                Assert.IsNull(adapter.CurrentTrack, "silence on black and during the verses");
 
                 flow.Tick(0.5f);
-                Assert.AreEqual(FrontEndPhase.FadingIn, flow.Phase);
+                Assert.AreEqual(FrontEndPhase.Title, flow.Phase);
                 Assert.IsFalse(adapter.IsSilenced);
-                Assert.AreEqual(map, adapter.CurrentTrack, "the music fades in with the mission");
+                Assert.AreEqual(map, adapter.CurrentTrack, "the map music fades in with the title");
             }
             finally
             {
@@ -231,6 +358,17 @@ namespace HeroesOfMetalAge.Tests
             FrontEndView view = (FrontEndView)PrefabUtility.InstantiatePrefab(ContentAssets.FrontEndPrefab);
             instance = view.gameObject;
             return view;
+        }
+
+        // ten letters per second: "abcde" is typed in half a second
+        private static IntroScript TwoStanzas()
+        {
+            return new IntroScript(new[]
+                {
+                    new IntroStanza(new[] { new IntroLine("abcde", 1f), new IntroLine("fghij", 1f) }, 2f),
+                    new IntroStanza(new[] { new IntroLine("klm", 0f) }, 1f)
+                },
+                "TITLE", 10f, 0.5f, 1f, 2f, 1f);
         }
 
         private static Sprite[] Frames(NewGameButtonView button, string field)

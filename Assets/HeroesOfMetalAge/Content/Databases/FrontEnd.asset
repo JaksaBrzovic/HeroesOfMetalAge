@@ -14,5 +14,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: HeroesOfMetalAge.Infrastructure::HeroesOfMetalAge.Infrastructure.Content.FrontEndSettingsScriptableObject
   fadeOutSeconds: 1.5
   blackSeconds: 2
-  introSeconds: 3
-  fadeInSeconds: 1.5
+  charactersPerSecond: 15
+  stanzaFadeSeconds: 1.5
+  stanzaGapSeconds: 1
+  stanzas:
+  - lines:
+    - text: As the day breaks, he is already awake
+      pauseAfterSeconds: 0.8
+    - text: A yearning in his soul
+      pauseAfterSeconds: 0.8
+    - text: On the journey he must go
+      pauseAfterSeconds: 0.8
+    holdSeconds: 5
+  - lines:
+    - text: Answers he seeks not
+      pauseAfterSeconds: 0.8
+    - text: But power of freedom
+      pauseAfterSeconds: 0.8
+    - text: A stream of life
+      pauseAfterSeconds: 0.8
+    holdSeconds: 5
+  - lines:
+    - text: But first
+      pauseAfterSeconds: 3
+    - text: He must uncover
+      pauseAfterSeconds: 0.8
+    holdSeconds: 2
+  title: The Secret of Metal
+  titleFadeInSeconds: 4
+  titleHoldSeconds: 2.5
+  musicFadeInSeconds: 10
+  burnSeconds: 3

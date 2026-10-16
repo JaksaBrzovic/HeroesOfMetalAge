@@ -10,11 +10,13 @@ namespace HeroesOfMetalAge.EditorTools
 {
     /// <summary>
     /// One-off bootstrap tool: it created the FrontEnd prefab (the main menu with its background, the animated New Game
-    /// button and the Load Game, Credits and Quit placeholders, the black fade and the placeholder intro hourglass) and set
-    /// the main menu images in <c>Content/UI/Sprites/MainMenu/</c> to import as sprites. The prefab is now an authored
-    /// asset edited by hand; the tool only creates it when it is missing and never changes anything that exists, so it has
-    /// nothing to do while it exists. Safe to delete together with its call in <see cref="PrototypePipeline.Setup"/> and
-    /// the mentions in README.md and Docs/HOMA_ARCHITECTURE.md.
+    /// button and the Load Game, Credits and Quit placeholders, the black fade and the intro with its verses, title and
+    /// burning curtain), the curtain's <c>Content/Rendering/IntroBurn.mat</c>, and set the main menu images in
+    /// <c>Content/UI/Sprites/MainMenu/</c> to import as sprites. On a FrontEnd prefab from before the intro it replaced the
+    /// placeholder intro (the nested end-of-day hourglass) with the new one and left everything else as it was. The prefab
+    /// is now an authored asset edited by hand; the tool only adds what is missing and never changes anything that exists,
+    /// so it has nothing to do once they exist. Safe to delete together with its call in
+    /// <see cref="PrototypePipeline.Setup"/> and the mentions in README.md and Docs/HOMA_ARCHITECTURE.md.
     /// </summary>
     public static class MainMenuAssetSeeder
     {
@@ -25,6 +27,11 @@ namespace HeroesOfMetalAge.EditorTools
         private const string HORNS_PATH_FORMAT = SPRITE_FOLDER + "/HornsClick{0:00}.png";
         private const string BUTTON_WIDGET_PATH = ContentAssets.UI_FOLDER + "/Widgets/Button.prefab";
         private const int FRAME_COUNT = 6;
+        private const int LINE_COUNT = 3;
+        private const float LINE_SPACING = 22f;
+        private const float VERSE_FONT_SIZE = 56f;
+        private const float TITLE_FONT_SIZE = 128f;
+        private const float TITLE_CHARACTER_SPACING = 6f;
         // above GameUiRoot (0) and the dialogue overlay (10)
         private const int SORTING_ORDER = 20;
         private const float BUTTONS_MARGIN_RIGHT = 120f;
@@ -34,6 +41,10 @@ namespace HeroesOfMetalAge.EditorTools
         // every arm frame and the title share one transparent canvas, so they line up
         private static readonly Vector2 NewGameSize = new Vector2(416f, 342f);
         private static readonly Vector2 PlaceholderSize = new Vector2(320f, 64f);
+        private static readonly Vector2 VersesSize = new Vector2(1700f, 600f);
+        private static readonly Vector2 TitleSize = new Vector2(1800f, 300f);
+        private static readonly Color VerseColor = new Color(0.9f, 0.86f, 0.78f, 1f);
+        private static readonly Color TitleColor = new Color(0.95f, 0.91f, 0.84f, 1f);
         private static readonly string[] PlaceholderNames = { "LoadGameButton", "CreditsButton", "QuitButton" };
         private static readonly string[] PlaceholderTitles = { "LOAD GAME", "CREDITS", "QUIT" };
         private static readonly string[] PlaceholderFields = { "loadGameButton", "creditsButton", "quitButton" };
@@ -41,14 +52,72 @@ namespace HeroesOfMetalAge.EditorTools
         [MenuItem("Tools/Heroes of Metal Age/Create missing main menu assets")]
         public static void CreateMissingAssets()
         {
-            if (ContentAssets.FrontEndPrefab != null)
+            Material burn = CreateMissingBurnMaterial();
+            if (ContentAssets.FrontEndPrefab == null)
             {
-                return;
+                ImportAsSprites();
+                CreateFrontEndPrefab(burn);
+            }
+            else
+            {
+                AddMissingIntro(burn);
             }
 
-            ImportAsSprites();
-            CreateFrontEndPrefab();
             AssetDatabase.SaveAssets();
+        }
+
+        private static Material CreateMissingBurnMaterial()
+        {
+            Material material = ContentAssets.IntroBurnMaterial;
+            if (material != null)
+            {
+                return material;
+            }
+
+            Shader shader = Shader.Find(ContentAssets.INTRO_BURN_SHADER);
+            if (shader == null)
+            {
+                throw new InvalidOperationException("The intro curtain needs the shader " + ContentAssets.INTRO_BURN_SHADER + " (Content/Rendering/IntroBurn.shader).");
+            }
+
+            material = new Material(shader);
+            AssetDatabase.CreateAsset(material, ContentAssets.INTRO_BURN_MATERIAL_PATH);
+            return material;
+        }
+
+        // a FrontEnd prefab from before the intro: the placeholder hourglass gives way to the intro, the rest stays as authored
+        private static void AddMissingIntro(Material burn)
+        {
+            GameObject root = PrefabUtility.LoadPrefabContents(ContentAssets.FRONT_END_PATH);
+            try
+            {
+                SerializedObject serialized = new SerializedObject(root.GetComponent<FrontEndView>());
+                SerializedProperty intro = serialized.FindProperty("introView");
+                if (intro.objectReferenceValue != null)
+                {
+                    return;
+                }
+
+                Transform overlays = root.transform.Find("Overlays");
+                if (overlays == null)
+                {
+                    throw new InvalidOperationException(ContentAssets.FRONT_END_PATH + " has no Overlays to add the intro to.");
+                }
+
+                Transform placeholder = overlays.Find("IntroFrame");
+                if (placeholder != null)
+                {
+                    Object.DestroyImmediate(placeholder.gameObject);
+                }
+
+                intro.objectReferenceValue = CreateIntro(overlays, burn);
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(root, ContentAssets.FRONT_END_PATH);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
         }
 
         private static void ImportAsSprites()
@@ -70,13 +139,8 @@ namespace HeroesOfMetalAge.EditorTools
             }
         }
 
-        private static void CreateFrontEndPrefab()
+        private static void CreateFrontEndPrefab(Material burn)
         {
-            if (ContentAssets.EndDayOverlayPrefab == null)
-            {
-                throw new InvalidOperationException("The placeholder intro nests " + ContentAssets.END_DAY_OVERLAY_PATH + ", which is missing.");
-            }
-
             GameObject buttonWidget = AssetDatabase.LoadAssetAtPath<GameObject>(BUTTON_WIDGET_PATH);
             if (buttonWidget == null || buttonWidget.GetComponent<UiWidget>() == null)
             {
@@ -146,21 +210,77 @@ namespace HeroesOfMetalAge.EditorTools
             fadeGroup.alpha = 0f;
             fade.SetActive(false);
 
-            GameObject introFrame = NewRect("IntroFrame", overlays.transform);
-            SetRect((RectTransform)introFrame.transform, middle, middle, Vector2.zero, DesignSize);
-            GameObject intro = (GameObject)PrefabUtility.InstantiatePrefab(ContentAssets.EndDayOverlayPrefab.gameObject, introFrame.transform);
-            intro.name = "Intro";
-            intro.SetActive(false);
+            IntroView intro = CreateIntro(overlays.transform, burn);
 
             FrontEndView view = root.AddComponent<FrontEndView>();
             SerializedObject serialized = new SerializedObject(view);
             serialized.FindProperty("mainMenu").objectReferenceValue = menuView;
             serialized.FindProperty("fade").objectReferenceValue = fadeGroup;
-            serialized.FindProperty("intro").objectReferenceValue = intro.GetComponent<EndDayView>();
+            serialized.FindProperty("introView").objectReferenceValue = intro;
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
             PrefabUtility.SaveAsPrefabAsset(root, ContentAssets.FRONT_END_PATH);
             Object.DestroyImmediate(root);
+        }
+
+        // a black curtain over the whole screen; its Mask cuts the texts out where it burns away
+        private static IntroView CreateIntro(Transform overlays, Material burn)
+        {
+            UiTheme theme = ContentAssets.Theme;
+            if (theme == null)
+            {
+                throw new InvalidOperationException("The intro texts use the font of " + ContentAssets.THEME_PATH + ", which is missing.");
+            }
+
+            Vector2 middle = new Vector2(0.5f, 0.5f);
+            GameObject intro = NewRect("Intro", overlays);
+            Stretch((RectTransform)intro.transform);
+            Image curtain = AddImage(intro, null, Color.black, true);
+            curtain.material = burn;
+            Mask mask = intro.AddComponent<Mask>();
+            mask.showMaskGraphic = true;
+
+            // the lines stack in the middle; a shorter stanza hides the rest and stays centred
+            GameObject verses = NewRect("Verses", intro.transform);
+            SetRect((RectTransform)verses.transform, middle, middle, Vector2.zero, VersesSize);
+            CanvasGroup versesGroup = verses.AddComponent<CanvasGroup>();
+            versesGroup.interactable = false;
+            versesGroup.blocksRaycasts = false;
+            VerticalLayoutGroup layout = verses.AddComponent<VerticalLayoutGroup>();
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.spacing = LINE_SPACING;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+            TMP_Text[] lines = new TMP_Text[LINE_COUNT];
+            for (int i = 0; i < LINE_COUNT; i++)
+            {
+                lines[i] = AddText(NewRect("Line" + (i + 1) + "Text", verses.transform), theme, VERSE_FONT_SIZE, VerseColor);
+                lines[i].maxVisibleCharacters = 0;
+            }
+
+            GameObject title = NewRect("TitleText", intro.transform);
+            SetRect((RectTransform)title.transform, middle, middle, Vector2.zero, TitleSize);
+            TMP_Text titleText = AddText(title, theme, TITLE_FONT_SIZE, TitleColor);
+            titleText.characterSpacing = TITLE_CHARACTER_SPACING;
+            title.SetActive(false);
+
+            IntroView view = intro.AddComponent<IntroView>();
+            SerializedObject serialized = new SerializedObject(view);
+            serialized.FindProperty("curtain").objectReferenceValue = curtain;
+            serialized.FindProperty("verses").objectReferenceValue = versesGroup;
+            SerializedProperty lineTexts = serialized.FindProperty("lineTexts");
+            lineTexts.arraySize = lines.Length;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                lineTexts.GetArrayElementAtIndex(i).objectReferenceValue = lines[i];
+            }
+
+            serialized.FindProperty("titleText").objectReferenceValue = titleText;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            intro.SetActive(false);
+            return view;
         }
 
         // the title over the arm on one shared canvas; both images take the pointer, so hovering either flexes the arm
@@ -266,6 +386,18 @@ namespace HeroesOfMetalAge.EditorTools
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
+        }
+
+        private static TMP_Text AddText(GameObject target, UiTheme theme, float size, Color color)
+        {
+            TextMeshProUGUI text = target.AddComponent<TextMeshProUGUI>();
+            text.font = theme.Font;
+            text.fontSize = size;
+            text.color = color;
+            text.alignment = TextAlignmentOptions.Center;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.raycastTarget = false;
+            return text;
         }
 
         private static Image AddImage(GameObject target, Sprite sprite, Color color, bool isRaycastTarget)

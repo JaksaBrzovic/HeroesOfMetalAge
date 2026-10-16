@@ -116,8 +116,8 @@ namespace HeroesOfMetalAge.Bootstrap
             GameSession session = new GameSession(catalog, store, random, mission.TravelStepSeconds, mission.EnemyTurnSeconds,
                 mission.BattleActionSeconds, mission.BattleResultSeconds, mission.EndDaySeconds, Debug.LogException);
             // the automated scenario drives the mission itself, so it starts without the main menu
-            FrontEndFlow frontEnd = new FrontEndFlow(frontEndSettings.FadeOutSeconds, frontEndSettings.BlackSeconds, frontEndSettings.IntroSeconds,
-                frontEndSettings.FadeInSeconds, !isSmokeTest);
+            FrontEndFlow frontEnd = new FrontEndFlow(frontEndSettings.FadeOutSeconds, frontEndSettings.BlackSeconds, frontEndSettings.CreateIntroScript(),
+                frontEndSettings.BurnSeconds, frontEndSettings.MusicFadeInSeconds, !isSmokeTest);
 
             GameAudio audio = gameObject.AddComponent<GameAudio>();
             audio.Initialize(audioDatabase, units, mission, session, frontEnd);

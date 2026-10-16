@@ -24,6 +24,8 @@ namespace HeroesOfMetalAge.EditorTools
         public const string END_DAY_OVERLAY_PATH = UI_FOLDER + "/Screens/EndDayOverlay.prefab";
         public const string FRONT_END_PATH = UI_FOLDER + "/FrontEnd.prefab";
         public const string FRONT_END_SETTINGS_PATH = DATABASE_FOLDER + "/FrontEnd.asset";
+        public const string INTRO_BURN_MATERIAL_PATH = "Assets/HeroesOfMetalAge/Content/Rendering/IntroBurn.mat";
+        public const string INTRO_BURN_SHADER = "HeroesOfMetalAge/UI/IntroBurn";
 
         public static UnitDatabaseScriptableObject Units => Load<UnitDatabaseScriptableObject>(DATABASE_FOLDER + "/UnitDatabase.asset");
         public static ArtefactDatabaseScriptableObject Artefacts => Load<ArtefactDatabaseScriptableObject>(DATABASE_FOLDER + "/ArtefactDatabase.asset");
@@ -41,6 +43,7 @@ namespace HeroesOfMetalAge.EditorTools
         public static DialogueDirector DialogueOverlayPrefab => Load<DialogueDirector>(DIALOGUE_OVERLAY_PATH);
         public static EndDayView EndDayOverlayPrefab => Load<EndDayView>(END_DAY_OVERLAY_PATH);
         public static FrontEndView FrontEndPrefab => Load<FrontEndView>(FRONT_END_PATH);
+        public static UnityEngine.Material IntroBurnMaterial => Load<UnityEngine.Material>(INTRO_BURN_MATERIAL_PATH);
         public static GameWorld WorldPrefab => Load<GameWorld>(WORLD_FOLDER + "/World.prefab");
         public static BattlefieldView BattlefieldPrefab => Load<BattlefieldView>(WORLD_FOLDER + "/Battlefield.prefab");
         public static WorldMarker MarkerPrefab => Load<WorldMarker>(WORLD_FOLDER + "/WorldMarker.prefab");

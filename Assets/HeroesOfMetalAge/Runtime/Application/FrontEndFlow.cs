@@ -11,34 +11,39 @@ namespace HeroesOfMetalAge.Application
         FadingOut,
         /// <summary>A few seconds of black silence.</summary>
         Black,
-        /// <summary>The intro plays on black.</summary>
-        Intro,
-        /// <summary>The mission fades in from black; input waits until it is fully visible.</summary>
-        FadingIn,
+        /// <summary>The intro's stanzas are typed on black, still in silence.</summary>
+        Verses,
+        /// <summary>The intro's title fades in on black while the map music fades in.</summary>
+        Title,
+        /// <summary>The black with the title burns away and uncovers the mission; input waits until it is gone.</summary>
+        Burning,
         /// <summary>The mission is being played.</summary>
         Playing
     }
 
     /// <summary>
-    /// The sequence from the main menu into the mission: fade to black, black, intro, fade in. It only times the phases and
-    /// reports them; the views draw them, the audio follows them and the composition root starts the mission when the
-    /// screen is black.
+    /// The sequence from the main menu into the mission: fade to black, black, the intro's verses and title, the burn. It
+    /// only times the phases and reports them; the views draw them, the audio follows them and the composition root starts
+    /// the mission when the screen is black.
     /// </summary>
     public sealed class FrontEndFlow
     {
         private readonly float fadeOutSeconds;
         private readonly float blackSeconds;
-        private readonly float introSeconds;
-        private readonly float fadeInSeconds;
+        private readonly float burnSeconds;
+        private readonly float musicFadeInSeconds;
         private float elapsed;
 
+        /// <param name="intro">The verses and the title; <see cref="IntroScript.None"/> skips them.</param>
+        /// <param name="musicFadeInSeconds">How long the music takes to come back, starting with the title.</param>
         /// <param name="isMenuShown">False skips the menu and starts in <see cref="FrontEndPhase.Playing"/> (automated runs).</param>
-        public FrontEndFlow(float fadeOutSeconds, float blackSeconds, float introSeconds, float fadeInSeconds, bool isMenuShown)
+        public FrontEndFlow(float fadeOutSeconds, float blackSeconds, IntroScript intro, float burnSeconds, float musicFadeInSeconds, bool isMenuShown)
         {
+            Intro = intro ?? throw new ArgumentNullException(nameof(intro));
             this.fadeOutSeconds = Math.Max(0f, fadeOutSeconds);
             this.blackSeconds = Math.Max(0f, blackSeconds);
-            this.introSeconds = Math.Max(0f, introSeconds);
-            this.fadeInSeconds = Math.Max(0f, fadeInSeconds);
+            this.burnSeconds = Math.Max(0f, burnSeconds);
+            this.musicFadeInSeconds = Math.Max(0f, musicFadeInSeconds);
             Phase = isMenuShown ? FrontEndPhase.MainMenu : FrontEndPhase.Playing;
         }
 
@@ -46,11 +51,14 @@ namespace HeroesOfMetalAge.Application
         public event Action<FrontEndPhase> PhaseChanged;
 
         public FrontEndPhase Phase { get; private set; }
+        public IntroScript Intro { get; }
         public float FadeOutSeconds => fadeOutSeconds;
-        public float FadeInSeconds => fadeInSeconds;
+        public float MusicFadeInSeconds => musicFadeInSeconds;
+        /// <summary>Seconds since the current phase started.</summary>
+        public float Elapsed => elapsed;
         /// <summary>0 when the current phase starts, 1 when it ends; 1 in the main menu and while playing.</summary>
         public float Progress => PhaseSeconds(Phase) > 0f ? Math.Min(1f, elapsed / PhaseSeconds(Phase)) : 1f;
-        /// <summary>How much of the screen the black covers: 0 in the menu and while playing, 1 on black and during the intro.</summary>
+        /// <summary>How much of the screen the black covers: 0 in the menu and while playing, 1 from black to the burn.</summary>
         public float Blackness
         {
             get
@@ -60,9 +68,10 @@ namespace HeroesOfMetalAge.Application
                     case FrontEndPhase.FadingOut:
                         return Progress;
                     case FrontEndPhase.Black:
-                    case FrontEndPhase.Intro:
+                    case FrontEndPhase.Verses:
+                    case FrontEndPhase.Title:
                         return 1f;
-                    case FrontEndPhase.FadingIn:
+                    case FrontEndPhase.Burning:
                         return 1f - Progress;
                     default:
                         return 0f;
@@ -111,10 +120,12 @@ namespace HeroesOfMetalAge.Application
                     return fadeOutSeconds;
                 case FrontEndPhase.Black:
                     return blackSeconds;
-                case FrontEndPhase.Intro:
-                    return introSeconds;
-                case FrontEndPhase.FadingIn:
-                    return fadeInSeconds;
+                case FrontEndPhase.Verses:
+                    return Intro.VersesSeconds;
+                case FrontEndPhase.Title:
+                    return Intro.TitleSeconds;
+                case FrontEndPhase.Burning:
+                    return burnSeconds;
                 default:
                     return 0f;
             }

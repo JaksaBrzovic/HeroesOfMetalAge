@@ -83,7 +83,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
         public bool IsDefeated { get; private set; }
         public bool IsInTown { get; private set; }
         public bool IsCelebrating { get; private set; }
-        /// <summary>True from New Game until the mission fades in: no music and no layers.</summary>
+        /// <summary>True from New Game until the intro's title: no music and no layers.</summary>
         public bool IsSilenced { get; private set; }
         /// <summary>The music track playing now, or null while the layers lead.</summary>
         public MusicTrack? CurrentTrack => currentTrack;
@@ -255,15 +255,9 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
             }
         }
 
-        // the fades follow the screen: out with the fade to black, in with the mission
+        // out with the fade to black, back with a long fade as the intro's title appears
         private void HandleFrontEndPhaseChanged(FrontEndPhase phase)
         {
-            if (phase == FrontEndPhase.Intro)
-            {
-                // placeholder intro: the end-of-day hourglass with its sound
-                Play(SoundCue.EndDay);
-            }
-
             bool isSilenced = IsSilentPhase(phase);
             if (isSilenced == IsSilenced)
             {
@@ -271,7 +265,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
             }
 
             IsSilenced = isSilenced;
-            float fade = isSilenced ? frontEnd.FadeOutSeconds : frontEnd.FadeInSeconds;
+            float fade = isSilenced ? frontEnd.FadeOutSeconds : frontEnd.MusicFadeInSeconds;
             ApplyMusic(false, fade);
             ApplyLayerMix(fade);
             ApplyRiding();
@@ -476,7 +470,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
 
         private static bool IsSilentPhase(FrontEndPhase phase)
         {
-            return phase == FrontEndPhase.FadingOut || phase == FrontEndPhase.Black || phase == FrontEndPhase.Intro;
+            return phase == FrontEndPhase.FadingOut || phase == FrontEndPhase.Black || phase == FrontEndPhase.Verses;
         }
 
         private static float PreviewSeconds(SoundDefinition sound)
