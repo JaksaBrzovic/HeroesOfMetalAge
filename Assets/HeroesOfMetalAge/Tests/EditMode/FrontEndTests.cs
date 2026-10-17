@@ -31,7 +31,7 @@ namespace HeroesOfMetalAge.Tests
         [Test]
         public void Flow_FadesOutWaitsOnBlackPlaysTheVersesAndTitleAndBurns()
         {
-            FrontEndFlow flow = new FrontEndFlow(1f, 2f, TwoStanzas(), 3f, 10f, true);
+            FrontEndFlow flow = new FrontEndFlow(Timing(black: 2f, burn: 3f, music: 10f), TwoStanzas(), true);
             List<FrontEndPhase> phases = new List<FrontEndPhase>();
             flow.PhaseChanged += phases.Add;
 
@@ -80,12 +80,75 @@ namespace HeroesOfMetalAge.Tests
         [Test]
         public void Flow_ZeroDurationsFinishAtOnceAndAutomatedRunsSkipTheMenu()
         {
-            FrontEndFlow flow = new FrontEndFlow(0f, 0f, IntroScript.None, 0f, 0f, true);
+            FrontEndFlow flow = new FrontEndFlow(FrontEndTiming.Instant, IntroScript.None, true);
             flow.StartNewGame();
             flow.Tick(0f);
             Assert.IsTrue(flow.IsPlaying);
 
-            Assert.IsTrue(new FrontEndFlow(1f, 1f, TwoStanzas(), 1f, 1f, false).IsPlaying);
+            Assert.IsTrue(new FrontEndFlow(Timing(), TwoStanzas(), false).IsPlaying);
+        }
+
+        [Test]
+        public void Flow_LoadGameGoesToBlackAndBurnsWithoutTheIntro()
+        {
+            FrontEndFlow flow = new FrontEndFlow(Timing(fadeOut: 1f, loadOut: 3f, black: 2f, burn: 1f), TwoStanzas(), true);
+            List<FrontEndPhase> phases = new List<FrontEndPhase>();
+            flow.PhaseChanged += phases.Add;
+
+            Assert.IsTrue(flow.StartLoadGame());
+            Assert.IsFalse(flow.StartNewGame(), "one choice at a time");
+            Assert.AreEqual(3f, flow.MusicFadeOutSeconds, "the music fades with Load Game's own way to black");
+            flow.Tick(1.5f);
+            Assert.AreEqual(0.5f, flow.Blackness, 1e-4f);
+            flow.Tick(1.5f);
+            Assert.AreEqual(FrontEndPhase.Black, flow.Phase);
+            flow.Tick(2f);
+            Assert.AreEqual(FrontEndPhase.Burning, flow.Phase);
+            flow.Tick(1f);
+            Assert.IsTrue(flow.IsPlaying);
+            CollectionAssert.AreEqual(new[] { FrontEndPhase.FadingOut, FrontEndPhase.Black, FrontEndPhase.Burning, FrontEndPhase.Playing }, phases);
+        }
+
+        [Test]
+        public void Flow_CreditsRollUntilAClickAndCloseBackToTheMenu()
+        {
+            FrontEndFlow flow = new FrontEndFlow(Timing(creditsOpen: 1f, creditsClose: 0.5f), TwoStanzas(), true);
+
+            Assert.IsFalse(flow.CloseCredits(), "nothing to close in the menu");
+            Assert.IsTrue(flow.OpenCredits());
+            Assert.AreEqual(FrontEndChoice.Credits, flow.Choice);
+            Assert.IsFalse(flow.CloseCredits(), "not while they open");
+            flow.Tick(1f);
+            Assert.AreEqual(FrontEndPhase.Credits, flow.Phase);
+            flow.Tick(100f);
+            Assert.AreEqual(FrontEndPhase.Credits, flow.Phase, "the credits wait for a click");
+            Assert.AreEqual(100f, flow.Elapsed, 1e-3f, "and keep counting while they roll");
+            Assert.AreEqual(0f, flow.Blackness);
+
+            Assert.IsTrue(flow.CloseCredits());
+            Assert.IsFalse(flow.CloseCredits());
+            flow.Tick(0.5f);
+            Assert.AreEqual(FrontEndPhase.MainMenu, flow.Phase);
+            Assert.AreEqual(FrontEndChoice.None, flow.Choice);
+            Assert.IsTrue(flow.StartNewGame(), "the menu takes a choice again");
+        }
+
+        [Test]
+        public void Flow_QuitLetsTheRiderLeaveThenStops()
+        {
+            FrontEndFlow flow = new FrontEndFlow(Timing(quit: 2f), TwoStanzas(), true);
+            List<FrontEndPhase> phases = new List<FrontEndPhase>();
+            flow.PhaseChanged += phases.Add;
+
+            Assert.IsTrue(flow.Quit());
+            Assert.AreEqual(2f, flow.MusicFadeOutSeconds, "the music fades out with him");
+            flow.Tick(1f);
+            Assert.AreEqual(0.5f, flow.Progress, 1e-4f);
+            flow.Tick(5f);
+            Assert.AreEqual(FrontEndPhase.Quit, flow.Phase);
+            Assert.IsFalse(flow.StartNewGame());
+            Assert.IsFalse(flow.IsPlaying);
+            CollectionAssert.AreEqual(new[] { FrontEndPhase.Quitting, FrontEndPhase.Quit }, phases);
         }
 
         [Test]
@@ -126,10 +189,10 @@ namespace HeroesOfMetalAge.Tests
             Assert.AreEqual("A stream of life", script.Stanzas[1].Lines[2].Text);
             IntroStanza last = script.Stanzas[2];
             Assert.AreEqual("But first", last.Lines[0].Text);
-            Assert.AreEqual(3f, last.Lines[0].PauseAfterSeconds, "a long pause before He must uncover");
+            Assert.AreEqual(2f, last.Lines[0].PauseAfterSeconds, "a long pause before He must uncover");
             Assert.AreEqual("He must uncover", last.Lines[1].Text);
-            Assert.AreEqual(5f, script.Stanzas[0].HoldSeconds);
-            Assert.AreEqual(5f, script.Stanzas[1].HoldSeconds);
+            Assert.AreEqual(3f, script.Stanzas[0].HoldSeconds);
+            Assert.AreEqual(3f, script.Stanzas[1].HoldSeconds);
             Assert.AreEqual(2f, last.HoldSeconds);
             Assert.AreEqual("The Secret of Metal", script.Title);
             Assert.LessOrEqual(script.MaxLines, ContentAssets.FrontEndPrefab.Intro.LineTexts.Count, "every stanza fits the prefab's line texts");
@@ -189,18 +252,39 @@ namespace HeroesOfMetalAge.Tests
             Assert.IsTrue(button.IsHornsComplete);
             button.SetHovered(true);
             Assert.AreEqual(1, hovers, "no hover sound after the click");
+            Assert.AreEqual(1f, button.GildProgress, "the gold has poured over the title with the horns");
+        }
+
+        [Test]
+        public void NewGameButton_PoursGoldOverItsOwnCopyOfTheTitleMaterialWithTheHorns()
+        {
+            NewGameButtonView button = NewFrontEnd().MainMenu.NewGameButton;
+            Image title = (Image)new SerializedObject(button).FindProperty("titleImage").objectReferenceValue;
+            button.Initialize();
+            Assert.AreNotSame(ContentAssets.MenuGildMaterial, title.material, "the shared material asset never changes");
+            Assert.AreEqual(ContentAssets.MENU_GILD_SHADER, title.material.shader.name);
+
+            button.SetHovered(true);
+            button.Tick(FRAME * 5f);
+            Assert.AreEqual(0f, button.GildProgress, "hovering only flexes");
+            button.Click();
+            button.Tick(FRAME * 2f);
+            Assert.Greater(button.GildProgress, 0f, "the gold starts with the horns");
+            Assert.Less(button.GildProgress, 1f);
+            Assert.AreEqual(button.GildProgress, title.material.GetFloat("_GildProgress"), 1e-4f);
+            button.Tick(2f);
+            Assert.AreEqual(1f, title.material.GetFloat("_GildProgress"));
         }
 
         [Test]
         public void MainMenu_NewGameStartsTheFlowWithItsSoundsAndHidesTheMenu()
         {
             FrontEndView frontEnd = NewFrontEnd();
-            FrontEndFlow flow = new FrontEndFlow(1f, 1f, TwoStanzas(), 3f, 1f, true);
+            FrontEndFlow flow = new FrontEndFlow(Timing(burn: 3f), TwoStanzas(), true);
             FakeAudioControls audio = new FakeAudioControls();
-            frontEnd.Initialize(flow, audio);
+            frontEnd.Initialize(flow, audio, "credits");
             MainMenuView menu = frontEnd.MainMenu;
 
-            // the placeholders' clicks need OnEnable listeners, which only run in play mode
             menu.NewGameButton.SetHovered(true);
             menu.NewGameButton.Click();
             Assert.AreEqual(FrontEndPhase.FadingOut, flow.Phase);
@@ -221,8 +305,8 @@ namespace HeroesOfMetalAge.Tests
         public void Intro_TypesTheStanzasShowsTheTitleAndBurnsTheCurtain()
         {
             FrontEndView frontEnd = NewFrontEnd();
-            FrontEndFlow flow = new FrontEndFlow(0f, 0f, TwoStanzas(), 3f, 1f, true);
-            frontEnd.Initialize(flow, new FakeAudioControls());
+            FrontEndFlow flow = new FrontEndFlow(Timing(fadeOut: 0f, black: 0f, burn: 3f), TwoStanzas(), true);
+            frontEnd.Initialize(flow, new FakeAudioControls(), "credits");
             IntroView intro = frontEnd.Intro;
 
             flow.StartNewGame();
@@ -289,11 +373,11 @@ namespace HeroesOfMetalAge.Tests
             Assert.AreEqual(CanvasScaler.ScreenMatchMode.Expand, scaler.screenMatchMode);
 
             MainMenuView menu = prefab.MainMenu;
-            foreach (UiWidget placeholder in new[] { menu.LoadGameButton, menu.CreditsButton, menu.QuitButton })
-            {
-                Assert.AreEqual(ContentAssets.UI_FOLDER + "/Widgets/Button.prefab", AssetDatabase.GetAssetPath(PrefabUtility.GetCorrespondingObjectFromSource(placeholder)),
-                    placeholder.name + " stays a nested button widget");
-            }
+            Assert.IsNotNull(menu.LoadGameButton, "run Tools > Heroes of Metal Age > Create missing main menu assets");
+            Assert.IsNotNull(menu.CreditsButton);
+            Assert.IsNotNull(menu.QuitButton);
+            Assert.IsNotNull(prefab.Credits);
+            Assert.IsNull(prefab.transform.Find("Overlays/Darkness"), "the camera falls into the hole instead of a spreading blot");
 
             // the buttons stand on the right side of the screen, New Game at the top
             RectTransform newGame = (RectTransform)menu.NewGameButton.transform;
@@ -302,6 +386,299 @@ namespace HeroesOfMetalAge.Tests
             Assert.AreEqual(0, newGame.GetSiblingIndex());
             Assert.AreEqual(6, Frames(menu.NewGameButton, "flexFrames").Length);
             Assert.AreEqual(6, Frames(menu.NewGameButton, "hornsFrames").Length);
+            RectTransform[] entries =
+            {
+                (RectTransform)menu.LoadGameButton.transform, (RectTransform)menu.CreditsButton.transform, (RectTransform)menu.QuitButton.transform
+            };
+            float bottom = newGame.rect.height;
+            foreach (RectTransform entry in entries)
+            {
+                Assert.AreSame(buttons, entry.parent, entry.name + " stands in the button column");
+                Assert.GreaterOrEqual(-entry.anchoredPosition.y, bottom, entry.name + " is below the entry above it");
+                bottom = -entry.anchoredPosition.y + entry.rect.height;
+            }
+
+            Assert.LessOrEqual(bottom + 40f, 1080f, "the column fits the screen");
+        }
+
+        [Test]
+        public void MenuPrefab_TheArmRisesOverTheGildedTitleAndEachEntryHasItsEffect()
+        {
+            MainMenuView menu = ContentAssets.FrontEndPrefab.MainMenu;
+            SerializedObject newGame = new SerializedObject(menu.NewGameButton);
+            Image title = (Image)newGame.FindProperty("titleImage").objectReferenceValue;
+            Image arm = (Image)newGame.FindProperty("armImage").objectReferenceValue;
+            Assert.AreSame(ContentAssets.MenuGildMaterial, title.material);
+            Assert.Greater(arm.transform.GetSiblingIndex(), title.transform.GetSiblingIndex(), "the fist passes over the title");
+            Assert.Greater(arm.rectTransform.offsetMin.x, 0f, "the arm moved right");
+            Assert.Greater(arm.rectTransform.offsetMin.y, 0f, "and up, just under the title");
+
+            Assert.IsTrue(menu.LoadGameCrumble.transform.IsChildOf(menu.LoadGameButton.transform));
+            Assert.IsTrue(menu.LoadGameHole.IsChildOf(menu.LoadGameButton.transform));
+            Assert.Less(menu.LoadGameHole.GetSiblingIndex(), menu.LoadGameCrumble.transform.GetSiblingIndex(), "the title lies in the hole");
+            Assert.IsTrue(menu.CreditsScroll.transform.IsChildOf(menu.CreditsButton.transform));
+            Assert.IsTrue(menu.QuitChopper.Chopper.transform.IsChildOf(menu.QuitButton.transform));
+            Assert.IsNotNull(ContentAssets.FrontEndPrefab.Credits.GetComponentInChildren<RectMask2D>(true), "the credits roll in a clipped viewport");
+            Assert.IsTrue(menu.LoadGameHole.IsChildOf(menu.DesignFrame), "the camera falls with everything the menu shows");
+            Assert.IsTrue(menu.Parallax.transform.IsChildOf(menu.DesignFrame));
+            Assert.AreEqual(6, menu.CreditsScroll.FrameCount);
+            Assert.AreEqual(6, menu.QuitChopper.HoverFrameCount);
+            Assert.AreEqual(7, menu.QuitChopper.DepartureFrameCount);
+            Assert.Greater(menu.CreditsButton.transform.GetSiblingIndex(), menu.QuitButton.transform.GetSiblingIndex(), "the opened scroll lies over Quit");
+        }
+
+        [Test]
+        public void Parallax_TheRestingCameraSwaysSidewaysBothWaysWithoutJumps()
+        {
+            float min = 0f;
+            float max = 0f;
+            float previous = ParallaxView.Drift(0f, 100f);
+            for (float time = 0.1f; time < 240f; time += 0.1f)
+            {
+                float drift = ParallaxView.Drift(time, 100f);
+                Assert.LessOrEqual(Mathf.Abs(drift), 100f, "never further than the sway");
+                Assert.Less(Mathf.Abs(drift - previous), 6f, "a smooth drift, no jumps");
+                min = Mathf.Min(min, drift);
+                max = Mathf.Max(max, drift);
+                previous = drift;
+            }
+
+            Assert.Less(min, -60f, "it drifts left");
+            Assert.Greater(max, 60f, "and right");
+        }
+
+        [Test]
+        public void Parallax_EachLayerMovesAgainstTheCameraByItsFactor()
+        {
+            ParallaxView parallax = NewFrontEnd().MainMenu.Parallax;
+            parallax.Initialize();
+            int last = parallax.LayerCount - 1;
+            Vector2 sky = parallax.LayerRect(0).anchoredPosition;
+            Vector2 rocks = parallax.LayerRect(last).anchoredPosition + parallax.CameraOffset * parallax.LayerFactor(last);
+            Vector2 middle = parallax.LayerRect(last / 2).anchoredPosition + parallax.CameraOffset * parallax.LayerFactor(last / 2);
+
+            Glide(parallax, 1f, new Vector2(0.9f, 0.8f));
+            Vector2 offset = parallax.CameraOffset;
+            Assert.AreNotEqual(Vector2.zero, offset);
+            Assert.AreEqual(sky, parallax.LayerRect(0).anchoredPosition, "the sky stays");
+            Assert.Less((rocks - offset * parallax.LayerFactor(last) - parallax.LayerRect(last).anchoredPosition).magnitude, 1e-3f, "the rocks move the most");
+            Assert.Less((middle - offset * parallax.LayerFactor(last / 2) - parallax.LayerRect(last / 2).anchoredPosition).magnitude, 1e-3f);
+        }
+
+        [Test]
+        public void Parallax_FollowsThePointerSwaysWhenItRestsAndHandsBackWhenItMoves()
+        {
+            ParallaxView parallax = NewFrontEnd().MainMenu.Parallax;
+            parallax.Initialize();
+            Vector2 amplitude = parallax.PointerAmplitude;
+
+            Glide(parallax, 0.9f, new Vector2(1f, 1f));
+            Assert.Greater(parallax.CameraOffset.x, amplitude.x * 0.8f, "the camera goes the way the pointer is");
+            Assert.Greater(parallax.CameraOffset.y, amplitude.y * 0.8f, "up and down too");
+            Glide(parallax, 0.9f, new Vector2(0f, 0.5f));
+            Assert.Less(parallax.CameraOffset.x, -amplitude.x * 0.8f, "and follows it back");
+            Assert.AreEqual(0f, parallax.SwayWeight, "the pointer leads while it moves");
+
+            // resting longer than any idle delay, then longer than the blend
+            Glide(parallax, 4.2f, new Vector2(0f, 0.5f));
+            Assert.Greater(parallax.SwayWeight, 0f, "the sway starts once the pointer has rested");
+            Glide(parallax, 3f, new Vector2(0f, 0.5f));
+            Assert.AreEqual(1f, parallax.SwayWeight);
+            Assert.AreEqual(0f, parallax.CameraOffset.y, 1e-4f, "the sway is sideways only");
+            Assert.LessOrEqual(Mathf.Abs(parallax.CameraOffset.x), parallax.SwayAmplitude);
+
+            // the pointer keeps moving, so it keeps the camera
+            for (float time = 0f; time < 2f; time += 1f / 60f)
+            {
+                parallax.Tick(1f / 60f, new Vector2(0.6f + time * 0.1f, 0.5f));
+                if (time < 0.2f)
+                {
+                    Assert.Less(parallax.SwayWeight, 1f, "a moving pointer takes the camera back");
+                }
+            }
+
+            Assert.AreEqual(0f, parallax.SwayWeight);
+            Assert.Greater(parallax.CameraOffset.x, 0f, "towards the pointer on the right");
+        }
+
+        [Test]
+        public void ParallaxPrefab_LayersBackToFrontCoverTheScreenAtEveryMove()
+        {
+            ParallaxView parallax = ContentAssets.FrontEndPrefab.MainMenu.Parallax;
+
+            Assert.IsNotNull(parallax, "run Tools > Heroes of Metal Age > Create missing main menu assets");
+            Assert.AreEqual(11, parallax.LayerCount);
+            Assert.AreEqual(0f, parallax.LayerFactor(0), "the sky is still");
+            Assert.AreEqual(0, parallax.transform.GetSiblingIndex(), "behind the buttons");
+            Assert.IsNotNull(parallax.GetComponent<Canvas>(), "its own canvas, so the moving layers do not rebuild the buttons");
+            Assert.IsNull(parallax.transform.parent.Find("Background"), "the single background image is gone");
+            float sideways = Mathf.Max(parallax.SwayAmplitude, parallax.PointerAmplitude.x);
+            for (int i = 0; i < parallax.LayerCount; i++)
+            {
+                RectTransform layer = parallax.LayerRect(i);
+                Image image = layer.GetComponent<Image>();
+                Assert.IsNotNull(image.sprite, layer.name);
+                Assert.IsFalse(image.raycastTarget, layer.name + " takes no clicks");
+                Assert.AreEqual(i, layer.GetSiblingIndex(), "drawn back to front");
+                Assert.AreEqual(1080f, layer.rect.height, 0.5f, layer.name);
+                // a 21:9 screen is 2520 wide at this height
+                Assert.GreaterOrEqual(layer.rect.width * parallax.Overscan * 0.5f - sideways * parallax.LayerFactor(i), 1260f,
+                    layer.name + " covers a wide screen at the furthest move");
+                Assert.GreaterOrEqual(1080f * (parallax.Overscan - 1f) * 0.5f, parallax.PointerAmplitude.y * parallax.LayerFactor(i),
+                    layer.name + " never shows its top or bottom edge");
+                if (i > 0)
+                {
+                    Assert.GreaterOrEqual(parallax.LayerFactor(i), parallax.LayerFactor(i - 1), "nearer layers move more");
+                }
+            }
+        }
+
+        [Test]
+        public void LoadGame_TitleFallsIntoTheHoleTheCameraFallsInAfterItAndTheBlackBurnsWithoutTheIntro()
+        {
+            FrontEndView frontEnd = NewFrontEnd();
+            FrontEndFlow flow = new FrontEndFlow(Timing(loadOut: 2f, black: 1f, burn: 2f), TwoStanzas(), true);
+            FakeAudioControls audio = new FakeAudioControls();
+            frontEnd.Initialize(flow, audio, "credits");
+            MainMenuView menu = frontEnd.MainMenu;
+            RectTransform frame = menu.DesignFrame;
+            RectTransform hole = menu.LoadGameHole;
+            RectTransform screen = (RectTransform)menu.transform;
+
+            menu.LoadGameButton.Click();
+            menu.LoadGameButton.Click();
+            Assert.AreEqual(FrontEndPhase.FadingOut, flow.Phase);
+            Assert.AreEqual(FrontEndChoice.LoadGame, flow.Choice);
+            CollectionAssert.AreEqual(new[] { SoundCue.Click }, audio.Played, "one click sound");
+
+            flow.Tick(0.25f);
+            frontEnd.Refresh();
+            Assert.Greater(menu.LoadGameCrumble.Progress, 0f, "the title crumbles");
+            Assert.AreEqual(0f, frontEnd.Fade.alpha, "no black yet");
+            float early = frame.localScale.x;
+            Assert.GreaterOrEqual(early, 1f, "the camera starts to fall slowly");
+            Assert.Less(early, 1.2f);
+
+            flow.Tick(0.75f);
+            frontEnd.Refresh();
+            Assert.AreEqual(1f, menu.LoadGameCrumble.Progress, "the title has fallen into the hole");
+            float middle = frame.localScale.x;
+            Assert.Greater(middle, early);
+
+            flow.Tick(0.9f);
+            frontEnd.Refresh();
+            Assert.Greater(frame.localScale.x - middle, middle - early, "faster and faster");
+            Vector2 holeOnScreen = screen.InverseTransformPoint(hole.TransformPoint(hole.rect.center));
+            Assert.Less((holeOnScreen - screen.rect.center).magnitude, 1f, "the hole is in the middle of the screen");
+            Assert.AreNotEqual(Quaternion.identity, frame.localRotation, "sucked into a whirl");
+            Assert.Greater(frontEnd.Fade.alpha, 0f, "the black closes in at the end of the fall");
+
+            flow.Tick(0.2f);
+            frontEnd.Refresh();
+            Assert.AreEqual(FrontEndPhase.Black, flow.Phase);
+            Assert.IsTrue(frontEnd.Fade.gameObject.activeSelf);
+            Assert.AreEqual(1f, frontEnd.Fade.alpha);
+
+            flow.Tick(1.5f);
+            frontEnd.Refresh();
+            Assert.AreEqual(FrontEndPhase.Burning, flow.Phase, "no verses and no title for Load Game");
+            Assert.IsTrue(frontEnd.Intro.gameObject.activeSelf);
+            Assert.IsFalse(frontEnd.Intro.TitleText.gameObject.activeSelf, "the plain black burns");
+            flow.Tick(2f);
+            frontEnd.Refresh();
+            Assert.IsTrue(flow.IsPlaying);
+        }
+
+        [Test]
+        public void Credits_ScrollUnrollsTheCreditsRollAndAnyClickGoesBackToTheMenu()
+        {
+            FrontEndView frontEnd = NewFrontEnd();
+            FrontEndFlow flow = new FrontEndFlow(Timing(creditsOpen: 2f, creditsClose: 1f), TwoStanzas(), true);
+            FakeAudioControls audio = new FakeAudioControls();
+            frontEnd.Initialize(flow, audio, "Heroes of Metal Age\n\nA\nB\nC");
+            MainMenuView menu = frontEnd.MainMenu;
+            Sprite[] frames = Frames(menu.CreditsScroll, "frames");
+
+            Assert.AreSame(frames[0], menu.CreditsScroll.CurrentFrame, "the scroll is rolled and sealed");
+            menu.CreditsButton.Click();
+            Assert.AreEqual(FrontEndPhase.OpeningCredits, flow.Phase);
+            flow.Tick(0.5f);
+            frontEnd.Refresh();
+            Assert.AreNotSame(frames[0], menu.CreditsScroll.CurrentFrame, "the scroll unrolls");
+            Assert.IsFalse(frontEnd.Credits.gameObject.activeSelf && frontEnd.Credits.GetComponent<CanvasGroup>().alpha > 0f,
+                "the credits screen waits for the scroll");
+            flow.Tick(1f);
+            frontEnd.Refresh();
+            Assert.AreSame(frames[frames.Length - 1], menu.CreditsScroll.CurrentFrame, "unrolled");
+            Assert.Greater(frontEnd.Credits.GetComponent<CanvasGroup>().alpha, 0f, "the credits screen fades in");
+
+            frontEnd.Credits.ClickBack();
+            Assert.AreEqual(FrontEndPhase.OpeningCredits, flow.Phase, "no way back while it opens");
+            flow.Tick(1f);
+            frontEnd.Refresh();
+            Assert.AreEqual(FrontEndPhase.Credits, flow.Phase);
+            Assert.AreEqual("Heroes of Metal Age\n\nA\nB\nC", frontEnd.Credits.CreditsText.text);
+            Assert.IsFalse(menu.gameObject.activeSelf, "the menu hides under the credits");
+            float offset = frontEnd.Credits.ScrollOffset;
+            flow.Tick(1f);
+            frontEnd.Refresh();
+            Assert.Greater(frontEnd.Credits.ScrollOffset, offset, "the credits roll up");
+
+            frontEnd.Credits.ClickBack();
+            Assert.AreEqual(FrontEndPhase.ClosingCredits, flow.Phase);
+            flow.Tick(1f);
+            frontEnd.Refresh();
+            Assert.AreEqual(FrontEndPhase.MainMenu, flow.Phase);
+            Assert.AreEqual(FrontEndChoice.None, flow.Choice);
+            Assert.IsFalse(frontEnd.Credits.gameObject.activeSelf);
+            Assert.IsTrue(menu.gameObject.activeSelf);
+            Assert.AreSame(frames[0], menu.CreditsScroll.CurrentFrame, "the scroll is rolled up again");
+            Assert.IsTrue(menu.GetComponent<CanvasGroup>().interactable);
+            CollectionAssert.AreEqual(new[] { SoundCue.Click, SoundCue.Click }, audio.Played);
+
+            menu.CreditsButton.Click();
+            Assert.AreEqual(FrontEndPhase.OpeningCredits, flow.Phase, "the entry takes clicks again");
+        }
+
+        [Test]
+        public void Quit_HoverLiftsTheFootAClickFinishesItThenTheRiderLeavesAndTheFlowAsksToClose()
+        {
+            FrontEndView frontEnd = NewFrontEnd();
+            FrontEndFlow flow = new FrontEndFlow(Timing(quit: 2f), TwoStanzas(), true);
+            frontEnd.Initialize(flow, new FakeAudioControls(), "credits");
+            MainMenuView menu = frontEnd.MainMenu;
+            ChopperView chopper = menu.QuitChopper;
+            Sprite[] hover = Frames(chopper, "hoverFrames");
+            Sprite[] departure = Frames(chopper, "departureFrames");
+            Assert.AreSame(hover[0], chopper.CurrentFrame, "the rider at rest");
+
+            menu.QuitButton.SetHovered(true);
+            frontEnd.Refresh();
+            chopper.Tick(2.5f / 12f);
+            Assert.AreSame(hover[2], chopper.CurrentFrame, "hovering lifts his foot, twelve frames a second");
+            menu.QuitButton.SetHovered(false);
+            frontEnd.Refresh();
+            chopper.Tick(1f / 12f);
+            Assert.AreSame(hover[1], chopper.CurrentFrame, "leaving puts it back down");
+            menu.QuitButton.SetHovered(true);
+            frontEnd.Refresh();
+            chopper.Tick(1f / 12f);
+
+            menu.QuitButton.Click();
+            Assert.AreEqual(FrontEndPhase.Quitting, flow.Phase);
+            frontEnd.Refresh();
+            Assert.AreSame(hover[3], chopper.CurrentFrame, "first he finishes lifting his foot");
+            flow.Tick(1.2f);
+            frontEnd.Refresh();
+            Assert.Contains(chopper.CurrentFrame, departure, "then he rides off");
+            Assert.AreNotSame(departure[0], chopper.CurrentFrame, "the departure skips its first frame, the last hover frame");
+            chopper.Tick(1f);
+            Assert.Contains(chopper.CurrentFrame, departure, "the pointer no longer moves him once he leaves");
+            flow.Tick(1f);
+            Assert.AreEqual(FrontEndPhase.Quit, flow.Phase);
+            frontEnd.Refresh();
+            Assert.AreSame(departure[departure.Length - 1], chopper.CurrentFrame, "gone");
+            Assert.IsTrue(menu.gameObject.activeSelf, "the menu stays while he leaves");
         }
 
         [Test]
@@ -329,7 +706,7 @@ namespace HeroesOfMetalAge.Tests
             try
             {
                 GameSession session = CampaignTestUtility.NewSession(ContentAssets.LoadCatalog(), new MemorySaveStore());
-                FrontEndFlow flow = new FrontEndFlow(1f, 1f, TwoStanzas(), 1f, 10f, true);
+                FrontEndFlow flow = new FrontEndFlow(Timing(music: 10f), TwoStanzas(), true);
                 GameAudio adapter = host.AddComponent<GameAudio>();
                 adapter.Initialize(ContentAssets.Audio, ContentAssets.Units, ContentAssets.Mission, session, flow);
                 MusicTrack? map = ContentAssets.Mission.MapMusic.HasClips ? MusicTrack.Map : (MusicTrack?)null;
@@ -353,11 +730,61 @@ namespace HeroesOfMetalAge.Tests
             }
         }
 
+        [Test]
+        public void Audio_ReturnsWithTheBurnAfterLoadGameAndFadesOutOnQuit()
+        {
+            GameObject host = new GameObject("front end audio test");
+            try
+            {
+                GameSession session = CampaignTestUtility.NewSession(ContentAssets.LoadCatalog(), new MemorySaveStore());
+                FrontEndFlow flow = new FrontEndFlow(Timing(loadOut: 2f, black: 1f, burn: 1f), TwoStanzas(), true);
+                GameAudio adapter = host.AddComponent<GameAudio>();
+                adapter.Initialize(ContentAssets.Audio, ContentAssets.Units, ContentAssets.Mission, session, flow);
+                MusicTrack? map = ContentAssets.Mission.MapMusic.HasClips ? MusicTrack.Map : (MusicTrack?)null;
+
+                flow.StartLoadGame();
+                Assert.IsTrue(adapter.IsSilenced);
+                flow.Tick(2.5f);
+                Assert.IsTrue(adapter.IsSilenced, "silence on black");
+                flow.Tick(0.6f);
+                Assert.AreEqual(FrontEndPhase.Burning, flow.Phase);
+                Assert.IsFalse(adapter.IsSilenced);
+                Assert.AreEqual(map, adapter.CurrentTrack, "the map music comes back as the black burns");
+            }
+            finally
+            {
+                Object.DestroyImmediate(host);
+            }
+
+            host = new GameObject("front end quit audio test");
+            try
+            {
+                GameSession session = CampaignTestUtility.NewSession(ContentAssets.LoadCatalog(), new MemorySaveStore());
+                FrontEndFlow flow = new FrontEndFlow(Timing(quit: 1f), TwoStanzas(), true);
+                GameAudio adapter = host.AddComponent<GameAudio>();
+                adapter.Initialize(ContentAssets.Audio, ContentAssets.Units, ContentAssets.Mission, session, flow);
+
+                flow.Quit();
+                Assert.IsTrue(adapter.IsSilenced, "the music leaves with the rider");
+                Assert.IsNull(adapter.CurrentTrack);
+            }
+            finally
+            {
+                Object.DestroyImmediate(host);
+            }
+        }
+
         private FrontEndView NewFrontEnd()
         {
             FrontEndView view = (FrontEndView)PrefabUtility.InstantiatePrefab(ContentAssets.FrontEndPrefab);
             instance = view.gameObject;
             return view;
+        }
+
+        private static FrontEndTiming Timing(float fadeOut = 1f, float loadOut = 1f, float black = 1f, float burn = 1f, float music = 1f,
+            float creditsOpen = 1f, float creditsClose = 1f, float quit = 1f)
+        {
+            return new FrontEndTiming(fadeOut, loadOut, black, burn, music, creditsOpen, creditsClose, quit);
         }
 
         // ten letters per second: "abcde" is typed in half a second
@@ -371,9 +798,18 @@ namespace HeroesOfMetalAge.Tests
                 "TITLE", 10f, 0.5f, 1f, 2f, 1f);
         }
 
-        private static Sprite[] Frames(NewGameButtonView button, string field)
+        // advances in frames of a sixtieth of a second, as the menu would
+        private static void Glide(ParallaxView parallax, float seconds, Vector2 pointer)
         {
-            SerializedProperty property = new SerializedObject(button).FindProperty(field);
+            for (float time = 0f; time < seconds; time += 1f / 60f)
+            {
+                parallax.Tick(1f / 60f, pointer);
+            }
+        }
+
+        private static Sprite[] Frames(Object view, string field)
+        {
+            SerializedProperty property = new SerializedObject(view).FindProperty(field);
             Sprite[] frames = new Sprite[property.arraySize];
             for (int i = 0; i < frames.Length; i++)
             {

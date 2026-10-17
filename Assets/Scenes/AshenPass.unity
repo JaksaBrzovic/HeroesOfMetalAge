@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &156956162
+--- !u!1 &718617419
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 156956164}
-  - component: {fileID: 156956163}
+  - component: {fileID: 718617421}
+  - component: {fileID: 718617420}
   m_Layer: 0
   m_Name: Heroes of Metal Age
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &156956163
+--- !u!114 &718617420
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 156956162}
+  m_GameObject: {fileID: 718617419}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b10be66943574f548cdd4c10d57cbe19, type: 3}
@@ -160,13 +160,13 @@ MonoBehaviour:
   debugPanelPrefab: {fileID: 1199435052972363032, guid: c6427983a0a23f845b4541c3e372633b, type: 3}
   dialoguePrefab: {fileID: 4655510642808958657, guid: 8fe68feb22eb6854586b625a689925c0, type: 3}
   frontEndPrefab: {fileID: 4523803826900708682, guid: 74ce152b3d94f784f84c766427d04d53, type: 3}
---- !u!4 &156956164
+--- !u!4 &718617421
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 156956162}
+  m_GameObject: {fileID: 718617419}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -179,4 +179,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 156956164}
+  - {fileID: 718617421}

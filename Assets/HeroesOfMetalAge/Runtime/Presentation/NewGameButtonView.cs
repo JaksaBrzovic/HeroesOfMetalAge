@@ -8,11 +8,14 @@ namespace HeroesOfMetalAge.Presentation
     /// <summary>
     /// The main menu's New Game button: the title over an arm. Hovering flexes the arm (the flex frames forward, holding the
     /// last), leaving relaxes it (the same frames backwards from wherever it is). A click finishes the flex first if it is
-    /// still running, then raises the fist into the metal horns and holds them. <see cref="Clicked"/> is raised at once;
-    /// the animation only shows it. Frames advance in unscaled time.
+    /// still running, then raises the fist into the metal horns and holds them while molten gold pours over the title
+    /// (its Gild material). <see cref="Clicked"/> is raised at once; the animation only shows it. Frames advance in
+    /// unscaled time.
     /// </summary>
     public sealed class NewGameButtonView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
+        private static readonly int GildProgressId = Shader.PropertyToID("_GildProgress");
+
         [SerializeField] private Button button;
         [Tooltip("Shows the current frame; its first flex frame is the resting arm.")]
         [SerializeField] private Image armImage;
@@ -22,6 +25,11 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private Sprite[] hornsFrames;
         [Min(1f)]
         [SerializeField] private float framesPerSecond = 16f;
+        [Tooltip("The New Game title, drawn with the Gild material; the button gives it its own copy.")]
+        [SerializeField] private Image titleImage;
+        [Tooltip("Seconds the gold takes to pour over the title, from the start of the horns.")]
+        [Min(0.05f)]
+        [SerializeField] private float gildSeconds = 1.1f;
 
         private int flexIndex;
         // 0 until the horns start; the horns' first frame is never shown, it is the flex's last
@@ -29,6 +37,8 @@ namespace HeroesOfMetalAge.Presentation
         private float frameTimer;
         private bool isHovered;
         private bool isClicked;
+        private Material gildMaterial;
+        private float gild;
 
         /// <summary>The pointer moved onto the button (not after it was clicked).</summary>
         public event Action Hovered;
@@ -38,13 +48,22 @@ namespace HeroesOfMetalAge.Presentation
         /// <summary>The sprite on screen now.</summary>
         public Sprite CurrentFrame => hornsIndex > 0 ? hornsFrames[hornsIndex] : flexFrames[flexIndex];
         public bool IsHornsComplete => hornsIndex == hornsFrames.Length - 1;
+        /// <summary>0 before the horns, 1 once the gold has covered the title.</summary>
+        public float GildProgress => gild;
 
         /// <exception cref="InvalidOperationException">A reference or a frame is missing on the prefab.</exception>
         public void Initialize()
         {
-            if (button == null || armImage == null || !HasFrames(flexFrames) || !HasFrames(hornsFrames) || hornsFrames.Length < 2)
+            if (button == null || armImage == null || titleImage == null || !HasFrames(flexFrames) || !HasFrames(hornsFrames) || hornsFrames.Length < 2)
             {
-                throw new InvalidOperationException($"NewGameButtonView on '{name}' needs its button, arm image, flex frames and at least two horns frames.");
+                throw new InvalidOperationException($"NewGameButtonView on '{name}' needs its button, arm and title images, flex frames and at least two horns frames.");
+            }
+
+            // a copy, so the shared material asset never changes at runtime
+            if (gildMaterial == null && titleImage.material.HasProperty(GildProgressId))
+            {
+                gildMaterial = new Material(titleImage.material);
+                titleImage.material = gildMaterial;
             }
 
             button.onClick.RemoveListener(HandleClicked);
@@ -60,7 +79,9 @@ namespace HeroesOfMetalAge.Presentation
             frameTimer = 0f;
             isHovered = false;
             isClicked = false;
+            gild = 0f;
             ShowFrame();
+            ShowGild();
         }
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -104,6 +125,12 @@ namespace HeroesOfMetalAge.Presentation
             {
                 ShowFrame();
             }
+
+            if (hornsIndex > 0 && gild < 1f)
+            {
+                gild = Mathf.Min(1f, gild + Mathf.Max(0f, deltaSeconds) / gildSeconds);
+                ShowGild();
+            }
         }
 
         internal void Click()
@@ -121,6 +148,11 @@ namespace HeroesOfMetalAge.Presentation
             if (button != null)
             {
                 button.onClick.RemoveListener(HandleClicked);
+            }
+
+            if (gildMaterial != null)
+            {
+                Destroy(gildMaterial);
             }
         }
 
@@ -176,6 +208,14 @@ namespace HeroesOfMetalAge.Presentation
             if (armImage.sprite != CurrentFrame)
             {
                 armImage.sprite = CurrentFrame;
+            }
+        }
+
+        private void ShowGild()
+        {
+            if (gildMaterial != null)
+            {
+                gildMaterial.SetFloat(GildProgressId, gild);
             }
         }
 

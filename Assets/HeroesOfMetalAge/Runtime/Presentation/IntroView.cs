@@ -9,7 +9,7 @@ namespace HeroesOfMetalAge.Presentation
 {
     /// <summary>
     /// The intro on a black curtain over the whole screen: the stanzas typed letter by letter in the middle, the title
-    /// fading in, then the curtain burning away with the title on it. It only displays the <see cref="FrontEndFlow"/>'s
+    /// fading in, then the curtain burning away with the title on it (Load Game burns the curtain alone). It only displays the <see cref="FrontEndFlow"/>'s
     /// phases and its <see cref="IntroScript"/>. The curtain's burn material reads how much of it is left from the
     /// Image's alpha, and the Mask beside it cuts the texts out of the burnt holes.
     /// </summary>
@@ -57,7 +57,9 @@ namespace HeroesOfMetalAge.Presentation
             int stanza = isVerses ? script.StanzaAt(flow.Elapsed) : -1;
             ShowStanza(stanza, flow.Elapsed);
 
-            UiBinding.SetVisible(titleText.gameObject, phase == FrontEndPhase.Title || phase == FrontEndPhase.Burning);
+            // Load Game burns the plain black, without the intro's title
+            bool hasTitle = flow.Choice != FrontEndChoice.LoadGame;
+            UiBinding.SetVisible(titleText.gameObject, hasTitle && (phase == FrontEndPhase.Title || phase == FrontEndPhase.Burning));
             SetAlpha(titleText, phase == FrontEndPhase.Title ? script.TitleAlpha(flow.Elapsed) : 1f);
             float left = phase == FrontEndPhase.Burning ? 1f - flow.Progress : 1f;
             Color color = new Color(curtain.color.r, curtain.color.g, curtain.color.b, left);

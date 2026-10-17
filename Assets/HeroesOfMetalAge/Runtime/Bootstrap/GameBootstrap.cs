@@ -116,8 +116,7 @@ namespace HeroesOfMetalAge.Bootstrap
             GameSession session = new GameSession(catalog, store, random, mission.TravelStepSeconds, mission.EnemyTurnSeconds,
                 mission.BattleActionSeconds, mission.BattleResultSeconds, mission.EndDaySeconds, Debug.LogException);
             // the automated scenario drives the mission itself, so it starts without the main menu
-            FrontEndFlow frontEnd = new FrontEndFlow(frontEndSettings.FadeOutSeconds, frontEndSettings.BlackSeconds, frontEndSettings.CreateIntroScript(),
-                frontEndSettings.BurnSeconds, frontEndSettings.MusicFadeInSeconds, !isSmokeTest);
+            FrontEndFlow frontEnd = new FrontEndFlow(frontEndSettings.CreateTiming(), frontEndSettings.CreateIntroScript(), !isSmokeTest);
 
             GameAudio audio = gameObject.AddComponent<GameAudio>();
             audio.Initialize(audioDatabase, units, mission, session, frontEnd);
@@ -149,14 +148,18 @@ namespace HeroesOfMetalAge.Bootstrap
             }
 
             FrontEndView frontEndView = Instantiate(frontEndPrefab);
-            frontEndView.Initialize(frontEnd, audio);
+            frontEndView.Initialize(frontEnd, audio, frontEndSettings.Credits);
             // the flow, the session and the HUD live as long as this composition root, so the handler is never removed
             frontEnd.PhaseChanged += phase =>
             {
-                // New Game starts a fresh mission while the screen is black
+                // New Game (and for now Load Game) starts a fresh mission while the screen is black
                 if (phase == FrontEndPhase.Black)
                 {
                     session.Restart();
+                }
+                else if (phase == FrontEndPhase.Quit)
+                {
+                    QuitProgram();
                 }
 
                 hud.IsSuspended = phase != FrontEndPhase.Playing;
@@ -175,6 +178,16 @@ namespace HeroesOfMetalAge.Bootstrap
             {
                 gameObject.AddComponent<RuntimeSmokeRunner>().Initialize(session, store, hud, world);
             }
+#endif
+        }
+
+        // the main menu's Quit, after the rider has left; in the Editor it leaves play mode
+        private static void QuitProgram()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            UnityEngine.Application.Quit();
 #endif
         }
 

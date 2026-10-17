@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: HeroesOfMetalAge.Infrastructure::HeroesOfMetalAge.Infrastructure.Content.FrontEndSettingsScriptableObject
   fadeOutSeconds: 1.5
   blackSeconds: 2
+  loadGameOutSeconds: 3.2
   charactersPerSecond: 15
   stanzaFadeSeconds: 1.5
   stanzaGapSeconds: 1
@@ -25,7 +26,7 @@ MonoBehaviour:
       pauseAfterSeconds: 0.8
     - text: On the journey he must go
       pauseAfterSeconds: 0.8
-    holdSeconds: 5
+    holdSeconds: 3
   - lines:
     - text: Answers he seeks not
       pauseAfterSeconds: 0.8
@@ -33,10 +34,10 @@ MonoBehaviour:
       pauseAfterSeconds: 0.8
     - text: A stream of life
       pauseAfterSeconds: 0.8
-    holdSeconds: 5
+    holdSeconds: 3
   - lines:
     - text: But first
-      pauseAfterSeconds: 3
+      pauseAfterSeconds: 2
     - text: He must uncover
       pauseAfterSeconds: 0.8
     holdSeconds: 2
@@ -45,3 +46,7 @@ MonoBehaviour:
   titleHoldSeconds: 2.5
   musicFadeInSeconds: 10
   burnSeconds: 3
+  creditsOpenSeconds: 1.3
+  creditsCloseSeconds: 0.8
+  credits: "<size=180%><color=#F2C25A>Heroes of Metal Age</color></size>\n<size=75%><color=#B9A88A>The Secret of Metal</color></size>\n\n\n\n<size=120%><color=#E8B04A>Game Design, Programming and Direction</color></size>\nJaksa Brzovic\n\n\n<size=120%><color=#E8B04A>Music</color></size>\nJRPG Epic Rock Battle Theme #1\n<size=75%><color=#B9A88A>HydroGene - CC0 - opengameart.org</color></size>\n\nShort Theme [Rock/Metal]\n<size=75%><color=#B9A88A>nene - CC0 - opengameart.org</color></size>\n\nRPG - Underworld Theme - Loop\n<size=75%><color=#B9A88A>Joseph Collard - CC-BY 4.0 - opengameart.org/content/rpg-underworld-theme-loop</color></size>\n\nMedieval: Market Day\n<size=75%><color=#B9A88A>RandomMind - CC0 - opengameart.org</color></size>\n\nMedieval: Defeat Theme\n<size=75%><color=#B9A88A>RandomMind - CC0 - opengameart.org</color></size>\n\n\n<size=120%><color=#E8B04A>Sound Effects</color></size>\nMaxheadroom's Galloping Horse\n<size=75%><color=#B9A88A>Podsburgh - CC0 - freesound.org</color></size>\n\nLarge sword swing\n<size=75%><color=#B9A88A>Squirrel_404 - CC-BY 4.0 - freesound.org/people/Squirrel_404/sounds/737748</color></size>\n\nCut Through Armor / Slice / Clang\n<size=75%><color=#B9A88A>SypherZent - CC-BY 4.0 - freesound.org/people/SypherZent/sounds/420675</color></size>\n\nBasic Melee Swing / Miss / Whoosh\n<size=75%><color=#B9A88A>SypherZent - CC0 - freesound.org</color></size>\n\nArrow woosh and twang\n<size=75%><color=#B9A88A>strangely_gnarled - CC-BY 4.0 - freesound.org/people/strangely_gnarled/sounds/72208 - trimmed, faded out</color></size>\n\nArrow Impact\n<size=75%><color=#B9A88A>Twisted_Euphoria - CC0 - freesound.org</color></size>\n\narrow_whoosh\n<size=75%><color=#B9A88A>smcameron - CC-BY 4.0 - freesound.org/people/smcameron/sounds/50773 - level raised</color></size>\n\nDistortion Guitar Power Chord E\n<size=75%><color=#B9A88A>tosha73 - CC-BY 4.0 - freesound.org/people/tosha73/sounds/533847</color></size>\n\nJH Guitar Killer Chord\n<size=75%><color=#B9A88A>tosha73 - CC-BY 4.0 - freesound.org/people/tosha73/sounds/534321</color></size>\n\nVictory (Rock Guitar Tapping)\n<size=75%><color=#B9A88A>DeathToMayo - CC0 - freesound.org</color></size>\n\nChoir of Voices - Single Chord\n<size=75%><color=#B9A88A>bone666138 - CC0 - freesound.org</color></size>\n\n\n<size=120%><color=#E8B04A>Built With</color></size>\nUnity\nTextMeshPro\nMLin Audio System\nLiberation Sans\n\n\n<size=120%><color=#E8B04A>Placeholder Credits</color></size>\n<size=75%><color=#B9A88A>(placeholder text, to be replaced)</color></size>\n\nLead Air Guitarist\n<size=75%><color=#B9A88A>Placeholder Name</color></size>\n\nChief Roadie\n<size=75%><color=#B9A88A>Placeholder Name</color></size>\n\nHorn Raising Consultant\n<size=75%><color=#B9A88A>Placeholder Name</color></size>\n\nChopper Mechanic\n<size=75%><color=#B9A88A>Placeholder Name</color></size>\n\nKeeper of the Hell Hole\n<size=75%><color=#B9A88A>Placeholder Name</color></size>\n\nScroll Unroller\n<size=75%><color=#B9A88A>Placeholder Name</color></size>\n\nAmplifier Tuning (all the way to eleven)\n<size=75%><color=#B9A88A>Placeholder Name</color></size>\n\nLeather and Studs\n<size=75%><color=#B9A88A>Placeholder Name</color></size>\n\n\n<size=120%><color=#E8B04A>Special Thanks</color></size>\nEveryone who ever raised the horns\n\n\n\n<size=75%><color=#B9A88A>Thank you for playing</color></size>\n<size=140%><color=#F2C25A>Stay Metal</color></size>"
+  quitSeconds: 1.2

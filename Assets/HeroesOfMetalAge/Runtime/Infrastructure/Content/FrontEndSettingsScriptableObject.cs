@@ -4,16 +4,19 @@ using UnityEngine;
 
 namespace HeroesOfMetalAge.Infrastructure.Content
 {
-    /// <summary>The sequence from the main menu's New Game into the mission: its timing and the intro's text.</summary>
+    /// <summary>The front end: timing of New Game, Load Game, Credits and Quit, the intro's text and the credits.</summary>
     [CreateAssetMenu(menuName = "Heroes of Metal Age/Front End Settings")]
     public sealed class FrontEndSettingsScriptableObject : ScriptableObject
     {
         [Tooltip("Seconds the main menu and the music take to fade to black after New Game.")]
         [Min(0f)]
         [SerializeField] private float fadeOutSeconds = 1.5f;
-        [Tooltip("Seconds of black silence before the intro.")]
+        [Tooltip("Seconds of black silence before the intro (New Game) or the burn (Load Game).")]
         [Min(0f)]
         [SerializeField] private float blackSeconds = 2f;
+        [Tooltip("Seconds from Load Game to black: its text falls into the hole and the camera falls in after it.")]
+        [Min(0f)]
+        [SerializeField] private float loadGameOutSeconds = 3.2f;
 
         [Header("Intro verses")]
         [Tooltip("How fast the lines are typed.")]
@@ -42,10 +45,29 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [Min(0f)]
         [SerializeField] private float burnSeconds = 3f;
 
-        public float FadeOutSeconds => fadeOutSeconds;
-        public float BlackSeconds => blackSeconds;
-        public float MusicFadeInSeconds => musicFadeInSeconds;
-        public float BurnSeconds => burnSeconds;
+        [Header("Credits")]
+        [Tooltip("Seconds the scroll takes to unroll and the credits screen to fade in.")]
+        [Min(0f)]
+        [SerializeField] private float creditsOpenSeconds = 1.3f;
+        [Tooltip("Seconds the credits screen takes to fade out back to the menu.")]
+        [Min(0f)]
+        [SerializeField] private float creditsCloseSeconds = 0.8f;
+        [Tooltip("The rolling credits; TextMeshPro rich text.")]
+        [TextArea(10, 40)]
+        [SerializeField] private string credits = string.Empty;
+
+        [Header("Quit")]
+        [Tooltip("Seconds the rider takes to leave before the program closes; the music fades out with him.")]
+        [Min(0f)]
+        [SerializeField] private float quitSeconds = 1.2f;
+
+        public string Credits => credits ?? string.Empty;
+
+        public FrontEndTiming CreateTiming()
+        {
+            return new FrontEndTiming(fadeOutSeconds, loadGameOutSeconds, blackSeconds, burnSeconds, musicFadeInSeconds, creditsOpenSeconds,
+                creditsCloseSeconds, quitSeconds);
+        }
 
         /// <summary>A runtime copy of the authored intro; changing it never changes this asset.</summary>
         public IntroScript CreateIntroScript()

@@ -83,7 +83,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
         public bool IsDefeated { get; private set; }
         public bool IsInTown { get; private set; }
         public bool IsCelebrating { get; private set; }
-        /// <summary>True from New Game until the intro's title: no music and no layers.</summary>
+        /// <summary>True from New Game until the intro's title, from Load Game until the burn and while quitting: no music and no layers.</summary>
         public bool IsSilenced { get; private set; }
         /// <summary>The music track playing now, or null while the layers lead.</summary>
         public MusicTrack? CurrentTrack => currentTrack;
@@ -255,7 +255,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
             }
         }
 
-        // out with the fade to black, back with a long fade as the intro's title appears
+        // out with the way to black (or the rider leaving), back with a long fade as the title appears or the black burns
         private void HandleFrontEndPhaseChanged(FrontEndPhase phase)
         {
             bool isSilenced = IsSilentPhase(phase);
@@ -265,7 +265,7 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
             }
 
             IsSilenced = isSilenced;
-            float fade = isSilenced ? frontEnd.FadeOutSeconds : frontEnd.MusicFadeInSeconds;
+            float fade = isSilenced ? frontEnd.MusicFadeOutSeconds : frontEnd.MusicFadeInSeconds;
             ApplyMusic(false, fade);
             ApplyLayerMix(fade);
             ApplyRiding();
@@ -470,7 +470,8 @@ namespace HeroesOfMetalAge.Infrastructure.Audio
 
         private static bool IsSilentPhase(FrontEndPhase phase)
         {
-            return phase == FrontEndPhase.FadingOut || phase == FrontEndPhase.Black || phase == FrontEndPhase.Verses;
+            return phase == FrontEndPhase.FadingOut || phase == FrontEndPhase.Black || phase == FrontEndPhase.Verses
+                || phase == FrontEndPhase.Quitting || phase == FrontEndPhase.Quit;
         }
 
         private static float PreviewSeconds(SoundDefinition sound)

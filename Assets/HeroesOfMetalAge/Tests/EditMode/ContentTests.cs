@@ -219,7 +219,7 @@ namespace HeroesOfMetalAge.Tests
             {
                 GameSession session = CampaignTestUtility.NewSession(Load(), new MemorySaveStore());
                 GameAudio adapter = host.AddComponent<GameAudio>();
-                adapter.Initialize(audio, units, mission, session, new FrontEndFlow(0f, 0f, IntroScript.None, 0f, 0f, false));
+                adapter.Initialize(audio, units, mission, session, new FrontEndFlow(FrontEndTiming.Instant, IntroScript.None, false));
 
                 Assert.AreSame(replacement, adapter.VoiceFor(unit.Id));
             }
@@ -237,7 +237,7 @@ namespace HeroesOfMetalAge.Tests
             {
                 GameSession session = CampaignTestUtility.NewSession(Load(), new MemorySaveStore());
                 GameAudio adapter = host.AddComponent<GameAudio>();
-                adapter.Initialize(audio, units, mission, session, new FrontEndFlow(0f, 0f, IntroScript.None, 0f, 0f, false));
+                adapter.Initialize(audio, units, mission, session, new FrontEndFlow(FrontEndTiming.Instant, IntroScript.None, false));
                 int heavy = audio.HeavyHitThreshold;
 
                 CollectionAssert.AreEqual(new[] { SoundCue.SwordSwing, SoundCue.SwordHit }, adapter.StrikeCues(Strike(1, false, false)));
@@ -259,7 +259,7 @@ namespace HeroesOfMetalAge.Tests
             {
                 GameSession session = CampaignTestUtility.NewSession(Load(), new MemorySaveStore());
                 GameAudio adapter = host.AddComponent<GameAudio>();
-                adapter.Initialize(audio, units, mission, session, new FrontEndFlow(0f, 0f, IntroScript.None, 0f, 0f, false));
+                adapter.Initialize(audio, units, mission, session, new FrontEndFlow(FrontEndTiming.Instant, IntroScript.None, false));
                 MusicTrack? map = mission.MapMusic.HasClips ? MusicTrack.Map : (MusicTrack?)null;
                 Assert.AreEqual(map, adapter.CurrentTrack, "the adventure map starts with the map music (the layers when its local clip is missing)");
 
