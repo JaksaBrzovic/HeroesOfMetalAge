@@ -7,8 +7,8 @@ using UnityEngine;
 namespace HeroesOfMetalAge.Presentation
 {
     /// <summary>
-    /// The modal dialog for the intro and encounters. Its two buttons map to the commands that the current dialog offers.
-    /// Victory, rewards and defeat have their own screens.
+    /// The modal dialog for encounters. Its two buttons map to the commands that the current dialog offers. The mission's
+    /// intro is the briefing scroll (<see cref="MissionBriefingView"/>); victory, rewards and defeat have their own screens.
     /// </summary>
     public sealed class DialogCanvasView : CanvasScreenView
     {
@@ -23,16 +23,16 @@ namespace HeroesOfMetalAge.Presentation
         /// <summary>True for the dialogs this view shows.</summary>
         public static bool Shows(DialogKind dialog)
         {
-            return dialog == DialogKind.Intro || dialog == DialogKind.Friendly || dialog == DialogKind.Hostile || dialog == DialogKind.Claim;
+            return dialog == DialogKind.Friendly || dialog == DialogKind.Hostile || dialog == DialogKind.Claim;
         }
 
         public override void Refresh()
         {
             DialogKind dialog = Session.Dialog;
-            UiBinding.SetText(titleText, dialog == DialogKind.Intro ? Catalog.Mission.Name : Session.Encounter.Name);
-            UiBinding.SetText(bodyText, dialog == DialogKind.Intro ? IntroBody() : EncounterBody(dialog));
+            UiBinding.SetText(titleText, Session.Encounter.Name);
+            UiBinding.SetText(bodyText, EncounterBody(dialog));
             UiBinding.SetButton(primaryButton, PrimaryLabel(dialog), true);
-            UiBinding.SetButton(secondaryButton, dialog == DialogKind.Intro ? "LOAD CAMPAIGN" : "LEAVE", dialog != DialogKind.Intro || Session.HasSave);
+            UiBinding.SetButton(secondaryButton, "LEAVE", true);
         }
 
         protected override void ValidateReferences()
@@ -53,9 +53,6 @@ namespace HeroesOfMetalAge.Presentation
         {
             switch (Session.Dialog)
             {
-                case DialogKind.Intro:
-                    Session.StartMission();
-                    break;
                 case DialogKind.Friendly:
                     Session.AcceptFriendly();
                     break;
@@ -67,21 +64,7 @@ namespace HeroesOfMetalAge.Presentation
 
         private void HandleSecondary()
         {
-            if (Session.Dialog == DialogKind.Intro)
-            {
-                Session.Load();
-            }
-            else
-            {
-                Session.Back();
-            }
-        }
-
-        private string IntroBody()
-        {
-            return "You are " + Catalog.Hero(Campaign.HeroId).Name + ".\n" + Catalog.Mission.Description
-                + "\n\nGather the willing, clear the pass, recruit and defeat the stronger warhost."
-                + "\n\nClick a tile to plan. Click again or Space to ride. E ends the day. Sound follows your journey.";
+            Session.Back();
         }
 
         private string EncounterBody(DialogKind dialog)
@@ -101,8 +84,6 @@ namespace HeroesOfMetalAge.Presentation
         {
             switch (dialog)
             {
-                case DialogKind.Intro:
-                    return "TAKE THE IRON OATH";
                 case DialogKind.Friendly:
                     return "WELCOME THEM";
                 default:

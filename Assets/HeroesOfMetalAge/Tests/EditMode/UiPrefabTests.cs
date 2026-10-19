@@ -80,7 +80,12 @@ namespace HeroesOfMetalAge.Tests
                 PresentationAssets media = GameBootstrap.CreatePresentationAssets(ContentAssets.Units, ContentAssets.Artefacts, ContentAssets.Heroes,
                     ContentAssets.Mission);
                 hud.Initialize(session, new FakeAudioControls(), media);
-                Assert.IsTrue(hud.DialogView.gameObject.activeSelf, "the intro dialog shows");
+                Assert.IsFalse(hud.DialogView.gameObject.activeSelf, "the mission's intro is the briefing scroll, not this dialog");
+                Assert.IsFalse(hud.IsGameplayInputEnabled, "but gameplay waits for it");
+                session.StartMission();
+                RideToFriendlyEncounter(session);
+                hud.RefreshNow();
+                Assert.IsTrue(hud.DialogView.gameObject.activeSelf, "the encounter dialog shows");
 
                 hud.SetDialogHeld(true);
                 hud.RefreshNow();
@@ -234,6 +239,32 @@ namespace HeroesOfMetalAge.Tests
                 new Dictionary<string, Sprite> { [artefactId] = sprite },
                 sprite);
             return new CanvasViewContext(session, null, media, theme);
+        }
+
+        // rides day after day towards the first friendly encounter until it stops the hero
+        private static void RideToFriendlyEncounter(GameSession session)
+        {
+            EncounterDefinition friendly = session.Catalog.Mission.Encounters.First(encounter => encounter.Kind == EncounterKind.Friendly);
+            for (int day = 0; day < 10 && session.Dialog == DialogKind.None; day++)
+            {
+                session.Plan(friendly.Position);
+                session.Travel();
+                for (int tick = 0; tick < 200 && session.IsBusy; tick++)
+                {
+                    session.Tick(1f);
+                }
+
+                if (session.Dialog == DialogKind.None)
+                {
+                    session.EndDay();
+                    for (int tick = 0; tick < 200 && session.IsBusy; tick++)
+                    {
+                        session.Tick(1f);
+                    }
+                }
+            }
+
+            Assert.AreEqual(DialogKind.Friendly, session.Dialog, "the ride stops at the friendly encounter");
         }
     }
 }

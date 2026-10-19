@@ -42,12 +42,14 @@ namespace HeroesOfMetalAge.Bootstrap
         [SerializeField] private DialogueDirector dialoguePrefab;
         [Tooltip("Main menu, black fade and intro, drawn above everything else.")]
         [SerializeField] private FrontEndView frontEndPrefab;
+        [Tooltip("The story scroll as a new mission starts, drawn above the game UI and the dialogue, below the front end.")]
+        [SerializeField] private MissionBriefingView briefingPrefab;
 
         /// <summary>Used by the scene generator to wire the authored assets.</summary>
         public void Configure(UnitDatabaseScriptableObject unitDatabase, ArtefactDatabaseScriptableObject artefactDatabase,
             HeroDataBaseScriptableObject heroDatabase, AudioDatabaseScriptableObject audio, MissionSettingsScriptableObject missionSettings,
             DialogueDatabaseScriptableObject dialogue, GameHud hudPrefab, GameWorld world, DebugPanelView debugPrefab, DialogueDirector dialogueOverlay,
-            FrontEndSettingsScriptableObject frontEnd, FrontEndView frontEndOverlay)
+            FrontEndSettingsScriptableObject frontEnd, FrontEndView frontEndOverlay, MissionBriefingView briefingOverlay)
         {
             units = unitDatabase;
             artefacts = artefactDatabase;
@@ -61,6 +63,7 @@ namespace HeroesOfMetalAge.Bootstrap
             dialoguePrefab = dialogueOverlay;
             frontEndSettings = frontEnd;
             frontEndPrefab = frontEndOverlay;
+            briefingPrefab = briefingOverlay;
         }
 
         /// <summary>Authored portraits, icons, walk cycles and battlefield images by ID for the presentation layer.</summary>
@@ -102,9 +105,10 @@ namespace HeroesOfMetalAge.Bootstrap
 
         private void Compose()
         {
-            if (uiPrefab == null || worldPrefab == null || dialoguePrefab == null || frontEndPrefab == null || frontEndSettings == null)
+            if (uiPrefab == null || worldPrefab == null || dialoguePrefab == null || frontEndPrefab == null || frontEndSettings == null
+                || briefingPrefab == null)
             {
-                throw new InvalidOperationException("GameUiRoot, World, DialogueOverlay or FrontEnd prefab or the front end settings are not configured on GameBootstrap.");
+                throw new InvalidOperationException("GameUiRoot, World, DialogueOverlay, FrontEnd or MissionBriefing prefab or the front end settings are not configured on GameBootstrap.");
             }
 
             DefinitionCatalog catalog = ContentLoader.Load(units, artefacts, heroes, audioDatabase, mission);
@@ -147,15 +151,36 @@ namespace HeroesOfMetalAge.Bootstrap
                 gameObject.AddComponent<SiteDialogueCues>().Initialize(session, hud, dialogue, SiteConversations(mission), world.ScreenPoint);
             }
 
+            // the story scroll waits for the front end to finish; its explosion shakes the whole screen
+            MissionBriefingView briefing = Instantiate(briefingPrefab);
+            briefing.Initialize(session, audio, mission.BriefingPages, () => frontEnd.IsPlaying,
+                (seconds, amplitude) =>
+                {
+                    hud.Shake(seconds, amplitude);
+                    world.Camera.Shake(seconds, amplitude * world.Camera.WorldUnitsPerPixel);
+                });
+
             FrontEndView frontEndView = Instantiate(frontEndPrefab);
             frontEndView.Initialize(frontEnd, audio, frontEndSettings.Credits);
             // the flow, the session and the HUD live as long as this composition root, so the handler is never removed
             frontEnd.PhaseChanged += phase =>
             {
-                // New Game (and for now Load Game) starts a fresh mission while the screen is black
+                // New Game starts a fresh mission while the screen is black, told on the briefing scroll; Load Game loads the
+                // saved campaign, or without one starts the mission at once
                 if (phase == FrontEndPhase.Black)
                 {
                     session.Restart();
+                    if (frontEnd.Choice == FrontEndChoice.LoadGame)
+                    {
+                        if (session.HasSave)
+                        {
+                            session.Load();
+                        }
+                        else
+                        {
+                            session.StartMission();
+                        }
+                    }
                 }
                 else if (phase == FrontEndPhase.Quit)
                 {
@@ -176,7 +201,7 @@ namespace HeroesOfMetalAge.Bootstrap
 
             if (isSmokeTest)
             {
-                gameObject.AddComponent<RuntimeSmokeRunner>().Initialize(session, store, hud, world);
+                gameObject.AddComponent<RuntimeSmokeRunner>().Initialize(session, store, hud, world, briefing);
             }
 #endif
         }

@@ -19,6 +19,8 @@ namespace HeroesOfMetalAge.Application
         MainMenuHover,
         /// <summary>New Game is clicked in the main menu.</summary>
         MainMenuNewGame,
+        /// <summary>The huge explosion over the mission briefing's first page.</summary>
+        BriefingExplosion,
         SwordSwing,
         SwordHit,
         SwordMiss,

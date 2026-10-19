@@ -78,6 +78,10 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [Tooltip("New Game is clicked; plays over the fade to black.")]
         [SerializeField] private SoundDefinition mainMenuNewGame;
 
+        [Header("Mission briefing")]
+        [Tooltip("The huge explosion over the briefing scroll's first page.")]
+        [SerializeField] private SoundDefinition briefingExplosion;
+
         [Header("Strikes")]
         [SerializeField] private SoundDefinition swordSwing;
         [SerializeField] private SoundDefinition swordHit;
@@ -168,6 +172,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                     return mainMenuHover;
                 case SoundCue.MainMenuNewGame:
                     return mainMenuNewGame;
+                case SoundCue.BriefingExplosion:
+                    return briefingExplosion;
                 case SoundCue.SwordSwing:
                     return swordSwing;
                 case SoundCue.SwordHit:

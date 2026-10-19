@@ -21,6 +21,8 @@ namespace HeroesOfMetalAge.Presentation
         private Vector2 center;
         private Vector2 followVelocity;
         private float shakeTime;
+        private float shakeSeconds = SHAKE_SECONDS;
+        private float shakeDistance = SHAKE_DISTANCE;
 
         public Camera Camera => targetCamera;
         public Vector2 Center => center;
@@ -79,7 +81,15 @@ namespace HeroesOfMetalAge.Presentation
 
         public void Shake()
         {
-            shakeTime = SHAKE_SECONDS;
+            Shake(SHAKE_SECONDS, SHAKE_DISTANCE);
+        }
+
+        /// <param name="distance">World units at the start, calming down over the seconds.</param>
+        public void Shake(float seconds, float distance)
+        {
+            shakeSeconds = Mathf.Max(0.01f, seconds);
+            shakeDistance = Mathf.Max(0f, distance);
+            shakeTime = shakeSeconds;
         }
 
         public bool ContainsScreenPoint(Vector2 screenPoint)
@@ -106,7 +116,7 @@ namespace HeroesOfMetalAge.Presentation
             if (shakeTime > 0f)
             {
                 shakeTime = Mathf.Max(0f, shakeTime - deltaTime);
-                shake = Random.insideUnitCircle * (SHAKE_DISTANCE * shakeTime / SHAKE_SECONDS);
+                shake = Random.insideUnitCircle * (shakeDistance * shakeTime / shakeSeconds);
             }
 
             transform.position = new Vector3(center.x + shake.x, center.y + shake.y, CAMERA_DEPTH);

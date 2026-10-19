@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MLin.Audio;
 using UnityEngine;
@@ -14,6 +15,9 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [SerializeField] private string heroId = "kael";
         [TextArea]
         [SerializeField] private string description;
+        [Tooltip("The story told on the big scroll as the mission starts, one page per entry; empty skips it.")]
+        [TextArea(2, 6)]
+        [SerializeField] private string[] briefingPages = Array.Empty<string>();
         [SerializeField] private string clanId = "ashen-clan";
         [SerializeField] private string clanName = "Ashen Clan";
         [SerializeField] private string clanHeroName = "Lord Varg";
@@ -105,6 +109,7 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public string DisplayName => displayName;
         public string HeroId => heroId;
         public string Description => description;
+        public IReadOnlyList<string> BriefingPages => briefingPages ?? Array.Empty<string>();
         public string ClanId => clanId;
         public string ClanName => clanName;
         public string ClanHeroName => clanHeroName;

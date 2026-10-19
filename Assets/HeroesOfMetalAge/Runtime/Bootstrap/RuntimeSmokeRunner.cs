@@ -27,20 +27,23 @@ namespace HeroesOfMetalAge.Bootstrap
         private const float EDGE_TOLERANCE = 0.01f;
         private const float FOLLOW_WAIT_SECONDS = 1.5f;
         private const float END_DAY_PEEK_SECONDS = 1.2f;
+        private const float BRIEFING_TIMEOUT_SECONDS = 20f;
 
         private readonly List<string> results = new List<string>();
         private GameSession session;
         private ISaveStore store;
         private GameHud hud;
         private GameWorld world;
+        private MissionBriefingView briefing;
         private string reportFolder;
 
-        public void Initialize(GameSession gameSession, ISaveStore saveStore, GameHud gameHud, GameWorld gameWorld)
+        public void Initialize(GameSession gameSession, ISaveStore saveStore, GameHud gameHud, GameWorld gameWorld, MissionBriefingView missionBriefing)
         {
             session = gameSession;
             store = saveStore;
             hud = gameHud;
             world = gameWorld;
+            briefing = missionBriefing;
             reportFolder = Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, "..", "..", "..", "Reports"));
             Directory.CreateDirectory(reportFolder);
             StartCoroutine(Drive());
@@ -316,8 +319,21 @@ namespace HeroesOfMetalAge.Bootstrap
             Check(!world.HandleClick(world.ScreenPoint(friendly.Position)) && session.Route.Count == 0, "Modal blocks clicks through to the world map");
             yield return Screenshot("00-intro.png");
 
-            Click(hud.DialogView.PrimaryButton);
-            Check(session.Dialog == DialogKind.None, "Intro prefab button starts mission");
+            // the briefing scroll: every page read with a click, then the scroll is thrown away and the mission starts
+            float waited = 0f;
+            while (session.Dialog == DialogKind.Intro && waited < BRIEFING_TIMEOUT_SECONDS)
+            {
+                if (briefing.Phase == BriefingPhase.Reading && briefing.Page == briefing.PageCount - 1)
+                {
+                    yield return Screenshot("00-briefing.png");
+                }
+
+                briefing.Advance();
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            Check(session.Dialog == DialogKind.None, "Briefing scroll pages through its story and starts the mission");
             hud.RefreshNow();
             yield return null;
             CheckViewport(hud.WorldView.MapViewport, "World camera draws the map inside the adventure screen's viewport");

@@ -57,6 +57,11 @@ namespace HeroesOfMetalAge.Presentation
         private DialogKind shownDialog;
         private GameObject selectionBeforeDialog;
         private GameObject selectionBeforeSettings;
+        private readonly System.Random shakeRandom = new System.Random();
+        private Vector2 designFrameHome;
+        private float shakeLeft;
+        private float shakeSeconds;
+        private float shakeAmplitude;
 
         /// <summary>False while an automated scenario drives the session itself.</summary>
         public bool IsDrivingSession { get; set; } = true;
@@ -102,6 +107,7 @@ namespace HeroesOfMetalAge.Presentation
             }
 
             context = new CanvasViewContext(session, audio, media, theme);
+            designFrameHome = designFrame.anchoredPosition;
             header.Initialize(session.ShowHero, OpenSettings);
             footer.Initialize();
             notifications.Initialize();
@@ -138,6 +144,15 @@ namespace HeroesOfMetalAge.Presentation
         /// Keeps the encounter dialog hidden while something is presented before it, such as a spoken line. The session is
         /// already in the dialog, so gameplay input stays blocked; the dialog appears and takes focus once released.
         /// </summary>
+        /// <summary>Shakes the whole UI, strongest at once and calming down over the given seconds.</summary>
+        /// <param name="amplitude">Canvas units at the start.</param>
+        public void Shake(float seconds, float amplitude)
+        {
+            shakeSeconds = Mathf.Max(0.01f, seconds);
+            shakeLeft = shakeSeconds;
+            shakeAmplitude = Mathf.Max(0f, amplitude);
+        }
+
         public void SetDialogHeld(bool isHeld)
         {
             isDialogHeld = isHeld;
@@ -193,6 +208,7 @@ namespace HeroesOfMetalAge.Presentation
 
             UpdateNotifications();
             UpdateEndDay();
+            UpdateShake();
         }
 
         private void LateUpdate()
@@ -289,6 +305,19 @@ namespace HeroesOfMetalAge.Presentation
         }
 
         // the hourglass follows the session's progress every frame while the day ends
+        private void UpdateShake()
+        {
+            if (shakeLeft <= 0f)
+            {
+                return;
+            }
+
+            shakeLeft = Mathf.Max(0f, shakeLeft - Time.unscaledDeltaTime);
+            float strength = shakeAmplitude * shakeLeft / shakeSeconds;
+            Vector2 offset = new Vector2((float)shakeRandom.NextDouble() * 2f - 1f, (float)shakeRandom.NextDouble() * 2f - 1f) * strength;
+            designFrame.anchoredPosition = designFrameHome + offset;
+        }
+
         private void UpdateEndDay()
         {
             GameSession session = context.Session;

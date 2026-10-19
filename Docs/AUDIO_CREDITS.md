@@ -25,4 +25,4 @@ Recorded sounds in `Assets/HeroesOfMetalAge/Content/Audio/Music/` and `Content/A
 
 **Source not recorded:** `main_menu_hover.wav` (seconds 0-2 of "Highlander", the seagull) and `main_menu_new_game.wav` (seconds 260-263 of "Welcome Back", the scream) are excerpts supplied for the main menu's hover and New Game sounds. Their recordings and licences are not documented here; check them before any build is shared or published.
 
-The remaining clips in `Content/Audio/` (ambient and gallop layers, which now play only for a mission without map music, friendly, gold, equip, click, end of day, level and heavy hit) and the unit voices are original placeholder audio made for this prototype.
+The remaining clips in `Content/Audio/` (the briefing explosion, synthesized: a crack, a falling thump, a noisy body and a rolling rumble; ambient and gallop layers, which now play only for a mission without map music, friendly, gold, equip, click, end of day, level and heavy hit) and the unit voices are original placeholder audio made for this prototype.

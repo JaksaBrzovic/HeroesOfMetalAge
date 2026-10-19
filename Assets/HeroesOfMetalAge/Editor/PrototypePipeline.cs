@@ -34,6 +34,7 @@ namespace HeroesOfMetalAge.EditorTools
             DialogueAssetSeeder.CreateMissingAssets();
             EndDayAssetSeeder.CreateMissingAssets();
             MainMenuAssetSeeder.CreateMissingAssets();
+            BriefingAssetSeeder.CreateMissingAssets();
             RequireAsset(ContentAssets.RootPrefab, ContentAssets.UI_FOLDER + "/GameUiRoot.prefab");
             RequireAsset(ContentAssets.DebugPanelPrefab, ContentAssets.UI_FOLDER + "/Screens/DebugPanel.prefab");
             RequireAsset(ContentAssets.WorldPrefab, ContentAssets.WORLD_FOLDER + "/World.prefab");
@@ -41,13 +42,14 @@ namespace HeroesOfMetalAge.EditorTools
             RequireAsset(ContentAssets.DialogueOverlayPrefab, ContentAssets.DIALOGUE_OVERLAY_PATH);
             RequireAsset(ContentAssets.FrontEnd, ContentAssets.FRONT_END_SETTINGS_PATH);
             RequireAsset(ContentAssets.FrontEndPrefab, ContentAssets.FRONT_END_PATH);
+            RequireAsset(ContentAssets.MissionBriefingPrefab, ContentAssets.MISSION_BRIEFING_PATH);
 
             Directory.CreateDirectory(Path.GetDirectoryName(ContentAssets.SCENE_PATH));
             UnityEngine.SceneManagement.Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             GameBootstrap bootstrap = new GameObject("Heroes of Metal Age").AddComponent<GameBootstrap>();
             bootstrap.Configure(ContentAssets.Units, ContentAssets.Artefacts, ContentAssets.Heroes, ContentAssets.Audio, ContentAssets.Mission,
                 ContentAssets.Dialogue, ContentAssets.RootPrefab, ContentAssets.WorldPrefab, ContentAssets.DebugPanelPrefab,
-                ContentAssets.DialogueOverlayPrefab, ContentAssets.FrontEnd, ContentAssets.FrontEndPrefab);
+                ContentAssets.DialogueOverlayPrefab, ContentAssets.FrontEnd, ContentAssets.FrontEndPrefab, ContentAssets.MissionBriefingPrefab);
             EditorUtility.SetDirty(bootstrap);
             EditorSceneManager.SaveScene(scene, ContentAssets.SCENE_PATH);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ContentAssets.SCENE_PATH, true) };

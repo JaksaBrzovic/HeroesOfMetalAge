@@ -114,3 +114,6 @@ MonoBehaviour:
   battleActionSeconds: 1.5
   battleResultSeconds: 2
   endDaySeconds: 3
+  briefingPages:
+  - "On the first day, our hero collects his friends and like minded folks around the land.\nBecause at this point, he is looking for success in an external world, the overworld of humans."
+  - He will search for the Secret of Metal in riches, women and victory. He needs to penetrate through the tight passage of Psur to the east.

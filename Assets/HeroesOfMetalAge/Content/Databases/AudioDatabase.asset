@@ -37,6 +37,7 @@ MonoBehaviour:
   endDay: {fileID: 11400000, guid: 5094501b3f6341a7ba7b9a1707921749, type: 2}
   mainMenuHover: {fileID: 11400000, guid: 29952722bda745a99c67fb358216edf2, type: 2}
   mainMenuNewGame: {fileID: 11400000, guid: f955c31ab77d491e968fad534a9d2d6a, type: 2}
+  briefingExplosion: {fileID: 11400000, guid: 70fe445245bd4b1983ed4d6551e3676d, type: 2}
   swordSwing: {fileID: 11400000, guid: 7bb6718beb4b4254fafade334c783d2f, type: 2}
   swordHit: {fileID: 11400000, guid: 1472276dcf6027b489cbd2bd98c15965, type: 2}
   swordMiss: {fileID: 11400000, guid: 59a0016fff061694381cc4f73821d482, type: 2}
