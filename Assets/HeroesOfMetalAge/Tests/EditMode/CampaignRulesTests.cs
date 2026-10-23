@@ -164,7 +164,7 @@ namespace HeroesOfMetalAge.Tests
         public void Level_FollowsAuthoredExperienceThreshold()
         {
             CampaignSnapshot snapshot = rules.NewCampaign().Snapshot();
-            snapshot.experience = catalog.Hero(snapshot.heroId).ExperiencePerLevel;
+            snapshot.experience = (int)catalog.HeroPolicy.Experience.Threshold(2);
 
             Assert.AreEqual(2, rules.Level(rules.Restore(snapshot)));
         }
@@ -241,7 +241,8 @@ namespace HeroesOfMetalAge.Tests
         public void ReorderedDatabase_KeepsSavedIdentities()
         {
             CampaignState state = rules.NewCampaign();
-            DefinitionCatalog reordered = new DefinitionCatalog(catalog.Units.Reverse(), catalog.Artefacts.Reverse(), catalog.Heroes, catalog.Mission);
+            DefinitionCatalog reordered = new DefinitionCatalog(catalog.Units.Reverse(), catalog.Artefacts.Reverse(), catalog.Heroes, catalog.Mission,
+                catalog.HeroPolicy, catalog.Classes, catalog.Spells.Reverse());
 
             Assert.AreEqual(state.Army[0].UnitId, new CampaignRules(reordered).Restore(state.Snapshot()).Army[0].UnitId);
         }

@@ -10,12 +10,14 @@ namespace HeroesOfMetalAge.Domain
     public sealed class CampaignState
     {
         public const string PLAYER_OWNER_ID = "player";
+        public const int PRIMARY_STAT_COUNT = 4;
 
         internal CampaignState()
         {
             Army = ArmyData.AsReadOnly();
             Garrison = GarrisonData.AsReadOnly();
             Inventory = InventoryData.AsReadOnly();
+            Skills = SkillData.AsReadOnly();
         }
 
         public IReadOnlyList<Troop> Army { get; }
@@ -37,12 +39,30 @@ namespace HeroesOfMetalAge.Domain
         public bool HasRecruited { get; internal set; }
         /// <summary>Morale added by map objects until the next won battle.</summary>
         public int MoraleBonus { get; internal set; }
+        /// <summary>Luck added by map objects until the next won battle.</summary>
+        public int LuckBonus { get; internal set; }
         /// <summary>Fog of war: the cells the hero has seen.</summary>
         public ExploredMap Explored { get; internal set; }
+        /// <summary>The secondary skills the hero knows, in the order learned.</summary>
+        public IReadOnlyList<HeroSkill> Skills { get; }
+        /// <summary>The highest level whose level-up has been granted (its primary stat rolled); from 1.</summary>
+        public int LevelsGranted { get; internal set; } = 1;
+        /// <summary>The level-up waiting for the player's choice of skill, or null.</summary>
+        public LevelUpOffer PendingLevelUp { get; internal set; }
+        /// <summary>Level-ups in a row that offered no Wisdom, for the class's Wisdom guarantee.</summary>
+        public int LevelsWithoutWisdom { get; internal set; }
+        public bool HasSpellBook { get; internal set; }
+        /// <summary>Spell points left; regained every day.</summary>
+        public int Mana { get; internal set; }
 
         internal List<Troop> ArmyData { get; } = new List<Troop>();
         internal List<Troop> GarrisonData { get; } = new List<Troop>();
         internal List<string> InventoryData { get; } = new List<string>();
+        internal List<HeroSkill> SkillData { get; } = new List<HeroSkill>();
+        /// <summary>Primary stats won on level-ups, per <see cref="PrimaryStat"/>.</summary>
+        internal int[] PrimaryGainData { get; } = new int[PRIMARY_STAT_COUNT];
+        /// <summary>The spells in the spell book.</summary>
+        internal HashSet<string> SpellData { get; } = new HashSet<string>(StringComparer.Ordinal);
         internal HashSet<string> CompletedData { get; } = new HashSet<string>(StringComparer.Ordinal);
         internal Dictionary<string, int> StockData { get; } = new Dictionary<string, int>(StringComparer.Ordinal);
         /// <summary>Artefact ID per <see cref="EquipmentPlace"/>, null where nothing is worn.</summary>
@@ -92,6 +112,31 @@ namespace HeroesOfMetalAge.Domain
             return MillWeekData.TryGetValue(objectId, out int week) ? week : 0;
         }
 
+        /// <summary>How well the hero knows a secondary skill; <see cref="SkillLevel.None"/> when not at all.</summary>
+        public SkillLevel SkillLevelOf(SecondarySkill skill)
+        {
+            foreach (HeroSkill known in SkillData)
+            {
+                if (known.Skill == skill)
+                {
+                    return known.Level;
+                }
+            }
+
+            return SkillLevel.None;
+        }
+
+        /// <summary>A primary stat won on level-ups so far.</summary>
+        public int PrimaryGain(PrimaryStat stat)
+        {
+            return PrimaryGainData[(int)stat];
+        }
+
+        public bool KnowsSpell(string spellId)
+        {
+            return spellId != null && SpellData.Contains(spellId);
+        }
+
         /// <summary>True if the artefact is carried or worn.</summary>
         public bool Owns(string artefactId)
         {
@@ -116,6 +161,7 @@ namespace HeroesOfMetalAge.Domain
                 heroHome = IsHeroHome,
                 recruited = HasRecruited,
                 morale = MoraleBonus,
+                luck = LuckBonus,
                 explored = Explored.Encode(),
                 equipped = EquippedData.Select(id => id ?? string.Empty).ToList(),
                 visited = VisitedData.OrderBy(id => id, StringComparer.Ordinal).ToList(),
@@ -129,7 +175,19 @@ namespace HeroesOfMetalAge.Domain
                 stock = StockData
                     .OrderBy(pair => pair.Key, StringComparer.Ordinal)
                     .Select(pair => new StockSnapshot { unitId = pair.Key, count = pair.Value })
-                    .ToList()
+                    .ToList(),
+                primaryGains = new List<int>(PrimaryGainData),
+                skills = SkillData.Select(skill => new SkillSnapshot { skill = skill.Skill.ToString(), level = (int)skill.Level }).ToList(),
+                levelsGranted = LevelsGranted,
+                levelsWithoutWisdom = LevelsWithoutWisdom,
+                pendingLevel = PendingLevelUp?.Level ?? 0,
+                pendingStat = PendingLevelUp != null ? PendingLevelUp.Stat.ToString() : string.Empty,
+                pendingSkills = PendingLevelUp != null
+                    ? PendingLevelUp.Options.Select(option => new SkillSnapshot { skill = option.Skill.ToString(), level = (int)option.Level }).ToList()
+                    : new List<SkillSnapshot>(),
+                spellBook = HasSpellBook,
+                spells = SpellData.OrderBy(id => id, StringComparer.Ordinal).ToList(),
+                mana = Mana
             };
         }
 
@@ -151,5 +209,23 @@ namespace HeroesOfMetalAge.Domain
 
             return stacks;
         }
+    }
+
+    /// <summary>
+    /// A level-up shown to the player: the primary stat it raised (already applied) and the secondary skills to choose from,
+    /// each at the level it would reach. No options means there was nothing left to learn.
+    /// </summary>
+    public sealed class LevelUpOffer
+    {
+        public LevelUpOffer(int level, PrimaryStat stat, IEnumerable<HeroSkill> options)
+        {
+            Level = level;
+            Stat = stat;
+            Options = options.ToList().AsReadOnly();
+        }
+
+        public int Level { get; }
+        public PrimaryStat Stat { get; }
+        public IReadOnlyList<HeroSkill> Options { get; }
     }
 }

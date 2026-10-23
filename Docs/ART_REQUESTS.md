@@ -21,7 +21,17 @@ no text, no UI, no frame, no ground shadow beyond the object's own footprint.
 | `Oracle.png` | The bone oracle | A ring of huge dragon bones and a horned dragon skull on a dark hill, green smoke rising from inside the skull |
 | `ExitPortal.png` | The Gate of Fire | A tall stone portal arch with demonic carvings, a vortex of fire inside it, lava cracks in the ground before it |
 | `ArtefactCache.png` | An artefact on the ground | A weapon and a shield lying on a small rock, faint golden glow |
+| `SpellShop.png` | Hall of Forbidden Hymns (spell shop) | A small dark stone temple with a domed roof, violet light in its arched door, spell books chained to lecterns outside, candles |
+| `LuckShrine.png` | Fortune's Anvil (luck shrine) | A black anvil on a mossy stone circle, a hammer leaning on it, four-leaf clovers growing around, green sparks |
 | `Minotaur.png` | Minotaur (map and battle figure, cut from the world map mockup) | A huge horned minotaur warrior with a double-headed axe, walking right; full figure, feet visible |
+
+## Skill and spell icons (`Content/UI/Sprites/Skills/`, `Spells/`, 160 x 160, transparent)
+
+Placeholder bronze medallions with an RPG Awesome glyph (`Tools/UiArt/build_magic.py`). Wanted: painted square icons in the
+style of the artefact icons, one per secondary skill (Archery, Armorer, Offense, Diplomacy, Estates, Intelligence, Leadership,
+Logistics, Luck, Mysticism, Pathfinding, Resistance, Sorcery, Tactics, Wisdom) and one per spell in `SpellDatabase.asset`. The
+open spell book (`Content/UI/Sprites/SpellBook/SpellBook.png`, 1400 x 860) is a procedural leather book with two parchment pages:
+wanted a painted open grimoire with the same page areas (the spell places sit on the pages).
 
 ## Units
 

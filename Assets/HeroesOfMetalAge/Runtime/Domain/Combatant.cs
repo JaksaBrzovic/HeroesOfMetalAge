@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace HeroesOfMetalAge.Domain
 {
     /// <summary>A stack on the battlefield. Health is pooled; the creature count follows from it.</summary>
@@ -12,6 +14,7 @@ namespace HeroesOfMetalAge.Domain
             HealthPerUnit = definition.Health;
             TotalHealth = checked(troop.Count * definition.Health);
             Position = position;
+            Effects = EffectData.AsReadOnly();
         }
 
         public int Id { get; }
@@ -29,5 +32,34 @@ namespace HeroesOfMetalAge.Domain
         /// <summary>Living creatures; a partly damaged creature still counts.</summary>
         public int Count => TotalHealth <= 0 ? 0 : (TotalHealth - 1) / HealthPerUnit + 1;
         public bool IsAlive => TotalHealth > 0;
+        /// <summary>The lasting spells on the stack.</summary>
+        public IReadOnlyList<ActiveSpell> Effects { get; }
+
+        internal List<ActiveSpell> EffectData { get; } = new List<ActiveSpell>();
+
+        /// <summary>The summed amount of every lasting spell of an effect on the stack.</summary>
+        public int EffectAmount(SpellEffect effect)
+        {
+            int amount = 0;
+            foreach (ActiveSpell active in EffectData)
+            {
+                if (active.Effect == effect)
+                {
+                    amount += active.Amount;
+                }
+            }
+
+            return amount;
+        }
+
+        public bool HasEffect(SpellEffect effect)
+        {
+            return EffectData.Exists(active => active.Effect == effect);
+        }
+
+        public bool HasSpell(string spellId)
+        {
+            return EffectData.Exists(active => active.SpellId == spellId);
+        }
     }
 }

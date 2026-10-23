@@ -36,6 +36,94 @@ namespace HeroesOfMetalAge.Infrastructure.Content
             RequireUniqueIds(mission.Encounters.Select(entry => entry.Id), "encounter");
         }
 
+        public static void ValidateMagicReferences(HeroRulesScriptableObject heroRules, HeroClassDatabaseScriptableObject heroClasses,
+            SpellDatabaseScriptableObject spells)
+        {
+            Require(heroRules != null && heroClasses != null && spells != null, "Missing hero rules, hero class or spell database reference on Bootstrap.");
+            Require(AllPresent(heroRules.Skills) && AllPresent(heroClasses.Classes) && AllPresent(spells.Spells), "A hero rules, class or spell database contains a missing entry.");
+            RequireUniqueIds(heroClasses.Classes.Select(entry => entry.Id), "hero class");
+            if (spells.Spells.Count > 0)
+            {
+                RequireUniqueIds(spells.Spells.Select(entry => entry.Id), "spell");
+            }
+        }
+
+        /// <summary>The experience table rises, every skill appears once with three non-negative values, the chances are chances.</summary>
+        public static void ValidateHeroRules(HeroRulesScriptableObject rules)
+        {
+            IReadOnlyList<int> experience = rules.LevelExperience;
+            bool isRising = experience.Count > 0 && experience[0] > 0;
+            for (int i = 1; i < experience.Count; i++)
+            {
+                isRising &= experience[i] > experience[i - 1];
+            }
+
+            Require(isRising, "The hero rules' level experience must be positive and rising.");
+            Require(rules.ExperienceGrowth >= 1f && rules.MaximumLevel >= 2 && rules.MaximumLevel <= 1000, "Invalid experience growth or maximum level.");
+            Require(InRange(rules.MaximumSkills, 1, Enum.GetValues(typeof(SecondarySkill)).Length), "Invalid number of secondary skills a hero can know.");
+            Require(rules.Skills.Count > 0 && rules.Skills.Select(entry => entry.Skill).Distinct().Count() == rules.Skills.Count, "Every secondary skill may appear once in the hero rules.");
+            foreach (SkillEntry skill in rules.Skills)
+            {
+                bool isValid = Enum.IsDefined(typeof(SecondarySkill), skill.Skill)
+                    && !string.IsNullOrWhiteSpace(skill.DisplayName)
+                    && skill.Values.Count == SkillDefinition.LEVEL_COUNT
+                    && skill.Values.All(value => value >= 0f);
+                Require(isValid, "Invalid skill " + skill.Skill + ": it needs a name and three non-negative values.");
+            }
+
+            Require(rules.LuckChance >= 0f && rules.LuckChance * CampaignRules.MAXIMUM_LUCK < 1f, "Invalid luck chance.");
+            Require(rules.ManaPerKnowledge > 0 && rules.ManaRegeneration >= 0 && InRange(rules.SpellLevelWithoutWisdom, 1, 5), "Invalid magic rules.");
+            Require(rules.UnpenalizedTerrainCost > 0, "Invalid Pathfinding baseline.");
+            bool isValidDiplomacy = rules.JoinStrengthRatio >= 0f
+                && rules.JoinCostMultiplier >= 0f
+                && rules.SurrenderCostMultiplier >= 0f
+                && rules.SurrenderDiscounts.Count == SkillDefinition.LEVEL_COUNT
+                && rules.SurrenderDiscounts.All(value => value >= 0f && value <= 1f);
+            Require(isValidDiplomacy, "Invalid diplomacy or surrender rules.");
+        }
+
+        public static void ValidateClasses(HeroClassDatabaseScriptableObject classes, HeroRulesScriptableObject rules)
+        {
+            HashSet<SecondarySkill> skills = new HashSet<SecondarySkill>(rules.Skills.Select(entry => entry.Skill));
+            foreach (HeroClassEntry heroClass in classes.Classes)
+            {
+                bool isValid = !string.IsNullOrWhiteSpace(heroClass.DisplayName)
+                    && IsWeights(heroClass.LowLevelPrimaryWeights)
+                    && IsWeights(heroClass.HighLevelPrimaryWeights)
+                    && heroClass.HighLevelFrom >= 2
+                    && heroClass.WisdomInterval >= 0
+                    && heroClass.SkillWeights.All(entry => entry != null && skills.Contains(entry.Skill) && entry.Weight >= 0)
+                    && heroClass.SkillWeights.Select(entry => entry.Skill).Distinct().Count() == heroClass.SkillWeights.Count;
+                Require(isValid, "Invalid hero class " + heroClass.Id + ": four non-negative primary weights per level range, skills the hero rules define, each once.");
+            }
+        }
+
+        public static void ValidateSpells(SpellDatabaseScriptableObject spells)
+        {
+            foreach (SpellEntry spell in spells.Spells)
+            {
+                bool isValid = !string.IsNullOrWhiteSpace(spell.DisplayName)
+                    && InRange(spell.Level, 1, 5)
+                    && InRange(spell.ManaCost, 0, CampaignRules.MAXIMUM_MANA)
+                    && spell.Price >= 0
+                    && Enum.IsDefined(typeof(SpellTarget), spell.Target)
+                    && Enum.IsDefined(typeof(SpellEffect), spell.Effect);
+                Require(isValid, "Invalid spell " + spell.Id);
+            }
+        }
+
+        public static void ValidateCommanders(MissionSettingsScriptableObject mission, HashSet<string> spellIds)
+        {
+            foreach (EncounterEntry encounter in mission.Encounters.Where(entry => entry.HasCommander))
+            {
+                bool isValid = encounter.Kind != EncounterKind.Friendly
+                    && encounter.CommanderSpellPower >= 0
+                    && InRange(encounter.CommanderMana, 0, CampaignRules.MAXIMUM_MANA)
+                    && encounter.CommanderSpellIds.All(spellIds.Contains);
+                Require(isValid, "Invalid commander of encounter " + encounter.Id + ": a hostile army, known spells, mana within limits.");
+            }
+        }
+
         public static void ValidateUnits(UnitDatabaseScriptableObject units)
         {
             foreach (UnitEntry unit in units.Units)
@@ -63,22 +151,36 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                     && InRange(artefact.AttackBonus, 0, MAX_STAT)
                     && InRange(artefact.DefenseBonus, 0, MAX_STAT)
                     && InRange(artefact.SpeedBonus, 0, MAX_SPEED)
-                    && InRange(artefact.MoraleBonus, -CampaignRules.MAXIMUM_MORALE, CampaignRules.MAXIMUM_MORALE);
+                    && InRange(artefact.MoraleBonus, -CampaignRules.MAXIMUM_MORALE, CampaignRules.MAXIMUM_MORALE)
+                    && InRange(artefact.LuckBonus, -CampaignRules.MAXIMUM_LUCK, CampaignRules.MAXIMUM_LUCK)
+                    && InRange(artefact.SpellPowerBonus, 0, MAX_STAT)
+                    && InRange(artefact.KnowledgeBonus, 0, MAX_STAT);
                 Require(isValid, "Invalid artefact " + artefact.Id);
             }
         }
 
-        public static void ValidateHeroes(HeroDataBaseScriptableObject heroes, HashSet<string> unitIds, int armySlots)
+        public static void ValidateHeroes(HeroDataBaseScriptableObject heroes, HashSet<string> unitIds, int armySlots, HeroRulesScriptableObject rules,
+            HeroClassDatabaseScriptableObject classes, HashSet<string> spellIds)
         {
+            HashSet<SecondarySkill> skills = new HashSet<SecondarySkill>(rules.Skills.Select(entry => entry.Skill));
             foreach (HeroEntry hero in heroes.Heroes)
             {
                 bool isValid = InRange(hero.BaseAttack, 0, MAX_STAT)
                     && InRange(hero.BaseDefense, 0, MAX_STAT)
-                    && InRange(hero.DailyMovement, 1, MAX_MOVEMENT)
-                    && hero.ExperiencePerLevel > 0
-                    && InRange(hero.AttackPerLevel, 0, MAX_STAT)
-                    && hero.DefenseLevelInterval > 0;
+                    && InRange(hero.BaseSpellPower, 0, MAX_STAT)
+                    && InRange(hero.BaseKnowledge, 0, MAX_STAT)
+                    && InRange(hero.DailyMovement, 1, MAX_MOVEMENT);
                 Require(isValid, "Invalid hero " + hero.Id);
+                Require(classes.Classes.Any(heroClass => heroClass.Id == hero.ClassId), "Hero " + hero.Id + " has an unknown class " + hero.ClassId);
+                bool isValidSkills = hero.StartingSkills.All(entry => entry != null && skills.Contains(entry.Skill) && entry.Level != SkillLevel.None
+                        && Enum.IsDefined(typeof(SkillLevel), entry.Level))
+                    && hero.StartingSkills.Select(entry => entry.Skill).Distinct().Count() == hero.StartingSkills.Count
+                    && hero.StartingSkills.Count <= rules.MaximumSkills;
+                Require(isValidSkills, "Invalid starting skills for hero " + hero.Id);
+                bool isValidSpells = hero.StartingSpellIds.All(spellIds.Contains)
+                    && hero.StartingSpellIds.Distinct().Count() == hero.StartingSpellIds.Count
+                    && (hero.StartsWithSpellBook || hero.StartingSpellIds.Count == 0);
+                Require(isValidSpells, "Invalid starting spells for hero " + hero.Id + " (known spells, each once, only with a spell book).");
                 ValidateArmy(hero.StartingArmy, unitIds, armySlots, "hero " + hero.Id);
             }
         }
@@ -161,7 +263,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         }
 
         /// <summary>Map objects and goals: unique IDs, inside the map, free cells and known references for each kind.</summary>
-        public static void ValidateMapObjects(MissionSettingsScriptableObject mission, HashSet<string> unitIds, HashSet<string> artefactIds)
+        public static void ValidateMapObjects(MissionSettingsScriptableObject mission, HashSet<string> unitIds, HashSet<string> artefactIds,
+            HashSet<string> spellIds)
         {
             AdventureMapAuthoring map = mission.Map;
             Require(AllPresent(mission.MapObjects) && AllPresent(mission.Objectives), "The mission contains a missing map object or goal.");
@@ -201,6 +304,13 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                         break;
                     case MapObjectKind.MoraleShrine:
                         Require(mapObject.MoraleBonus > 0, name + " needs a morale bonus.");
+                        break;
+                    case MapObjectKind.LuckShrine:
+                        Require(mapObject.LuckBonus > 0, name + " needs a luck bonus.");
+                        break;
+                    case MapObjectKind.SpellShop:
+                        Require(mapObject.Gold > 0 && mapObject.SpellIds.All(spellIds.Contains) && mapObject.SpellIds.Distinct().Count() == mapObject.SpellIds.Count,
+                            name + " needs the spell book's price in its gold and known spells, each once.");
                         break;
                     case MapObjectKind.Dwelling:
                         Require(unitIds.Contains(mapObject.UnitId) && mapObject.WeeklyGrowth > 0, name + " needs a known unit and weekly growth.");
@@ -307,6 +417,11 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                 && values.All(id => !string.IsNullOrWhiteSpace(id))
                 && values.Distinct(StringComparer.Ordinal).Count() == values.Length;
             Require(isValid, "Invalid/duplicate " + context + " IDs.");
+        }
+
+        private static bool IsWeights(IReadOnlyList<int> weights)
+        {
+            return weights.Count == CampaignState.PRIMARY_STAT_COUNT && weights.All(weight => weight >= 0) && weights.Sum() > 0;
         }
 
         private static bool AllPresent<T>(IReadOnlyList<T> entries)

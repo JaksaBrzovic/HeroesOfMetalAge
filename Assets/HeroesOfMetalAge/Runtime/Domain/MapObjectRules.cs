@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace HeroesOfMetalAge.Domain
 {
@@ -20,6 +21,7 @@ namespace HeroesOfMetalAge.Domain
         public int AttackBonus { get; internal set; }
         public int DefenseBonus { get; internal set; }
         public int MoraleBonus { get; internal set; }
+        public int LuckBonus { get; internal set; }
     }
 
     /// <summary>
@@ -65,6 +67,8 @@ namespace HeroesOfMetalAge.Domain
                     return LearnAtShrine(campaign, mapObject, outcome);
                 case MapObjectKind.MoraleShrine:
                     return Bless(campaign, mapObject, outcome);
+                case MapObjectKind.LuckShrine:
+                    return BringLuck(campaign, mapObject, outcome);
                 case MapObjectKind.Mill:
                     return CollectMill(campaign, mapObject, outcome);
                 case MapObjectKind.QuestGiver:
@@ -157,6 +161,75 @@ namespace HeroesOfMetalAge.Domain
 
             campaign.DwellingStockData[dwelling.Id] = campaign.DwellingStock(dwelling.Id) - count;
             campaign.Gold -= (int)total;
+            return CommandResult.Ok();
+        }
+
+        /// <summary>Buys the spell book a spell shop sells, for the shop's gold.</summary>
+        public CommandResult BuySpellBook(CampaignState campaign, MapObjectDefinition shop)
+        {
+            if (shop.Kind != MapObjectKind.SpellShop)
+            {
+                return CommandResult.Reject("No spell book is sold here.");
+            }
+
+            CommandResult where = CheckPosition(campaign, shop);
+            if (!where.IsSuccess)
+            {
+                return where;
+            }
+
+            if (campaign.HasSpellBook)
+            {
+                return CommandResult.Reject("You already carry a spell book.");
+            }
+
+            if (shop.Gold > campaign.Gold)
+            {
+                return CommandResult.Reject("Not enough gold.");
+            }
+
+            campaign.Gold -= shop.Gold;
+            campaign.HasSpellBook = true;
+            return CommandResult.Ok();
+        }
+
+        /// <summary>Learns a spell the shop sells into the spell book: needs the book, the gold and enough Wisdom.</summary>
+        public CommandResult BuySpell(CampaignState campaign, MapObjectDefinition shop, string spellId)
+        {
+            if (shop.Kind != MapObjectKind.SpellShop || !shop.SpellIds.Contains(spellId) || !catalog.HasSpell(spellId))
+            {
+                return CommandResult.Reject("That spell is not sold here.");
+            }
+
+            CommandResult where = CheckPosition(campaign, shop);
+            if (!where.IsSuccess)
+            {
+                return where;
+            }
+
+            SpellDefinition spell = catalog.Spell(spellId);
+            if (!campaign.HasSpellBook)
+            {
+                return CommandResult.Reject("Buy a spell book first.");
+            }
+
+            if (campaign.KnowsSpell(spellId))
+            {
+                return CommandResult.Reject("You already know " + spell.Name + ".");
+            }
+
+            if (!rules.CanLearn(campaign, spell))
+            {
+                return CommandResult.Reject(spell.Name + " is a level " + spell.Level + " spell: it needs more Wisdom.");
+            }
+
+            if (spell.Price > campaign.Gold)
+            {
+                return CommandResult.Reject("Not enough gold.");
+            }
+
+            campaign.Gold -= spell.Price;
+            campaign.SpellData.Add(spellId);
             return CommandResult.Ok();
         }
 
@@ -287,6 +360,19 @@ namespace HeroesOfMetalAge.Domain
             {
                 outcome.MoraleBonus = blessed - campaign.MoraleBonus;
                 campaign.MoraleBonus = blessed;
+                outcome.IsRewarding = true;
+            }
+
+            return CommandResult.Ok();
+        }
+
+        private static CommandResult BringLuck(CampaignState campaign, MapObjectDefinition shrine, VisitOutcome outcome)
+        {
+            int lucky = Math.Min(CampaignRules.MAXIMUM_LUCK, shrine.LuckBonus);
+            if (lucky > campaign.LuckBonus)
+            {
+                outcome.LuckBonus = lucky - campaign.LuckBonus;
+                campaign.LuckBonus = lucky;
                 outcome.IsRewarding = true;
             }
 

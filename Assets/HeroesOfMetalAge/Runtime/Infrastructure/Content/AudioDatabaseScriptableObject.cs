@@ -92,6 +92,14 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [Tooltip("A border gate opens for its key.")]
         [SerializeField] private SoundDefinition gateOpened;
 
+        [Header("Magic and luck")]
+        [Tooltip("A hero casts a spell in battle.")]
+        [SerializeField] private SoundDefinition spellCast;
+        [Tooltip("Good luck doubles a strike's damage.")]
+        [SerializeField] private SoundDefinition goodLuck;
+        [Tooltip("Bad luck halves a strike's damage.")]
+        [SerializeField] private SoundDefinition badLuck;
+
         [Header("Strikes")]
         [SerializeField] private SoundDefinition swordSwing;
         [SerializeField] private SoundDefinition swordHit;
@@ -206,6 +214,12 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                     return blessing;
                 case SoundCue.GateOpened:
                     return gateOpened;
+                case SoundCue.SpellCast:
+                    return spellCast;
+                case SoundCue.GoodLuck:
+                    return goodLuck;
+                case SoundCue.BadLuck:
+                    return badLuck;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(cue), cue, "No sound field for this cue.");
             }

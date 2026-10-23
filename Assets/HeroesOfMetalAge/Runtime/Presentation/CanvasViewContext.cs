@@ -1,4 +1,5 @@
 using HeroesOfMetalAge.Application;
+using HeroesOfMetalAge.Domain;
 using UnityEngine;
 
 namespace HeroesOfMetalAge.Presentation
@@ -83,6 +84,30 @@ namespace HeroesOfMetalAge.Presentation
         {
             Sprite authored = Media.Artefact(artefactId);
             return authored != null ? authored : Theme.Axe;
+        }
+
+        /// <summary>A secondary skill's icon, else the placeholder axe.</summary>
+        public Sprite SkillIcon(SecondarySkill skill)
+        {
+            Sprite authored = Media.SkillIcon(skill);
+            return authored != null ? authored : Theme.Axe;
+        }
+
+        public Color SkillTint(SecondarySkill skill)
+        {
+            return Media.SkillIcon(skill) != null ? Color.white : Theme.Gold;
+        }
+
+        /// <summary>A spell's icon, else the placeholder axe.</summary>
+        public Sprite SpellIcon(string spellId)
+        {
+            Sprite authored = Media.SpellIcon(spellId);
+            return authored != null ? authored : Theme.Axe;
+        }
+
+        public Color SpellTint(string spellId)
+        {
+            return Media.SpellIcon(spellId) != null ? Color.white : Theme.Gold;
         }
 
         /// <summary>Authored art is shown untinted; placeholder art is tinted by side.</summary>

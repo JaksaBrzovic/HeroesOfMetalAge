@@ -19,6 +19,9 @@ namespace HeroesOfMetalAge.Presentation
             Add(bonuses, artefact.DefenseBonus, "DEFENSE");
             Add(bonuses, artefact.SpeedBonus, "SPEED");
             Add(bonuses, artefact.MoraleBonus, "MORALE");
+            Add(bonuses, artefact.LuckBonus, "LUCK");
+            Add(bonuses, artefact.SpellPowerBonus, "POWER");
+            Add(bonuses, artefact.KnowledgeBonus, "KNOWLEDGE");
             return bonuses.Count > 0 ? string.Join(" / ", bonuses) : "NO BONUS";
         }
 

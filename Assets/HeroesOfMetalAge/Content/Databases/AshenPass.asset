@@ -40,6 +40,7 @@ MonoBehaviour:
   map: {fileID: 8507097743292139526, guid: 0baf0b2a643f39148832e2881d47c6a5, type: 3}
   terrain: {fileID: 11400000, guid: 33418e1c302a9d14999b2563017f9af2, type: 2}
   startingPosition: {x: 3, y: 30}
+  scoutingRadius: 6
   recruitmentUnitIds:
   - ironbound
   - ash-archer
@@ -59,6 +60,10 @@ MonoBehaviour:
     battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
     mapSprite: {fileID: 0}
     arrivalConversationId: friendly-arrival
+    commanderName: 
+    commanderSpellPower: 0
+    commanderMana: 0
+    commanderSpellIds: []
   - id: road-crew
     displayName: THE ROAD CREW
     kind: 0
@@ -73,6 +78,10 @@ MonoBehaviour:
     battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
     mapSprite: {fileID: 0}
     arrivalConversationId: 
+    commanderName: 
+    commanderSpellPower: 0
+    commanderMana: 0
+    commanderSpellIds: []
   - id: bandits
     displayName: FOREST BANDITS
     kind: 1
@@ -89,6 +98,10 @@ MonoBehaviour:
     battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
     mapSprite: {fileID: 0}
     arrivalConversationId: 
+    commanderName: 
+    commanderSpellPower: 0
+    commanderMana: 0
+    commanderSpellIds: []
   - id: iron-reavers
     displayName: THE IRON REAVERS
     kind: 1
@@ -106,6 +119,10 @@ MonoBehaviour:
     battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
     mapSprite: {fileID: 0}
     arrivalConversationId: 
+    commanderName: 
+    commanderSpellPower: 0
+    commanderMana: 0
+    commanderSpellIds: []
   - id: sentinel
     displayName: THE PASS WARDENS
     kind: 1
@@ -123,6 +140,10 @@ MonoBehaviour:
     battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
     mapSprite: {fileID: 0}
     arrivalConversationId: sentinel-arrival
+    commanderName: 
+    commanderSpellPower: 0
+    commanderMana: 0
+    commanderSpellIds: []
   - id: town
     displayName: ASHEN HOLD
     kind: 2
@@ -140,6 +161,12 @@ MonoBehaviour:
     battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
     mapSprite: {fileID: 0}
     arrivalConversationId: town-arrival
+    commanderName: Lord Varg
+    commanderSpellPower: 1
+    commanderMana: 15
+    commanderSpellIds:
+    - bloodlust
+    - magic-arrow
   - id: revenants
     displayName: ASH REVENANTS
     kind: 1
@@ -156,6 +183,10 @@ MonoBehaviour:
     battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
     mapSprite: {fileID: 0}
     arrivalConversationId: 
+    commanderName: 
+    commanderSpellPower: 0
+    commanderMana: 0
+    commanderSpellIds: []
   - id: minotaurs
     displayName: THE MINOTAUR PACK
     kind: 1
@@ -170,6 +201,10 @@ MonoBehaviour:
     battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
     mapSprite: {fileID: 21300000, guid: 6e5379996d82f5148a5bcdfdc0d49e93, type: 3}
     arrivalConversationId: 
+    commanderName: 
+    commanderSpellPower: 0
+    commanderMana: 0
+    commanderSpellIds: []
   - id: boss
     displayName: THE BLACK BANNER
     kind: 3
@@ -189,6 +224,13 @@ MonoBehaviour:
     battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
     mapSprite: {fileID: 0}
     arrivalConversationId: boss-arrival
+    commanderName: Morthal of the Black Banner
+    commanderSpellPower: 2
+    commanderMana: 30
+    commanderSpellIds:
+    - slow
+    - magic-arrow
+    - curse
   mapObjects:
   - id: spilled-purse
     displayName: A SPILLED PURSE
@@ -206,6 +248,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: 
   - id: bandit-hoard
     displayName: THE BANDITS' HOARD
@@ -223,6 +267,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: 
   - id: ash-tribute
     displayName: A TRIBUTE IN ASH
@@ -240,6 +286,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: 
   - id: old-chest
     displayName: AN OLD CHEST
@@ -257,6 +305,84 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
+    arrivalConversationId: 
+  - id: test-chest-1
+    displayName: A TRAINING CHEST 1
+    kind: 1
+    position: {x: 2, y: 30}
+    description: Left by the road for testing; it holds lessons more than gold.
+    sprite: {fileID: 21300000, guid: 649c320e1bf1f8342a0078ec5f834415, type: 3}
+    mapHeight: 1
+    gold: 100
+    experience: 300
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    luckBonus: 0
+    spellIds: []
+    arrivalConversationId: 
+  - id: test-chest-2
+    displayName: A TRAINING CHEST 2
+    kind: 1
+    position: {x: 2, y: 31}
+    description: Left by the road for testing; it holds lessons more than gold.
+    sprite: {fileID: 21300000, guid: 649c320e1bf1f8342a0078ec5f834415, type: 3}
+    mapHeight: 1
+    gold: 100
+    experience: 500
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    luckBonus: 0
+    spellIds: []
+    arrivalConversationId: 
+  - id: test-chest-3
+    displayName: A TRAINING CHEST 3
+    kind: 1
+    position: {x: 1, y: 31}
+    description: Left by the road for testing; it holds lessons more than gold.
+    sprite: {fileID: 21300000, guid: 649c320e1bf1f8342a0078ec5f834415, type: 3}
+    mapHeight: 1
+    gold: 100
+    experience: 800
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    luckBonus: 0
+    spellIds: []
+    arrivalConversationId: 
+  - id: test-chest-4
+    displayName: A TRAINING CHEST 4
+    kind: 1
+    position: {x: 0, y: 31}
+    description: Left by the road for testing; it holds lessons more than gold.
+    sprite: {fileID: 21300000, guid: 649c320e1bf1f8342a0078ec5f834415, type: 3}
+    mapHeight: 1
+    gold: 100
+    experience: 1200
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: 
   - id: lost-buckler
     displayName: A LOST BUCKLER
@@ -274,6 +400,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: 
   - id: horned-ring
     displayName: A RING IN THE ASH
@@ -291,6 +419,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: 
   - id: colosseum
     displayName: THE BLOODY COLOSSEUM
@@ -308,6 +438,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: 
   - id: iron-bastion
     displayName: THE IRON BASTION
@@ -325,6 +457,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: 
   - id: shrine-of-horns
     displayName: SHRINE OF THE HORNS
@@ -342,6 +476,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: 
   - id: watermill
     displayName: THE OLD WATERMILL
@@ -359,6 +495,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: 
   - id: roadie-camp
     displayName: ROADIE CAMP
@@ -376,6 +514,8 @@ MonoBehaviour:
     unitId: ironbound
     weeklyGrowth: 8
     keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: 
   - id: old-skald
     displayName: THE OLD SKALD
@@ -393,6 +533,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: red key
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: quest-bearer
   - id: red-tent
     displayName: THE RED TENT
@@ -410,6 +552,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: red key
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: red-tent
   - id: chained-maiden
     displayName: THE CHAINED MAIDEN
@@ -427,6 +571,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: maiden-freed
   - id: bone-oracle
     displayName: THE BONE ORACLE
@@ -444,6 +590,8 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
     arrivalConversationId: dragon-lore
   - id: gate-of-fire
     displayName: THE GATE OF FIRE
@@ -461,6 +609,55 @@ MonoBehaviour:
     unitId: 
     weeklyGrowth: 0
     keyId: 
+    luckBonus: 0
+    spellIds: []
+    arrivalConversationId: 
+  - id: hall-of-hymns
+    displayName: HALL OF FORBIDDEN HYMNS
+    kind: 14
+    position: {x: 26, y: 30}
+    description: Old songs of power are sold here, and the books to keep them in.
+    sprite: {fileID: 21300000, guid: d3fc0e38347175c47b44d3f32cafa576, type: 3}
+    mapHeight: 1.2
+    gold: 500
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    luckBonus: 0
+    spellIds:
+    - magic-arrow
+    - cure
+    - haste
+    - bloodlust
+    - lightning-bolt
+    - fireball
+    - meteor-shower
+    - implosion
+    arrivalConversationId: 
+  - id: fortunes-anvil
+    displayName: FORTUNE'S ANVIL
+    kind: 13
+    position: {x: 42, y: 25}
+    description: Strike the anvil once, and fortune rides with you until your next
+      victory.
+    sprite: {fileID: 21300000, guid: 2ae0943dfdecd8943a005461d55eed10, type: 3}
+    mapHeight: 1.2
+    gold: 0
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    luckBonus: 1
+    spellIds: []
     arrivalConversationId: 
   objectives:
   - id: defeat-black-banner

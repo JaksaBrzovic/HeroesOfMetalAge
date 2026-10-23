@@ -111,6 +111,13 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [Tooltip("Morale while worn, -3..3: good morale lets stacks act again, bad morale freezes them.")]
         [Range(-3, 3)]
         [SerializeField] private int moraleBonus;
+        [Tooltip("Luck while worn, -3..3: good luck may double a strike's damage, bad luck halve it.")]
+        [Range(-3, 3)]
+        [SerializeField] private int luckBonus;
+        [Min(0)]
+        [SerializeField] private int spellPowerBonus;
+        [Min(0)]
+        [SerializeField] private int knowledgeBonus;
 
         public string Id => id;
         public string DisplayName => displayName;
@@ -132,10 +139,14 @@ namespace HeroesOfMetalAge.Infrastructure.Content
 
         public int SpeedBonus => speedBonus;
         public int MoraleBonus => moraleBonus;
+        public int LuckBonus => luckBonus;
+        public int SpellPowerBonus => spellPowerBonus;
+        public int KnowledgeBonus => knowledgeBonus;
 
         public ArtefactDefinition ToDefinition()
         {
-            return new ArtefactDefinition(id, displayName, description, slot, rarity, attackBonus, defenseBonus, speedBonus, moraleBonus);
+            return new ArtefactDefinition(id, displayName, description, slot, rarity, attackBonus, defenseBonus, speedBonus, moraleBonus, luckBonus,
+                spellPowerBonus, knowledgeBonus);
         }
     }
 
@@ -155,14 +166,36 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         }
     }
 
+    /// <summary>A secondary skill at a level, as authored on a hero.</summary>
+    [Serializable]
+    public sealed class SkillLevelEntry
+    {
+        [SerializeField] private SecondarySkill skill;
+        [SerializeField] private SkillLevel level = SkillLevel.Basic;
+
+        internal SkillLevelEntry(SecondarySkill skill, SkillLevel level)
+        {
+            this.skill = skill;
+            this.level = level;
+        }
+
+        public SecondarySkill Skill => skill;
+        public SkillLevel Level => level;
+
+        public HeroSkill ToSkill()
+        {
+            return new HeroSkill(skill, level);
+        }
+    }
+
     [Serializable]
     public sealed class HeroEntry
     {
         [Tooltip("Stable ID used by saves.")]
         [SerializeField] private string id;
         [SerializeField] private string displayName;
-        [SerializeField] private string className;
-        [SerializeField] private string faction;
+        [Tooltip("ID of the hero's class in the hero class database: how the hero grows on level-ups.")]
+        [SerializeField] private string classId = "warrior";
         [TextArea]
         [SerializeField] private string description;
         [Tooltip("The figure on the adventure map while standing (usually the ride cycle's first frame).")]
@@ -175,20 +208,25 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [SerializeField] private Sprite[] mapFrames = new Sprite[0];
         [Min(1f)]
         [SerializeField] private float mapFramesPerSecond = 11f;
+        [Header("Primary stats at level 1")]
         [Min(0)]
         [SerializeField] private int baseAttack;
         [Min(0)]
         [SerializeField] private int baseDefense;
+        [Min(0)]
+        [SerializeField] private int baseSpellPower = 1;
+        [Min(0)]
+        [SerializeField] private int baseKnowledge = 1;
+        [Tooltip("Movement points per day on land before Logistics.")]
         [Min(1)]
         [SerializeField] private int dailyMovement = 1600;
-        [Min(1)]
-        [SerializeField] private int experiencePerLevel = 300;
-        [Min(0)]
-        [SerializeField] private int attackPerLevel = 1;
-        [Tooltip("Defense grows by one every this many levels.")]
-        [Min(1)]
-        [SerializeField] private int defenseLevelInterval = 2;
+        [Header("Start")]
         [SerializeField] private List<ArmyEntry> startingArmy = new List<ArmyEntry>();
+        [Tooltip("Secondary skills the hero knows at the start.")]
+        [SerializeField] private List<SkillLevelEntry> startingSkills = new List<SkillLevelEntry>();
+        [SerializeField] private bool startsWithSpellBook;
+        [Tooltip("Spell IDs written in the starting spell book.")]
+        [SerializeField] private List<string> startingSpellIds = new List<string>();
 
         public string Id => id;
 
@@ -210,22 +248,35 @@ namespace HeroesOfMetalAge.Infrastructure.Content
             internal set => portrait = value;
         }
 
+        public string ClassId
+        {
+            get => classId;
+            internal set => classId = value;
+        }
+
         public Sprite PanelPortrait => panelPortrait;
         public Sprite ScreenPortrait => screenPortrait;
         public IReadOnlyList<Sprite> MapFrames => mapFrames;
         public float MapFramesPerSecond => mapFramesPerSecond;
         public int BaseAttack => baseAttack;
         public int BaseDefense => baseDefense;
+        public int BaseSpellPower => baseSpellPower;
+        public int BaseKnowledge => baseKnowledge;
         public int DailyMovement => dailyMovement;
-        public int ExperiencePerLevel => experiencePerLevel;
-        public int AttackPerLevel => attackPerLevel;
-        public int DefenseLevelInterval => defenseLevelInterval;
         public IReadOnlyList<ArmyEntry> StartingArmy => startingArmy;
+        public IReadOnlyList<SkillLevelEntry> StartingSkills => startingSkills ?? (startingSkills = new List<SkillLevelEntry>());
+        public bool StartsWithSpellBook => startsWithSpellBook;
+        public IReadOnlyList<string> StartingSpellIds => startingSpellIds ?? (startingSpellIds = new List<string>());
+
+        internal void SetStartingSkills(IEnumerable<SkillLevelEntry> skills)
+        {
+            startingSkills = skills.ToList();
+        }
 
         public HeroDefinition ToDefinition()
         {
-            return new HeroDefinition(id, displayName, description, className, faction, baseAttack, baseDefense, dailyMovement, experiencePerLevel,
-                attackPerLevel, defenseLevelInterval, startingArmy.Select(entry => entry.ToTroop()));
+            return new HeroDefinition(id, displayName, description, classId, baseAttack, baseDefense, baseSpellPower, baseKnowledge, dailyMovement,
+                startingArmy.Select(entry => entry.ToTroop()), StartingSkills.Select(entry => entry.ToSkill()), startsWithSpellBook, StartingSpellIds);
         }
     }
 
@@ -254,9 +305,32 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [Tooltip("Dialogue conversation played when the hero reaches this site: before the friendly or hostile dialog opens, or "
             + "in the town from the garrison hero while the clan still holds it. Empty for none.")]
         [SerializeField] private string arrivalConversationId;
+        [Header("Commander")]
+        [Tooltip("The enemy hero leading this army: casts spells in battle and can be surrendered to. Empty for an army without one.")]
+        [SerializeField] private string commanderName;
+        [Min(0)]
+        [SerializeField] private int commanderSpellPower;
+        [Tooltip("The commander's mana at the start of each battle.")]
+        [Min(0)]
+        [SerializeField] private int commanderMana;
+        [Tooltip("Spell IDs the commander casts, in the order it prefers them.")]
+        [SerializeField] private List<string> commanderSpellIds = new List<string>();
 
         public string Id => id;
         public EncounterKind Kind => kind;
+        public string CommanderName => commanderName;
+        public int CommanderSpellPower => commanderSpellPower;
+        public int CommanderMana => commanderMana;
+        public IReadOnlyList<string> CommanderSpellIds => commanderSpellIds ?? (commanderSpellIds = new List<string>());
+        public bool HasCommander => !string.IsNullOrWhiteSpace(commanderName);
+
+        internal void SetCommander(string name, int spellPower, int mana, IEnumerable<string> spellIds)
+        {
+            commanderName = name;
+            commanderSpellPower = spellPower;
+            commanderMana = mana;
+            commanderSpellIds = spellIds.ToList();
+        }
         public Vector2Int Position => position;
 
         public List<ArmyEntry> Army
@@ -279,8 +353,9 @@ namespace HeroesOfMetalAge.Infrastructure.Content
 
         public EncounterDefinition ToDefinition()
         {
+            CommanderDefinition commander = HasCommander ? new CommanderDefinition(commanderName, commanderSpellPower, commanderMana, CommanderSpellIds) : null;
             return new EncounterDefinition(id, kind, new WorldPosition(position.x, position.y), displayName, description,
-                army.Select(entry => entry.ToTroop()), rewardExperience, rewardGold, rewardArtefactId);
+                army.Select(entry => entry.ToTroop()), rewardExperience, rewardGold, rewardArtefactId, commander);
         }
     }
 
@@ -322,8 +397,32 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [SerializeField] private int weeklyGrowth;
         [Tooltip("Quest giver: the key handed over. Border gate: the key that opens it.")]
         [SerializeField] private string keyId;
+        [Tooltip("Luck shrine: luck until the next won battle.")]
+        [Range(0, 3)]
+        [SerializeField] private int luckBonus;
+        [Tooltip("Spell shop: the spell IDs for sale (each at its price in the spell database). Its gold is the spell book's price.")]
+        [SerializeField] private List<string> spellIds = new List<string>();
         [Tooltip("Dialogue conversation played when the hero reaches the object. Empty for none.")]
         [SerializeField] private string arrivalConversationId;
+
+        public MapObjectEntry()
+        {
+        }
+
+        /// <summary>A new object as the content seeder places it.</summary>
+        internal MapObjectEntry(string id, string displayName, MapObjectKind kind, Vector2Int position, string description, Sprite sprite, int gold,
+            int luckBonus, IEnumerable<string> spellIds)
+        {
+            this.id = id;
+            this.displayName = displayName;
+            this.kind = kind;
+            this.position = position;
+            this.description = description;
+            this.sprite = sprite;
+            this.gold = gold;
+            this.luckBonus = luckBonus;
+            this.spellIds = spellIds.ToList();
+        }
 
         public string Id => id;
         public string DisplayName => displayName;
@@ -340,12 +439,14 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public string UnitId => unitId;
         public int WeeklyGrowth => weeklyGrowth;
         public string KeyId => keyId;
+        public int LuckBonus => luckBonus;
+        public IReadOnlyList<string> SpellIds => spellIds ?? (spellIds = new List<string>());
         public string ArrivalConversationId => arrivalConversationId;
 
         public MapObjectDefinition ToDefinition()
         {
             return new MapObjectDefinition(id, kind, new WorldPosition(position.x, position.y), displayName, description, gold, experience, artefactId,
-                attackBonus, defenseBonus, moraleBonus, unitId, weeklyGrowth, keyId);
+                attackBonus, defenseBonus, moraleBonus, unitId, weeklyGrowth, keyId, luckBonus, SpellIds);
         }
     }
 

@@ -28,7 +28,13 @@ namespace HeroesOfMetalAge.Application
         /// <summary>A dwelling's creatures for sale.</summary>
         Dwelling,
         /// <summary>The exit portal asks whether to finish the mission.</summary>
-        Exit
+        Exit,
+        /// <summary>The hero gained a level: a primary stat rose and a secondary skill is to be chosen.</summary>
+        LevelUp,
+        /// <summary>The hero's spell book is open, on the map, the hero screen or in battle.</summary>
+        SpellBook,
+        /// <summary>A spell shop sells its spell book and spells.</summary>
+        SpellShop
     }
 
     /// <summary>Where the player is, for the music tracks and layers and the riding loop.</summary>

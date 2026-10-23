@@ -85,6 +85,25 @@ namespace HeroesOfMetalAge.Tests
         }
     }
 
+    /// <summary>Random source that returns the given values in order, then repeats the last one.</summary>
+    internal sealed class SequenceRandomSource : IRandomSource
+    {
+        private readonly double[] values;
+        private int index;
+
+        public SequenceRandomSource(params double[] values)
+        {
+            this.values = values;
+        }
+
+        public double NextValue()
+        {
+            double value = values[Math.Min(index, values.Length - 1)];
+            index++;
+            return value;
+        }
+    }
+
     internal static class CampaignTestUtility
     {
         /// <summary>A copy of the campaign standing on the town.</summary>

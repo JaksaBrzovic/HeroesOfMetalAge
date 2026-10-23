@@ -35,7 +35,7 @@ namespace HeroesOfMetalAge.Presentation
             HeroDefinition hero = Catalog.Hero(Campaign.HeroId);
             int dailyMovement = Rules.DailyMovement(Campaign);
             UiBinding.SetText(heroText, hero.Name);
-            UiBinding.SetText(levelText, hero.ClassName + "  •  LEVEL " + Rules.Level(Campaign));
+            UiBinding.SetText(levelText, Catalog.ClassOf(hero.Id).Name.ToUpperInvariant() + "  •  LEVEL " + Rules.Level(Campaign));
             UiBinding.SetSprite(portraitImage, Context.HeroPanelPortrait, Context.HeroTint);
             UiBinding.SetText(movementText, "MOVEMENT " + Campaign.Movement + " / " + dailyMovement);
             UiBinding.SetProgress(movementBarImage, Campaign.Movement / (float)dailyMovement);

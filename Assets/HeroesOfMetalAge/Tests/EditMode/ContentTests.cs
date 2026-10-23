@@ -22,6 +22,9 @@ namespace HeroesOfMetalAge.Tests
         private HeroDataBaseScriptableObject heroes;
         private AudioDatabaseScriptableObject audio;
         private MissionSettingsScriptableObject mission;
+        private HeroRulesScriptableObject heroRules;
+        private HeroClassDatabaseScriptableObject heroClasses;
+        private SpellDatabaseScriptableObject spells;
 
         [SetUp]
         public void SetUp()
@@ -32,12 +35,15 @@ namespace HeroesOfMetalAge.Tests
             heroes = Object.Instantiate(ContentAssets.Heroes);
             audio = Object.Instantiate(ContentAssets.Audio);
             mission = Object.Instantiate(ContentAssets.Mission);
+            heroRules = Object.Instantiate(ContentAssets.HeroRules);
+            heroClasses = Object.Instantiate(ContentAssets.HeroClasses);
+            spells = Object.Instantiate(ContentAssets.Spells);
         }
 
         [TearDown]
         public void TearDown()
         {
-            foreach (Object copy in new Object[] { units, artefacts, heroes, audio, mission })
+            foreach (Object copy in new Object[] { units, artefacts, heroes, audio, mission, heroRules, heroClasses, spells })
             {
                 Object.DestroyImmediate(copy);
             }
@@ -283,7 +289,7 @@ namespace HeroesOfMetalAge.Tests
 
         private DefinitionCatalog Load()
         {
-            return ContentLoader.Load(units, artefacts, heroes, audio, mission);
+            return ContentLoader.Load(units, artefacts, heroes, audio, mission, heroRules, heroClasses, spells);
         }
     }
 }

@@ -13,17 +13,24 @@ namespace HeroesOfMetalAge.Infrastructure.Content
 
         /// <exception cref="InvalidOperationException">Any authored value is missing or out of range.</exception>
         public static DefinitionCatalog Load(UnitDatabaseScriptableObject units, ArtefactDatabaseScriptableObject artefacts,
-            HeroDataBaseScriptableObject heroes, AudioDatabaseScriptableObject audio, MissionSettingsScriptableObject mission)
+            HeroDataBaseScriptableObject heroes, AudioDatabaseScriptableObject audio, MissionSettingsScriptableObject mission,
+            HeroRulesScriptableObject heroRules, HeroClassDatabaseScriptableObject heroClasses, SpellDatabaseScriptableObject spells)
         {
             ContentValidator.ValidateReferences(units, artefacts, heroes, audio, mission);
+            ContentValidator.ValidateMagicReferences(heroRules, heroClasses, spells);
             HashSet<string> unitIds = new HashSet<string>(units.Units.Select(entry => entry.Id));
+            HashSet<string> spellIds = new HashSet<string>(spells.Spells.Select(entry => entry.Id));
 
             ContentValidator.ValidateUnits(units);
             ContentValidator.ValidateArtefacts(artefacts);
-            ContentValidator.ValidateHeroes(heroes, unitIds, mission.ArmySlots);
+            ContentValidator.ValidateHeroRules(heroRules);
+            ContentValidator.ValidateClasses(heroClasses, heroRules);
+            ContentValidator.ValidateSpells(spells);
+            ContentValidator.ValidateHeroes(heroes, unitIds, mission.ArmySlots, heroRules, heroClasses, spellIds);
             ContentValidator.ValidateAudio(audio);
             ContentValidator.ValidateMission(mission, heroes, unitIds);
-            ContentValidator.ValidateMapObjects(mission, unitIds, new HashSet<string>(artefacts.Artefacts.Select(entry => entry.Id)));
+            ContentValidator.ValidateCommanders(mission, spellIds);
+            ContentValidator.ValidateMapObjects(mission, unitIds, new HashSet<string>(artefacts.Artefacts.Select(entry => entry.Id)), spellIds);
 
             MissionDefinition definition = ToDefinition(mission);
             ContentValidator.ValidateMap(definition);
@@ -31,7 +38,10 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                 units.Units.Select(entry => entry.ToDefinition()),
                 artefacts.Artefacts.Select(entry => entry.ToDefinition()),
                 heroes.Heroes.Select(entry => entry.ToDefinition()),
-                definition);
+                definition,
+                heroRules.ToPolicy(),
+                heroClasses.Classes.Select(entry => entry.ToDefinition()),
+                spells.Spells.Select(entry => entry.ToDefinition()));
         }
 
         private static MissionDefinition ToDefinition(MissionSettingsScriptableObject mission)

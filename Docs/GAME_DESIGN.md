@@ -153,7 +153,9 @@ Akcije:
 
 **Implementirano (0.7):** svaki udarac, i uzvrat, ima 15 % šanse za promašaj (Miss Chance u AshenPass.asset): bez štete i gubitaka, na bojištu piše MISS, a zvuk je promašaj mača ili strijele. Promašeni melee napad i dalje izaziva uzvrat.
 
-Melee meta uzvraća ako preživi i nije već uzvratila u toj rundi. Ranged napad na udaljenosti ne izaziva taj melee uzvrat. Air Guitarist u melee radi štetu × 0,5. Prototip nema streljivo, zaklone, magiju ni posebne sposobnosti.
+Melee meta uzvraća ako preživi i nije već uzvratila u toj rundi. Ranged napad na udaljenosti ne izaziva taj melee uzvrat. Air Guitarist u melee radi štetu × 0,5. Prototip nema streljivo, zaklone ni posebne sposobnosti jedinica.
+
+**Implementirano (0.9, po uzoru na Heroes 3):** heroj svake strane može baciti jedan spell po rundi, za vrijeme poteza svog stacka (potez stacka se time ne troši); spell book se otvara gumbom ili tipkom C, spell na stack ili područje čeka klik na heks (Esc odustaje). Luck: svaki udarac s pozitivnim luckom ima šansu (1/24 po bodu) za dvostruku štetu, s negativnim za pola štete (LUCKY!/UNLUCKY na bojištu, zvuk). Offense/Archery povećavaju melee/ranged štetu, Armorer smanjuje primljenu, Shield spell smanjuje melee štetu, Bless/Curse fiksiraju roll na maksimum/minimum. Tactics: prije prve runde igrač postavlja stackove u prvim stupcima ploče (START BATTLE / NEXT STACK). Neprijateljske vojske mogu imati zapovjednika (Lord Varg u gradu, Morthal s Black Bannerom) koji baca spellove; Resistance može poništiti neprijateljski spell na igračevom stacku. Predaja (SURRENDER) je moguća samo protiv zapovjednika: plaća se dio cijene preživjele vojske (Diplomacy smanjuje cijenu), vojska ostaje heroju, neprijatelj ostaje na mapi.
 
 Formula aktualnog damagea:
 
@@ -166,11 +168,33 @@ Ako je delta < 0: množitelj = `1 − min(−delta, 28) × 0,025`.
 
 Broj preživjelih = zaokruženi preostali ukupni HP prema gore / HP jedne jedinice. Pobjeda nastupa kad nema živih neprijateljskih stackova; poraz kad nema igračeve vojske. Gubici ostaju nakon pobjede, a preživjele jedinice vraćaju puni HP između borbi. Poraz ne zapisuje trajne gubitke i omogućuje retry s vojskom prije borbe ili povratak na pripremu.
 
-Jednostavni AI bira najbližu metu, zatim niži ukupni HP i stabilni ID. Napada ako može, inače ide prema meti. Nakon svake akcije u borbi (igračeve ili neprijateljeve) slijedi pauza od 1,5 s prije sljedeće akcije, da se potezi ne mogu prokliknuti jedan za drugim (Battle Action Seconds u AshenPass.asset, Presentation pacing). Neprijatelj koji počinje borbu čeka 0,7 s (Enemy Turn Seconds). Težine, napredniji AI, wait, bježanje i predaja: **otvoreno**.
+Jednostavni AI bira najbližu metu, zatim niži ukupni HP i stabilni ID. Napada ako može, inače ide prema meti. Zapovjednik prvo baci prvi spell sa svog popisa koji može i koji nešto mijenja (šteta najjačem stacku, slabljenje stacka koji ga još nema). Nakon svake akcije u borbi (igračeve ili neprijateljeve) slijedi pauza od 1,5 s prije sljedeće akcije, da se potezi ne mogu prokliknuti jedan za drugim (Battle Action Seconds u AshenPass.asset, Presentation pacing). Neprijatelj koji počinje borbu čeka 0,7 s (Enemy Turn Seconds). Težine, napredniji AI, wait, bježanje i predaja: **otvoreno**.
 
 ## 9. Heroj, XP i artefakti
 
-Kael ima portret, opis, klasu, frakciju, vojsku, XP, level, osnovne/izvedene statove, inventar i opremu. Svakih 300 XP daje novi level; attack raste svakim levelom, defense svaka dva levela. Detalji su podesivi u HeroDatabase.asset.
+Kael ima portret, opis, klasu, vojsku, XP, level, četiri primarna stata (attack, defense, spell power, knowledge), sekundarne skillove, manu, spell book, inventar i opremu. Frakcije za sada nema; heroj ima samo klasu.
+
+**Implementirano (0.9, po uzoru na Heroes 3):** XP tablica je HoMM3 tablica × 0,3 (level 2 na 300, level 5 na 1380 XP, iza tablice svaki level 20 % skuplji). Svaki level podiže jedan primarni stat za 1, nasumično po težinama klase (Warrior: 35/45/10/10 do levela 9, 30/30/20/20 od levela 10), i nudi dva sekundarna skilla: lijevi poboljšava poznati skill, desni je novi dok ima slobodnog mjesta (najviše 8 skillova); Wisdom se nudi najkasnije svakih 6 levela. Izbor otvara dijalog nakon nagrade (Escape ga ne zatvara); novi level čeka dok se prethodni ne riješi; roll se sprema odmah. Klasa Warrior (bez frakcije) može dobiti: Archery, Armorer, Offense, Diplomacy, Estates, Intelligence, Leadership, Logistics, Luck, Mysticism, Pathfinding, Resistance, Sorcery, Tactics i Wisdom (težine kao Knight iz HoMM3); Navigation je izostavljen dok nema brodova. Kael počinje s Basic Leadership i Basic Offense.
+
+| Skill | Basic / Advanced / Expert |
+|---|---|
+| Archery | +10 / 25 / 50 % ranged štete |
+| Armorer | −5 / 10 / 15 % primljene štete |
+| Offense | +10 / 20 / 30 % melee štete |
+| Diplomacy | 25 / 50 / 100 % voljnih vojski (bez zapovjednika, barem 2× slabijih) nudi pridruživanje za cijenu regrutacije; predaja 20 / 40 / 60 % jeftinija |
+| Estates | +125 / 250 / 500 golda dnevno |
+| Intelligence | +25 / 50 / 100 % maksimalne mane |
+| Leadership | +1 / 2 / 3 morala |
+| Logistics | +10 / 20 / 30 % kretanja po kopnu |
+| Luck | +1 / 2 / 3 lucka |
+| Mysticism | +2 / 3 / 4 mane dnevno |
+| Pathfinding | −25 / 50 / 75 % kazne teškog terena (dio cijene iznad 100) |
+| Resistance | 5 / 10 / 20 % šanse da neprijateljski spell ne djeluje |
+| Sorcery | +5 / 10 / 15 % štete spellova |
+| Tactics | postavljanje stackova u prva 2 / 3 / 5 stupca (ploča je 10 širine, HoMM3 15) |
+| Wisdom | spellovi do levela 3 / 4 / 5 (bez Wisdoma do 2) |
+
+Mana = knowledge × 10 (× Intelligence); dnevno se vraća 1 + Mysticism, a ulaskom u vlastiti grad puni do maksimuma. Spell book i spellovi se kupuju u Hall of Forbidden Hymns na cesti blizu starta (knjiga 500 golda, spellovi 150 do 1600); 16 spellova jedne škole (škola magije još nema): Magic Arrow, Cure, Bless, Curse, Haste, Slow, Bloodlust, Stone Skin, Shield (level 1), Lightning Bolt, Weakness (2), Fireball (3), Battle Hymn, Meteor Shower (4), Implosion, Armageddon (5). Šteta = baza + po bodu spell powera; trajanje = spell power rundi. Fortune's Anvil daje +1 luck do sljedeće pobjede; artefakti mogu davati luck, spell power i knowledge. Sva pravila i brojevi su u `HeroRules.asset` (XP, skillovi po levelima, luck, mana, Wisdom, Pathfinding, Diplomacy i predaja), `HeroClassDatabase.asset` (klase i težine) i `SpellDatabase.asset` (spellovi).
 
 Implementirani slotovi opreme: weapon i charm. **Dogovoreni budući smjer (2026-10-12):** hero screen treba imati 10 equipment slotova: Head, Ring 1, Ring 2, Amulet, Left Hand, Right Hand, Torso, Sash, Pants i Boots, uz inventory i 7 slotova vojske. Nova podjela opreme još nije implementirana; kompatibilnost itema, dvoručno oružje i migracija postojećih slotova ostaju otvoreni. Koncept prikazuje 5 × 5 inventory polja kao prijedlog prikaza, ne potvrđeno ograničenje kapaciteta. **Dogovoreni vizualni smjer itema (2026-10-12):** common jednostavan i praktičan, rare atraktivniji i ukrašen, epic izrazito upečatljiv, legendary najraskošniji; izrađene ilustracije za svaki slot i razinu. Gameplay učinci rijetkosti i pravila dropova nisu definirani. Bonusi se računaju iz opreme i ne upisuju trajno u osnovne statove.
 
@@ -184,7 +208,7 @@ Implementirani slotovi opreme: weapon i charm. **Dogovoreni budući smjer (2026-
 | Axe of the First Riff | legendary, +4 attack, +1 speed | nasumična nagrada |
 | Amulet of Endless Feedback | legendary, +1 attack, +3 defense, +1 speed | nasumična nagrada |
 
-Artefakti imaju ID, naziv, opis, ikonu, kompatibilni slot i bonuse u ArtefactDatabaseScriptableObject. Rarity (common, rare, legendary) određuje samo vjerojatnost dropa i izgled kartice. Skill tree, herojske aktivne sposobnosti, epic razina, set bonusi, trgovina i više heroja: **otvoreno**.
+Artefakti imaju ID, naziv, opis, ikonu, kompatibilni slot i bonuse u ArtefactDatabaseScriptableObject. Rarity (common, rare, legendary) određuje samo vjerojatnost dropa i izgled kartice. Herojske aktivne sposobnosti, set bonusi, trgovina artefaktima, škole magije, adventure spellovi, brodovi (Navigation) i više heroja: **otvoreno**.
 
 ## 10. Gold, gradovi i vlasništvo
 
@@ -325,7 +349,7 @@ Kriteriji prve misije: pridruživanje, pobjeda na prolazu, opremanje nagrade, ku
 | 2 | Opseg prve dovršene verzije | Broj misija, frakcija, heroja i jedinica |
 | 2 | Pravila gradnje, ulaganja i nagodbe | Potrebna prije širenja ekonomije |
 | 2 | Lore i ton: ozbiljan epic metal ili više humora | Usklađuje tekstove, glasove i art |
-| 3 | Magija, skillovi, posebne sposobnosti | Mijenja kompleksnost borbe |
+| 3 | Škole magije, adventure spellovi, brodovi i Navigation; frakcije i dodatne klase | Skillovi, levele i jedna škola magije postoje (0.9); ovo ih proširuje |
 | 3 | Kampanja/skirmish, platforme, multiplayer | Određuje dugoročni scope |
 
 ## 17. Dnevnik promjena
@@ -344,6 +368,7 @@ Kriteriji prve misije: pridruživanje, pobjeda na prolazu, opremanje nagrade, ku
 | 2026-10-13 | 0.7 | Pauza od 1,5 s nakon svake akcije u borbi (Battle Action Seconds) | EditMode testovi i scenarij cijele misije u buildu |
 | 2026-10-13 | 0.7 | Glazba mape i grada po misiji (overworld, Market Day; underworld tema pripremljena za buduću podzemnu mapu); pauza od 2 s prije ekrana pobjede/poraza (Battle Result Seconds) | EditMode testovi i scenarij cijele misije u buildu |
 | 2026-10-13 | 0.7 | Snimljeni zvukovi za borbu (intro i petlja), poraz, kopita, mač i strijelu (zamah/pogodak/promašaj), susrete, pobjedu i legendary item; ekrani Victory, Rewards i Defeat; nasumične nagrade (uvijek gold, najviše jedan artefakt, rarity, zajamčen legendary najkasnije svake četvrte pobjede); promašaji u borbi | EditMode testovi i scenarij cijele misije u buildu |
+| 2026-10-23 | 0.9 | Klasa Warrior (bez frakcije) i sekundarni skillovi po uzoru na Heroes 3 (15 skillova, sve osim Navigationa); level-up s HoMM3 XP tablicom × 0,3, nasumičnim primarnim statom po klasi i izborom između dva skilla; spell power, knowledge i mana; luck sustav; spell book, 16 spellova i Hall of Forbidden Hymns na mapi; spell book ekran i bacanje spellova u borbi; neprijateljski zapovjednici sa spellovima; Tactics faza, Diplomacy (pridruživanje i predaja), Pathfinding, Logistics, Estates, Mysticism; Fortune's Anvil (+1 luck); sva pravila u HeroRules/HeroClassDatabase/SpellDatabase assetima; save v5 (v4 se migrira) | EditMode testovi i scenarij cijele misije u buildu sa screenshotovima |
 | 2026-10-20 | 0.8 | Proširena karta Ashen Passa (100 × 61, logički sloj iz boja slike); 9 vojski, 16 objekata (zlato, škrinja zlato/XP, koloseum +napad, bastion +obrana, svetište morala, mlin, logor Roadieja, skald s crvenim ključem, crveni šator, okovana djeva s epic artefaktom, koštani orakul, Vrata vatre kao izlaz); 5 ciljeva (Black Banner obavezan), izlaz vodi u main menu; moral (dodatni potez / smrzavanje); 11 mjesta opreme i 28 artefakata s ikonama; minotaur i berserker; novi UI izrezan iz mockupova; heavy metal fontovi po stilovima (Typography.asset); zlato na hover svih stavki menija; save v4 | 124 EditMode testa; scenarij cijele misije u buildu (do Vrata vatre) sa screenshotovima |
 | 2026-10-17 | 0.7 | Priča na početku misije na velikom svitku s nuklearnom eksplozijom, trešnjom ekrana i bačenim svitkom; Load Game učitava spremljenu kampanju | Kompilacija izvan Editora i pregled eksplozije izvan Unityja; EditMode testovi još nisu pokrenuti |
 | 2026-10-16 | 0.7 | Kamera menija prati miš i njiše se kad miš miruje; nova grafika i animacije za paklenu rupu, svitak i choppera; Load Game: kamera upada u rupu | Kompilacija izvan Editora i simulacija pada izvan Unityja; EditMode testovi još nisu pokrenuti |

@@ -158,6 +158,12 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public IReadOnlyList<EncounterEntry> Encounters => encounters;
         public IReadOnlyList<MapObjectEntry> MapObjects => mapObjects ?? (mapObjects = new List<MapObjectEntry>());
         public IReadOnlyList<ObjectiveEntry> Objectives => objectives ?? (objectives = new List<ObjectiveEntry>());
+
+        /// <summary>Places a new map object (content seeding).</summary>
+        internal void AddMapObject(MapObjectEntry entry)
+        {
+            (mapObjects ?? (mapObjects = new List<MapObjectEntry>())).Add(entry);
+        }
         public int CombatWidth => combatWidth;
         public int CombatHeight => combatHeight;
         public int EnemyAttack => enemyAttack;

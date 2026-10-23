@@ -202,7 +202,7 @@ namespace HeroesOfMetalAge.Tests
             MissionDefinition openMission = new MissionDefinition(mission.Id, mission.Name, mission.Description, mission.HeroId, mission.ClanId,
                 mission.ClanName, mission.ClanHeroName, mission.StartingGold, mission.ArmySlots, mission.DaysPerWeek, mission.TerrainRules,
                 mission.OwnedPriceMultiplier, size, size, start, open, mission.Combat, mission.Encounters, mission.RecruitmentIds, mission.Rewards);
-            DefinitionCatalog catalog = new DefinitionCatalog(real.Units, real.Artefacts, real.Heroes, openMission);
+            DefinitionCatalog catalog = new DefinitionCatalog(real.Units, real.Artefacts, real.Heroes, openMission, real.HeroPolicy, real.Classes, real.Spells);
             campaign = new CampaignRules(catalog).NewCampaign();
             return new WorldMap(openMission);
         }

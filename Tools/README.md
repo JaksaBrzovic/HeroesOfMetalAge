@@ -7,6 +7,9 @@
   `python build_common.py` draws the button glow, the check mark and the map objects' placeholder tokens (RPG Awesome icon
   font, SIL OFL, `UiArt/icons/LICENSE.md`); `gloves.py` forges the Gloves of Metal icon. Needs Python 3 with Pillow, NumPy and
   opencv-python-headless. One-off tools: the project works without them and they can be deleted.
+- `UiArt/build_magic.py`: draws the placeholder secondary skill and spell icons, the open spell book, the spell shop and luck
+  shrine map tokens and synthesizes the spell cast and luck cues (`python build_magic.py`, Pillow and NumPy). One-off tool: the
+  project works without it once the files exist.
 - `MapLogic/`: `terrain.py` derives the Ashen Pass terrain logic from the painted map by colour, `design.py` shapes it for the
   mission (castle, portal clearing, the maiden's pocket) and writes `Editor/MapData/AshenPassTerrain.json` input for
   `MissionContentSeeder` (copy `%TEMP%/homa-map/map/final_terrain.json` there). One-off tools, safe to delete.

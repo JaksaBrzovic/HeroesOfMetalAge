@@ -32,6 +32,10 @@ namespace HeroesOfMetalAge.Bootstrap
         [SerializeField] private HeroDataBaseScriptableObject heroes;
         [SerializeField] private AudioDatabaseScriptableObject audioDatabase;
         [SerializeField] private MissionSettingsScriptableObject mission;
+        [Tooltip("Experience, secondary skills, luck, mana and the other rules of hero growth.")]
+        [SerializeField] private HeroRulesScriptableObject heroRules;
+        [SerializeField] private HeroClassDatabaseScriptableObject heroClasses;
+        [SerializeField] private SpellDatabaseScriptableObject spells;
         [SerializeField] private DialogueDatabaseScriptableObject dialogueDatabase;
         [SerializeField] private FrontEndSettingsScriptableObject frontEndSettings;
         [SerializeField] private GameHud uiPrefab;
@@ -50,8 +54,12 @@ namespace HeroesOfMetalAge.Bootstrap
         public void Configure(UnitDatabaseScriptableObject unitDatabase, ArtefactDatabaseScriptableObject artefactDatabase,
             HeroDataBaseScriptableObject heroDatabase, AudioDatabaseScriptableObject audio, MissionSettingsScriptableObject missionSettings,
             DialogueDatabaseScriptableObject dialogue, GameHud hudPrefab, GameWorld world, DebugPanelView debugPrefab, DialogueDirector dialogueOverlay,
-            FrontEndSettingsScriptableObject frontEnd, FrontEndView frontEndOverlay, MissionBriefingView briefingOverlay)
+            FrontEndSettingsScriptableObject frontEnd, FrontEndView frontEndOverlay, MissionBriefingView briefingOverlay, HeroRulesScriptableObject rules,
+            HeroClassDatabaseScriptableObject classes, SpellDatabaseScriptableObject spellDatabase)
         {
+            heroRules = rules;
+            heroClasses = classes;
+            spells = spellDatabase;
             units = unitDatabase;
             artefacts = artefactDatabase;
             heroes = heroDatabase;
@@ -69,8 +77,15 @@ namespace HeroesOfMetalAge.Bootstrap
 
         /// <summary>Authored portraits, icons, walk cycles and battlefield images by ID for the presentation layer.</summary>
         public static PresentationAssets CreatePresentationAssets(UnitDatabaseScriptableObject unitDatabase, ArtefactDatabaseScriptableObject artefactDatabase,
-            HeroDataBaseScriptableObject heroDatabase, MissionSettingsScriptableObject missionSettings)
+            HeroDataBaseScriptableObject heroDatabase, MissionSettingsScriptableObject missionSettings, HeroRulesScriptableObject rules = null,
+            SpellDatabaseScriptableObject spellDatabase = null)
         {
+            Dictionary<SecondarySkill, Sprite> skillIcons = rules != null
+                ? rules.Skills.Where(entry => entry.Icon != null).ToDictionary(entry => entry.Skill, entry => entry.Icon)
+                : new Dictionary<SecondarySkill, Sprite>();
+            Dictionary<string, Sprite> spellIcons = spellDatabase != null
+                ? spellDatabase.Spells.Where(entry => entry.Icon != null).ToDictionary(entry => entry.Id, entry => entry.Icon)
+                : new Dictionary<string, Sprite>();
             return new PresentationAssets(
                 unitDatabase.Units.ToDictionary(entry => entry.Id, entry => entry.Portrait),
                 heroDatabase.Heroes.ToDictionary(entry => entry.Id, entry => entry.Portrait),
@@ -84,7 +99,9 @@ namespace HeroesOfMetalAge.Bootstrap
                 missionSettings.MapObjects.ToDictionary(entry => entry.Id, entry => new MapFigure(entry.Sprite, entry.MapHeight)),
                 missionSettings.Encounters.Where(entry => entry.MapSprite != null).ToDictionary(entry => entry.Id, entry => entry.MapSprite),
                 heroDatabase.Heroes.ToDictionary(entry => entry.Id, entry => entry.PanelPortrait),
-                unitDatabase.Units.ToDictionary(entry => entry.Id, entry => entry.CardPortrait));
+                unitDatabase.Units.ToDictionary(entry => entry.Id, entry => entry.CardPortrait),
+                skillIcons,
+                spellIcons);
         }
 
         /// <summary>The conversation each mission site plays when the hero reaches it, by encounter or map object ID.</summary>
@@ -123,7 +140,7 @@ namespace HeroesOfMetalAge.Bootstrap
                 throw new InvalidOperationException("GameUiRoot, World, DialogueOverlay, FrontEnd or MissionBriefing prefab or the front end settings are not configured on GameBootstrap.");
             }
 
-            DefinitionCatalog catalog = ContentLoader.Load(units, artefacts, heroes, audioDatabase, mission);
+            DefinitionCatalog catalog = ContentLoader.Load(units, artefacts, heroes, audioDatabase, mission, heroRules, heroClasses, spells);
             string[] arguments = Environment.GetCommandLineArgs();
             bool isSmokeTest = arguments.Contains(SMOKE_TEST_FLAG);
             string saveFile = isSmokeTest ? SMOKE_TEST_CAMPAIGN_FILE : CAMPAIGN_FILE;
@@ -137,7 +154,7 @@ namespace HeroesOfMetalAge.Bootstrap
             GameAudio audio = gameObject.AddComponent<GameAudio>();
             audio.Initialize(audioDatabase, units, mission, session, frontEnd);
 
-            PresentationAssets media = CreatePresentationAssets(units, artefacts, heroes, mission);
+            PresentationAssets media = CreatePresentationAssets(units, artefacts, heroes, mission, heroRules, spells);
             GameHud hud = Instantiate(uiPrefab);
             hud.Initialize(session, audio, media);
             hud.IsDrivingSession = !isSmokeTest;
@@ -212,6 +229,8 @@ namespace HeroesOfMetalAge.Bootstrap
                 hud.AttachDebugPanel(debugPanel);
                 AddDialogueAuditions(debugPanel, dialogue);
                 debugPanel.AddAction("Reveal map", session.DebugRevealMap);
+                debugPanel.AddAction("Gain a level", session.DebugLevel);
+                debugPanel.AddAction("All spells", session.DebugSpells);
                 // remembered between runs: the panel cannot be opened while the intro plays
                 frontEndView.IsIntroSkippedOnClick = PlayerPrefs.GetInt(SKIP_INTRO_PREFERENCE, 0) == 1;
                 debugPanel.AddToggle("Click to skip intro", () => frontEndView.IsIntroSkippedOnClick, isOn =>

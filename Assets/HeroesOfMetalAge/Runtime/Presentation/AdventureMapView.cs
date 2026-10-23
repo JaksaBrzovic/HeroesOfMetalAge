@@ -274,6 +274,7 @@ namespace HeroesOfMetalAge.Presentation
 
             int cost = 0;
             WorldPosition previous = Session.Campaign.Position;
+            TerrainRelief pathfinding = Session.Rules.Pathfinding(Session.Campaign);
             for (int i = 0; i < routeSteps.Count; i++)
             {
                 SpriteRenderer step = routeSteps[i];
@@ -284,7 +285,7 @@ namespace HeroesOfMetalAge.Presentation
                     continue;
                 }
 
-                cost += World.StepCost(previous, steps[i]);
+                cost += World.StepCost(previous, steps[i], pathfinding);
                 previous = steps[i];
                 step.transform.localPosition = CellCenter(steps[i]);
                 step.transform.localScale = Vector3.one * (i == steps.Count - 1 ? ROUTE_END_SIZE : ROUTE_STEP_SIZE);

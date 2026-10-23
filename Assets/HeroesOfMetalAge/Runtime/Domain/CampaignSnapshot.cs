@@ -28,11 +28,21 @@ namespace HeroesOfMetalAge.Domain
         public int count;
     }
 
+    /// <summary>A secondary skill by its <see cref="SecondarySkill"/> name and its <see cref="SkillLevel"/> value.</summary>
+    [Serializable]
+    public sealed class SkillSnapshot
+    {
+        public string skill;
+        public int level;
+    }
+
     [Serializable]
     public sealed class CampaignSnapshot
     {
-        // version 4: the expanded map, map objects, keys, morale and eleven equipment places
-        public const int CURRENT_VERSION = 4;
+        // version 5: secondary skills, level-ups, primary stats, luck, the spell book and mana
+        public const int CURRENT_VERSION = 5;
+        /// <summary>Saves of this version load with the hero's starting skills and every level-up still to be granted.</summary>
+        public const int OLDEST_MIGRATED_VERSION = 4;
 
         public int version;
         public int day;
@@ -63,5 +73,19 @@ namespace HeroesOfMetalAge.Domain
         public List<StockSnapshot> stock;
         public List<string> inventory;
         public List<string> completed;
+        /// <summary>Luck from map objects until the next won battle.</summary>
+        public int luck;
+        /// <summary>Primary stats won on level-ups, in <see cref="PrimaryStat"/> order.</summary>
+        public List<int> primaryGains;
+        public List<SkillSnapshot> skills;
+        public int levelsGranted;
+        public int levelsWithoutWisdom;
+        /// <summary>The level of the level-up waiting for a choice; 0 for none.</summary>
+        public int pendingLevel;
+        public string pendingStat;
+        public List<SkillSnapshot> pendingSkills;
+        public bool spellBook;
+        public List<string> spells;
+        public int mana;
     }
 }

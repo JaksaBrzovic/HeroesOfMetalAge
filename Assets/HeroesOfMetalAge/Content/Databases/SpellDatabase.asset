@@ -1,0 +1,223 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e58e55ffff9670f429574d5c0a539364, type: 3}
+  m_Name: SpellDatabase
+  m_EditorClassIdentifier: HeroesOfMetalAge.Infrastructure::HeroesOfMetalAge.Infrastructure.Content.SpellDatabaseScriptableObject
+  spells:
+  - id: magic-arrow
+    displayName: Magic Arrow
+    description: A bolt of raw force strikes one enemy stack.
+    icon: {fileID: 21300000, guid: a5c09bac6b70d194aac942488a7c15dc, type: 3}
+    level: 1
+    manaCost: 5
+    price: 150
+    target: 0
+    effect: 0
+    baseAmount: 10
+    amountPerPower: 10
+    baseDuration: 0
+    durationPerPower: 0
+  - id: cure
+    displayName: Cure
+    description: Closes the wounds of the top creature of one of your stacks.
+    icon: {fileID: 21300000, guid: 891368ac3903da544bd02324b6fb8934, type: 3}
+    level: 1
+    manaCost: 6
+    price: 150
+    target: 1
+    effect: 1
+    baseAmount: 10
+    amountPerPower: 5
+    baseDuration: 0
+    durationPerPower: 0
+  - id: bless
+    displayName: Bless
+    description: Every blow of the stack lands with its full weight.
+    icon: {fileID: 21300000, guid: a3b7679fb2174f64e865e234cbacbc37, type: 3}
+    level: 1
+    manaCost: 5
+    price: 150
+    target: 1
+    effect: 6
+    baseAmount: 0
+    amountPerPower: 0
+    baseDuration: 0
+    durationPerPower: 1
+  - id: curse
+    displayName: Curse
+    description: The enemy stack strikes as weakly as it can.
+    icon: {fileID: 21300000, guid: ea9b27d5a7738f64e8b1ec003aca925a, type: 3}
+    level: 1
+    manaCost: 6
+    price: 150
+    target: 0
+    effect: 7
+    baseAmount: 0
+    amountPerPower: 0
+    baseDuration: 0
+    durationPerPower: 1
+  - id: haste
+    displayName: Haste
+    description: A drumbeat quickens the stack's feet.
+    icon: {fileID: 21300000, guid: f1f489b51964c804d9a021360254befe, type: 3}
+    level: 1
+    manaCost: 6
+    price: 150
+    target: 1
+    effect: 4
+    baseAmount: 3
+    amountPerPower: 0
+    baseDuration: 0
+    durationPerPower: 1
+  - id: slow
+    displayName: Slow
+    description: The enemy stack wades as if through tar.
+    icon: {fileID: 21300000, guid: 34796552df60aab49a7e5eb243c45c51, type: 3}
+    level: 1
+    manaCost: 6
+    price: 150
+    target: 0
+    effect: 4
+    baseAmount: -2
+    amountPerPower: 0
+    baseDuration: 0
+    durationPerPower: 1
+  - id: bloodlust
+    displayName: Bloodlust
+    description: Battle fury raises the stack's attack.
+    icon: {fileID: 21300000, guid: 8cf085ec3eec17f4a868f328d266ba1d, type: 3}
+    level: 1
+    manaCost: 5
+    price: 150
+    target: 1
+    effect: 2
+    baseAmount: 3
+    amountPerPower: 0
+    baseDuration: 0
+    durationPerPower: 1
+  - id: stone-skin
+    displayName: Stone Skin
+    description: The stack's skin hardens like granite.
+    icon: {fileID: 21300000, guid: 3eb0bcdbeb5a25f40ac161bad01eea51, type: 3}
+    level: 1
+    manaCost: 5
+    price: 150
+    target: 1
+    effect: 3
+    baseAmount: 3
+    amountPerPower: 0
+    baseDuration: 0
+    durationPerPower: 1
+  - id: shield
+    displayName: Shield
+    description: An unseen shield turns aside part of every melee blow.
+    icon: {fileID: 21300000, guid: 41d6b7244eb62cc4fa4fd354c268ce2f, type: 3}
+    level: 1
+    manaCost: 5
+    price: 150
+    target: 1
+    effect: 5
+    baseAmount: 15
+    amountPerPower: 0
+    baseDuration: 0
+    durationPerPower: 1
+  - id: lightning-bolt
+    displayName: Lightning Bolt
+    description: Thunder from a clear sky strikes one enemy stack.
+    icon: {fileID: 21300000, guid: 5ecd55c0448a87e45aa77d700231e61f, type: 3}
+    level: 2
+    manaCost: 10
+    price: 300
+    target: 0
+    effect: 0
+    baseAmount: 10
+    amountPerPower: 25
+    baseDuration: 0
+    durationPerPower: 0
+  - id: weakness
+    displayName: Weakness
+    description: The enemy stack's arms grow heavy.
+    icon: {fileID: 21300000, guid: e01dc7ac1aa0ddf4fb7dcef98cf32489, type: 3}
+    level: 2
+    manaCost: 8
+    price: 300
+    target: 0
+    effect: 2
+    baseAmount: -3
+    amountPerPower: 0
+    baseDuration: 0
+    durationPerPower: 1
+  - id: fireball
+    displayName: Fireball
+    description: A ball of fire bursts over a hex and burns every stack around it.
+    icon: {fileID: 21300000, guid: f2fb8dd6f0fb2e243870e454eea3e652, type: 3}
+    level: 3
+    manaCost: 15
+    price: 600
+    target: 4
+    effect: 0
+    baseAmount: 15
+    amountPerPower: 10
+    baseDuration: 0
+    durationPerPower: 0
+  - id: battle-hymn
+    displayName: Battle Hymn
+    description: A war song lifts the attack of your whole warhost.
+    icon: {fileID: 21300000, guid: 663a95e30ce1ebf44a55756e37f69849, type: 3}
+    level: 4
+    manaCost: 16
+    price: 1000
+    target: 3
+    effect: 2
+    baseAmount: 2
+    amountPerPower: 0
+    baseDuration: 0
+    durationPerPower: 1
+  - id: meteor-shower
+    displayName: Meteor Shower
+    description: Rocks of fire fall on a hex and everything around it.
+    icon: {fileID: 21300000, guid: d50ae33cb2a51594a810f9690a6c2de9, type: 3}
+    level: 4
+    manaCost: 16
+    price: 1000
+    target: 4
+    effect: 0
+    baseAmount: 25
+    amountPerPower: 25
+    baseDuration: 0
+    durationPerPower: 0
+  - id: implosion
+    displayName: Implosion
+    description: One enemy stack is crushed from within.
+    icon: {fileID: 21300000, guid: 13b00e5e3b1095649927d2daf191298a, type: 3}
+    level: 5
+    manaCost: 30
+    price: 1600
+    target: 0
+    effect: 0
+    baseAmount: 100
+    amountPerPower: 75
+    baseDuration: 0
+    durationPerPower: 0
+  - id: armageddon
+    displayName: Armageddon
+    description: Fire rains on the whole battlefield, friend and foe alike.
+    icon: {fileID: 21300000, guid: 54dbe31371debf04db7149adbf0aa1d7, type: 3}
+    level: 5
+    manaCost: 24
+    price: 1600
+    target: 5
+    effect: 0
+    baseAmount: 30
+    amountPerPower: 50
+    baseDuration: 0
+    durationPerPower: 0

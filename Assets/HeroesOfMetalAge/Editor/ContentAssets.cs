@@ -32,12 +32,21 @@ namespace HeroesOfMetalAge.EditorTools
         public const string MISSION_BRIEFING_PATH = UI_FOLDER + "/MissionBriefing.prefab";
         public const string NUKE_MATERIAL_PATH = "Assets/HeroesOfMetalAge/Content/Rendering/NukeExplosion.mat";
         public const string NUKE_SHADER = "HeroesOfMetalAge/UI/NukeExplosion";
+        public const string HERO_RULES_PATH = DATABASE_FOLDER + "/HeroRules.asset";
+        public const string HERO_CLASSES_PATH = DATABASE_FOLDER + "/HeroClassDatabase.asset";
+        public const string SPELLS_PATH = DATABASE_FOLDER + "/SpellDatabase.asset";
+        public const string LEVEL_UP_PATH = UI_FOLDER + "/Screens/LevelUp.prefab";
+        public const string SPELL_BOOK_PATH = UI_FOLDER + "/Screens/SpellBook.prefab";
+        public const string SPELL_SHOP_PATH = UI_FOLDER + "/Screens/SpellShop.prefab";
 
         public static UnitDatabaseScriptableObject Units => Load<UnitDatabaseScriptableObject>(DATABASE_FOLDER + "/UnitDatabase.asset");
         public static ArtefactDatabaseScriptableObject Artefacts => Load<ArtefactDatabaseScriptableObject>(DATABASE_FOLDER + "/ArtefactDatabase.asset");
         public static HeroDataBaseScriptableObject Heroes => Load<HeroDataBaseScriptableObject>(DATABASE_FOLDER + "/HeroDatabase.asset");
         public static AudioDatabaseScriptableObject Audio => Load<AudioDatabaseScriptableObject>(DATABASE_FOLDER + "/AudioDatabase.asset");
         public static MissionSettingsScriptableObject Mission => Load<MissionSettingsScriptableObject>(DATABASE_FOLDER + "/AshenPass.asset");
+        public static HeroRulesScriptableObject HeroRules => Load<HeroRulesScriptableObject>(HERO_RULES_PATH);
+        public static HeroClassDatabaseScriptableObject HeroClasses => Load<HeroClassDatabaseScriptableObject>(HERO_CLASSES_PATH);
+        public static SpellDatabaseScriptableObject Spells => Load<SpellDatabaseScriptableObject>(SPELLS_PATH);
         public static FrontEndSettingsScriptableObject FrontEnd => Load<FrontEndSettingsScriptableObject>(FRONT_END_SETTINGS_PATH);
         public static DialogueDatabaseScriptableObject Dialogue => Load<DialogueDatabaseScriptableObject>(DIALOGUE_DATABASE_PATH);
         public static AudioSystemSettings AudioSettings => Load<AudioSystemSettings>(AUDIO_FOLDER + "/GameAudioSettings.asset");
@@ -61,7 +70,7 @@ namespace HeroesOfMetalAge.EditorTools
         /// <summary>The validated gameplay catalog built from the authored databases.</summary>
         public static DefinitionCatalog LoadCatalog()
         {
-            return ContentLoader.Load(Units, Artefacts, Heroes, Audio, Mission);
+            return ContentLoader.Load(Units, Artefacts, Heroes, Audio, Mission, HeroRules, HeroClasses, Spells);
         }
 
         private static T Load<T>(string path)

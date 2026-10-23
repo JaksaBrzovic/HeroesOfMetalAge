@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+
 namespace HeroesOfMetalAge.Domain
 {
     /// <summary>
@@ -31,14 +34,19 @@ namespace HeroesOfMetalAge.Domain
         /// <summary>A place of lore; visiting it is a goal.</summary>
         Oracle,
         /// <summary>Leaves the mission once the required goals are done.</summary>
-        ExitPortal
+        ExitPortal,
+        /// <summary>Raises the army's luck until the next won battle.</summary>
+        LuckShrine,
+        /// <summary>Sells a spell book (for its gold) and the spells it lists.</summary>
+        SpellShop
     }
 
     /// <summary>One authored object on the adventure map. Which values matter depends on <see cref="Kind"/>.</summary>
     public sealed class MapObjectDefinition
     {
         public MapObjectDefinition(string id, MapObjectKind kind, WorldPosition position, string name, string description, int gold, int experience,
-            string artefactId, int attackBonus, int defenseBonus, int moraleBonus, string unitId, int weeklyGrowth, string keyId)
+            string artefactId, int attackBonus, int defenseBonus, int moraleBonus, string unitId, int weeklyGrowth, string keyId, int luckBonus = 0,
+            IEnumerable<string> spellIds = null)
         {
             Id = id;
             Kind = kind;
@@ -54,6 +62,8 @@ namespace HeroesOfMetalAge.Domain
             UnitId = string.IsNullOrEmpty(unitId) ? null : unitId;
             WeeklyGrowth = weeklyGrowth;
             KeyId = string.IsNullOrEmpty(keyId) ? null : keyId;
+            LuckBonus = luckBonus;
+            SpellIds = (spellIds ?? Enumerable.Empty<string>()).ToList().AsReadOnly();
         }
 
         public string Id { get; }
@@ -61,7 +71,7 @@ namespace HeroesOfMetalAge.Domain
         public WorldPosition Position { get; }
         public string Name { get; }
         public string Description { get; }
-        /// <summary>Gold pile: its gold; chest: the gold choice; mill: the weekly gold.</summary>
+        /// <summary>Gold pile: its gold; chest: the gold choice; mill: the weekly gold; spell shop: the spell book's price.</summary>
         public int Gold { get; }
         /// <summary>Chest: the experience choice.</summary>
         public int Experience { get; }
@@ -76,6 +86,9 @@ namespace HeroesOfMetalAge.Domain
         public int WeeklyGrowth { get; }
         /// <summary>Quest giver: the key handed over; border gate: the key that opens it.</summary>
         public string KeyId { get; }
+        public int LuckBonus { get; }
+        /// <summary>Spell shop: the spells for sale.</summary>
+        public IReadOnlyList<string> SpellIds { get; }
 
         /// <summary>
         /// Objects that stop a ride passing over them: what is taken or opened there (and then leaves the map). The hero rides

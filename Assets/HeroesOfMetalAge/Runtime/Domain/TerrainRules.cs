@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace HeroesOfMetalAge.Domain
@@ -38,6 +39,22 @@ namespace HeroesOfMetalAge.Domain
         public int StepCost(TerrainType terrain, bool isDiagonal)
         {
             int cost = Cost(terrain);
+            return isDiagonal ? cost * DiagonalCostPercent / 100 : cost;
+        }
+
+        /// <summary>
+        /// The step cost with Pathfinding: only what the terrain costs above <paramref name="unpenalizedCost"/> is cut, by
+        /// <paramref name="reductionPercent"/> percent; cheaper terrain such as roads keeps its cost.
+        /// </summary>
+        public int StepCost(TerrainType terrain, bool isDiagonal, int reductionPercent, int unpenalizedCost)
+        {
+            int cost = Cost(terrain);
+            if (reductionPercent > 0 && cost > unpenalizedCost)
+            {
+                int penalty = cost - unpenalizedCost;
+                cost = unpenalizedCost + penalty * (100 - Math.Min(100, reductionPercent)) / 100;
+            }
+
             return isDiagonal ? cost * DiagonalCostPercent / 100 : cost;
         }
     }

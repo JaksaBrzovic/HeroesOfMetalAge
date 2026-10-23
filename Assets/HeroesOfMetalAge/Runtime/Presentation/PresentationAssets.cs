@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using HeroesOfMetalAge.Domain;
 using UnityEngine;
 
 namespace HeroesOfMetalAge.Presentation
@@ -48,13 +49,16 @@ namespace HeroesOfMetalAge.Presentation
         private readonly IReadOnlyDictionary<string, Sprite> unitCards;
         private readonly IReadOnlyDictionary<string, MapFigure> objectFigures;
         private readonly IReadOnlyDictionary<string, Sprite> encounterFigures;
+        private readonly IReadOnlyDictionary<SecondarySkill, Sprite> skillIcons;
+        private readonly IReadOnlyDictionary<string, Sprite> spellIcons;
 
         public PresentationAssets(IReadOnlyDictionary<string, Sprite> units, IReadOnlyDictionary<string, Sprite> heroes,
             IReadOnlyDictionary<string, Sprite> artefacts, Sprite town, IReadOnlyDictionary<string, FigureAnimation> unitAnimations = null,
             IReadOnlyDictionary<string, FigureAnimation> heroAnimations = null, IReadOnlyDictionary<string, Sprite> battlegrounds = null,
             Sprite defaultBattleground = null, IReadOnlyDictionary<string, Sprite> heroScreenPortraits = null,
             IReadOnlyDictionary<string, MapFigure> objectFigures = null, IReadOnlyDictionary<string, Sprite> encounterFigures = null,
-            IReadOnlyDictionary<string, Sprite> heroPanelPortraits = null, IReadOnlyDictionary<string, Sprite> unitCards = null)
+            IReadOnlyDictionary<string, Sprite> heroPanelPortraits = null, IReadOnlyDictionary<string, Sprite> unitCards = null,
+            IReadOnlyDictionary<SecondarySkill, Sprite> skillIcons = null, IReadOnlyDictionary<string, Sprite> spellIcons = null)
         {
             this.units = units;
             this.heroes = heroes;
@@ -67,6 +71,8 @@ namespace HeroesOfMetalAge.Presentation
             this.unitCards = unitCards ?? NoSprites;
             this.objectFigures = objectFigures ?? new Dictionary<string, MapFigure>();
             this.encounterFigures = encounterFigures ?? NoSprites;
+            this.skillIcons = skillIcons ?? new Dictionary<SecondarySkill, Sprite>();
+            this.spellIcons = spellIcons ?? NoSprites;
             Town = town;
             DefaultBattleground = defaultBattleground;
         }
@@ -89,6 +95,18 @@ namespace HeroesOfMetalAge.Presentation
         public Sprite Artefact(string id)
         {
             return artefacts.TryGetValue(id, out Sprite sprite) ? sprite : null;
+        }
+
+        /// <summary>A secondary skill's icon, or null.</summary>
+        public Sprite SkillIcon(SecondarySkill skill)
+        {
+            return skillIcons.TryGetValue(skill, out Sprite sprite) ? sprite : null;
+        }
+
+        /// <summary>A spell's icon, or null.</summary>
+        public Sprite SpellIcon(string id)
+        {
+            return spellIcons.TryGetValue(id, out Sprite sprite) ? sprite : null;
         }
 
         /// <summary>A unit's picture for the UI, or null to use its figure.</summary>

@@ -82,7 +82,15 @@ namespace HeroesOfMetalAge.Presentation
                     Session.FinishMission();
                     break;
                 default:
-                    Session.FightEncounter();
+                    if (IsOfferingToJoin())
+                    {
+                        Session.HireEncounter();
+                    }
+                    else
+                    {
+                        Session.FightEncounter();
+                    }
+
                     break;
             }
         }
@@ -92,6 +100,13 @@ namespace HeroesOfMetalAge.Presentation
             if (Session.Dialog == DialogKind.Chest)
             {
                 Session.OpenChest(false);
+                return;
+            }
+
+            // an army willing to join can still be fought; Escape leaves
+            if (IsOfferingToJoin())
+            {
+                Session.FightEncounter();
                 return;
             }
 
@@ -111,8 +126,23 @@ namespace HeroesOfMetalAge.Presentation
 
             string treasure = encounter.RewardArtefactId != null ? "They guard " + Catalog.Artefact(encounter.RewardArtefactId).Name + "."
                 : "Perhaps an artefact among the fallen.";
-            Show(encounter.Description + "\nVictory: " + encounter.RewardExperience + " XP, about " + encounter.RewardGold + " gold. " + treasure,
-                "TO BATTLE", true, "LEAVE");
+            string commander = encounter.Commander != null ? "\n" + encounter.Commander.Name + " leads them and wields magic." : string.Empty;
+            string victory = encounter.Description + commander + "\nVictory: " + encounter.RewardExperience + " XP, about " + encounter.RewardGold
+                + " gold. " + treasure;
+            int price = dialog == DialogKind.Hostile ? Rules.JoinPrice(Campaign, encounter) : -1;
+            if (price >= 0)
+            {
+                Show(victory + "\nYour Diplomacy sways them: they would join you for " + price + " gold.", "HIRE FOR " + price + " GOLD",
+                    price <= Campaign.Gold, "TO BATTLE");
+                return;
+            }
+
+            Show(victory, "TO BATTLE", true, "LEAVE");
+        }
+
+        private bool IsOfferingToJoin()
+        {
+            return Session.Dialog == DialogKind.Hostile && Session.Encounter != null && Rules.JoinPrice(Campaign, Session.Encounter) >= 0;
         }
 
         private void ShowChest(MapObjectDefinition chest)

@@ -15,7 +15,7 @@ namespace HeroesOfMetalAge.Presentation
         private const float NOTICE_SECONDS = 5f;
         private const float HIT_SECONDS = 1.5f;
         private const string ADVENTURE_HELP = "CLICK TO PLAN / AGAIN OR SPACE TO RIDE / DRAG TO LOOK / WHEEL TO ZOOM / E END DAY / H HERO";
-        private const string BATTLE_HELP = "CLICK A BLUE HEX TO MOVE / CLICK AN ENEMY TO ATTACK / RANGED STACKS STRIKE FROM AFAR";
+        private const string BATTLE_HELP = "CLICK A HEX TO MOVE / AN ENEMY TO ATTACK / C SPELLS";
         private const string MENU_HELP = "ESC RETURN / D DEBUG PANEL / M MUTE";
 
         [SerializeField] private UiTheme theme;
@@ -39,6 +39,9 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private RewardsCanvasView rewardsView;
         [SerializeField] private DefeatCanvasView defeatView;
         [SerializeField] private SettingsCanvasView settingsView;
+        [SerializeField] private LevelUpCanvasView levelUpView;
+        [SerializeField] private SpellBookCanvasView spellBookView;
+        [SerializeField] private SpellShopCanvasView spellShopView;
 
         private CanvasViewContext context;
         private DebugPanelView debugPanel;
@@ -88,11 +91,15 @@ namespace HeroesOfMetalAge.Presentation
         public RewardsCanvasView RewardsView => rewardsView;
         public DefeatCanvasView DefeatView => defeatView;
         public EndDayView EndDayView => endDayView;
+        public LevelUpCanvasView LevelUpView => levelUpView;
+        public SpellBookCanvasView SpellBookView => spellBookView;
+        public SpellShopCanvasView SpellShopView => spellShopView;
         public EventSystem Events => eventSystem;
 
         private CanvasScreenView[] Screens => new CanvasScreenView[]
         {
-            worldView, combatView, townView, heroView, dialogView, victoryView, rewardsView, defeatView, settingsView
+            worldView, combatView, townView, heroView, dialogView, victoryView, rewardsView, defeatView, settingsView, levelUpView, spellBookView,
+            spellShopView
         };
 
         /// <summary>The top bar of the screen on display (the world, battle, town or hero screen).</summary>
@@ -128,7 +135,8 @@ namespace HeroesOfMetalAge.Presentation
         public void Initialize(GameSession session, IAudioControls audio, PresentationAssets media)
         {
             if (theme == null || designFrame == null || eventSystem == null || notifications == null
-                || contentGroup == null || dialogGroup == null || victoryView == null || rewardsView == null || defeatView == null || endDayView == null)
+                || contentGroup == null || dialogGroup == null || victoryView == null || rewardsView == null || defeatView == null || endDayView == null
+                || levelUpView == null || spellBookView == null || spellShopView == null)
             {
                 throw new InvalidOperationException($"GameHud on '{name}' has unassigned references. Assign them in the GameUiRoot prefab.");
             }
@@ -292,6 +300,11 @@ namespace HeroesOfMetalAge.Presentation
                 session.ShowHero();
             }
 
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                session.OpenSpellBook();
+            }
+
             session.Tick(Time.deltaTime);
         }
 
@@ -309,6 +322,10 @@ namespace HeroesOfMetalAge.Presentation
             else if (session.Dialog != DialogKind.None || session.Screen == GameScreen.Hero || session.Screen == GameScreen.Town)
             {
                 session.Back();
+            }
+            else if (session.TargetingSpellId != null)
+            {
+                session.CancelSpell();
             }
             else
             {
@@ -375,6 +392,9 @@ namespace HeroesOfMetalAge.Presentation
             ShowScreen(victoryView, session.Dialog == DialogKind.Victory);
             ShowScreen(rewardsView, session.Dialog == DialogKind.Rewards);
             ShowScreen(defeatView, session.Dialog == DialogKind.Defeat);
+            ShowScreen(levelUpView, session.Dialog == DialogKind.LevelUp);
+            ShowScreen(spellBookView, session.Dialog == DialogKind.SpellBook);
+            ShowScreen(spellShopView, session.Dialog == DialogKind.SpellShop);
             ShowScreen(settingsView, isSettingsOpen);
             if (debugPanel != null)
             {
@@ -523,6 +543,12 @@ namespace HeroesOfMetalAge.Presentation
                     return rewardsView.PrimaryButton;
                 case DialogKind.Defeat:
                     return defeatView.PrimaryButton;
+                case DialogKind.LevelUp:
+                    return levelUpView.PrimaryButton;
+                case DialogKind.SpellBook:
+                    return spellBookView.CloseButton;
+                case DialogKind.SpellShop:
+                    return spellShopView.CloseButton;
                 default:
                     return dialogView.PrimaryButton;
             }

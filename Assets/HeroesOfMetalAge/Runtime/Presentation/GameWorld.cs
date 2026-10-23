@@ -101,7 +101,16 @@ namespace HeroesOfMetalAge.Presentation
 
             if (Session.Screen == GameScreen.Battle && battlefield.TryGetHex(point, out HexPosition hex))
             {
-                Session.BattleAction(new BattleAction(BattleActionKind.MoveOrAttack, hex));
+                // a spell picked in the spell book is cast at the clicked hex
+                if (Session.TargetingSpellId != null)
+                {
+                    Session.CastAt(hex);
+                }
+                else
+                {
+                    Session.BattleAction(new BattleAction(BattleActionKind.MoveOrAttack, hex));
+                }
+
                 return true;
             }
 

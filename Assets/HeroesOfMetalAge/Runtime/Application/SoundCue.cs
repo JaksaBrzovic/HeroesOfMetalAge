@@ -36,7 +36,13 @@ namespace HeroesOfMetalAge.Application
         /// <summary>A shrine raises the hero's attack, defense or morale.</summary>
         Blessing,
         /// <summary>A border gate opens for its key.</summary>
-        GateOpened
+        GateOpened,
+        /// <summary>A hero casts a spell in battle.</summary>
+        SpellCast,
+        /// <summary>Good luck doubles a strike's damage.</summary>
+        GoodLuck,
+        /// <summary>Bad luck halves a strike's damage.</summary>
+        BadLuck
     }
 
     /// <summary>The synchronized music layers, in mixing order.</summary>

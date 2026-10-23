@@ -12,6 +12,8 @@ namespace HeroesOfMetalAge.Domain
     {
         public const int MAXIMUM_STACK_COUNT = 100000;
         public const int MAXIMUM_MORALE = 3;
+        public const int MAXIMUM_LUCK = 3;
+        public const int MAXIMUM_MANA = 100000;
 
         private readonly DefinitionCatalog catalog;
 
@@ -21,6 +23,7 @@ namespace HeroesOfMetalAge.Domain
         }
 
         private MissionDefinition Mission => catalog.Mission;
+        private HeroPolicy Policy => catalog.HeroPolicy;
 
         public CampaignState NewCampaign()
         {
@@ -30,13 +33,15 @@ namespace HeroesOfMetalAge.Domain
                 Day = 1,
                 Gold = Mission.StartingGold,
                 Position = Mission.Start,
-                Movement = hero.DailyMovement,
                 HeroId = hero.Id,
                 MissionId = Mission.Id,
                 TownOwnerId = Mission.ClanId,
                 Explored = new ExploredMap(Mission.Width, Mission.Height)
             };
 
+            GiveStartingMagicAndSkills(state, hero);
+            state.Movement = DailyMovement(state);
+            state.Mana = MaximumMana(state);
             Scout(state);
             state.ArmyData.AddRange(hero.StartingArmy);
             foreach (string id in Mission.RecruitmentIds)
@@ -55,13 +60,14 @@ namespace HeroesOfMetalAge.Domain
         #region DERIVED STATS
         public int Level(CampaignState campaign)
         {
-            return (int)Math.Min(int.MaxValue, 1L + campaign.Experience / catalog.Hero(campaign.HeroId).ExperiencePerLevel);
+            return Policy.Experience.Level(campaign.Experience);
         }
 
+        /// <summary>Attack: the hero's base, level-ups, worn artefacts and shrines.</summary>
         public int Attack(CampaignState campaign)
         {
             HeroDefinition hero = catalog.Hero(campaign.HeroId);
-            long attack = (long)hero.BaseAttack + (long)(Level(campaign) - 1) * hero.AttackPerLevel + EquippedBonus(campaign, EquippedStat.Attack)
+            long attack = (long)hero.BaseAttack + campaign.PrimaryGain(PrimaryStat.Attack) + EquippedBonus(campaign, EquippedStat.Attack)
                 + ShrineBonus(campaign, MapObjectKind.AttackShrine);
             return (int)Math.Min(int.MaxValue, attack);
         }
@@ -69,16 +75,139 @@ namespace HeroesOfMetalAge.Domain
         public int Defense(CampaignState campaign)
         {
             HeroDefinition hero = catalog.Hero(campaign.HeroId);
-            long defense = (long)hero.BaseDefense + (Level(campaign) - 1) / hero.DefenseLevelInterval + EquippedBonus(campaign, EquippedStat.Defense)
+            long defense = (long)hero.BaseDefense + campaign.PrimaryGain(PrimaryStat.Defense) + EquippedBonus(campaign, EquippedStat.Defense)
                 + ShrineBonus(campaign, MapObjectKind.DefenseShrine);
             return (int)Math.Min(int.MaxValue, defense);
         }
 
-        /// <summary>The army's morale from worn artefacts and map objects, between -3 and +3.</summary>
+        /// <summary>Spell power: how strong and how long the hero's spells are.</summary>
+        public int SpellPower(CampaignState campaign)
+        {
+            HeroDefinition hero = catalog.Hero(campaign.HeroId);
+            long power = (long)hero.BaseSpellPower + campaign.PrimaryGain(PrimaryStat.SpellPower) + EquippedBonus(campaign, EquippedStat.SpellPower);
+            return (int)Math.Min(int.MaxValue, power);
+        }
+
+        /// <summary>Knowledge: how much mana the hero holds.</summary>
+        public int Knowledge(CampaignState campaign)
+        {
+            HeroDefinition hero = catalog.Hero(campaign.HeroId);
+            long knowledge = (long)hero.BaseKnowledge + campaign.PrimaryGain(PrimaryStat.Knowledge) + EquippedBonus(campaign, EquippedStat.Knowledge);
+            return (int)Math.Min(int.MaxValue, knowledge);
+        }
+
+        public int Primary(CampaignState campaign, PrimaryStat stat)
+        {
+            switch (stat)
+            {
+                case PrimaryStat.Attack:
+                    return Attack(campaign);
+                case PrimaryStat.Defense:
+                    return Defense(campaign);
+                case PrimaryStat.SpellPower:
+                    return SpellPower(campaign);
+                default:
+                    return Knowledge(campaign);
+            }
+        }
+
+        /// <summary>The army's morale from worn artefacts, map objects and Leadership, between -3 and +3.</summary>
         public int Morale(CampaignState campaign)
         {
-            long morale = (long)EquippedBonus(campaign, EquippedStat.Morale) + campaign.MoraleBonus;
+            long morale = (long)EquippedBonus(campaign, EquippedStat.Morale) + campaign.MoraleBonus + (int)SkillValue(campaign, SecondarySkill.Leadership);
             return (int)Math.Max(-MAXIMUM_MORALE, Math.Min(MAXIMUM_MORALE, morale));
+        }
+
+        /// <summary>The army's luck from worn artefacts, map objects and the Luck skill, between -3 and +3.</summary>
+        public int Luck(CampaignState campaign)
+        {
+            long luck = (long)EquippedBonus(campaign, EquippedStat.Luck) + campaign.LuckBonus + (int)SkillValue(campaign, SecondarySkill.Luck);
+            return (int)Math.Max(-MAXIMUM_LUCK, Math.Min(MAXIMUM_LUCK, luck));
+        }
+
+        /// <summary>A secondary skill's value for the hero at the level known; 0 when not known (see the hero rules asset).</summary>
+        public double SkillValue(CampaignState campaign, SecondarySkill skill)
+        {
+            return Policy.Value(skill, campaign.SkillLevelOf(skill));
+        }
+
+        /// <summary>Knowledge times the mana per point, raised by Intelligence.</summary>
+        public int MaximumMana(CampaignState campaign)
+        {
+            double mana = (double)Knowledge(campaign) * Policy.ManaPerKnowledge * (1d + SkillValue(campaign, SecondarySkill.Intelligence));
+            return (int)Math.Max(0, Math.Min(MAXIMUM_MANA, Math.Floor(mana + 1e-9)));
+        }
+
+        /// <summary>Mana regained every day: the rules' base plus Mysticism.</summary>
+        public int ManaRegeneration(CampaignState campaign)
+        {
+            return Policy.ManaRegeneration + (int)SkillValue(campaign, SecondarySkill.Mysticism);
+        }
+
+        /// <summary>Gold Estates bring every day.</summary>
+        public int DailyIncome(CampaignState campaign)
+        {
+            return (int)SkillValue(campaign, SecondarySkill.Estates);
+        }
+
+        /// <summary>What Pathfinding cuts from rough terrain for this hero.</summary>
+        public TerrainRelief Pathfinding(CampaignState campaign)
+        {
+            int percent = (int)Math.Round(SkillValue(campaign, SecondarySkill.Pathfinding) * 100d);
+            return new TerrainRelief(percent, Policy.UnpenalizedTerrainCost);
+        }
+
+        /// <summary>The highest spell level the hero can learn: Wisdom's level, else the rules' level without Wisdom.</summary>
+        public int MaximumSpellLevel(CampaignState campaign)
+        {
+            return Math.Max(Policy.SpellLevelWithoutWisdom, (int)SkillValue(campaign, SecondarySkill.Wisdom));
+        }
+
+        public bool CanLearn(CampaignState campaign, SpellDefinition spell)
+        {
+            return spell.Level <= MaximumSpellLevel(campaign);
+        }
+
+        /// <summary>A rough measure of an army's fighting strength: every creature's health times its average damage.</summary>
+        public double ArmyStrength(IReadOnlyList<Troop> army)
+        {
+            double strength = 0d;
+            foreach (Troop troop in army)
+            {
+                UnitDefinition unit = catalog.Unit(troop.UnitId);
+                strength += (double)troop.Count * unit.Health * (unit.MinimumDamage + unit.MaximumDamage) / 2d;
+            }
+
+            return strength;
+        }
+
+        /// <summary>
+        /// Diplomacy: the gold a hostile army asks for joining the hero, or -1 when it will not join. Only armies without a
+        /// commander consider it, and only when the hero's army is strong enough and the army is willing: each army's
+        /// willingness is fixed by its ID, so asking again never changes the answer, while a better Diplomacy convinces more.
+        /// </summary>
+        public int JoinPrice(CampaignState campaign, EncounterDefinition encounter)
+        {
+            SkillLevel diplomacy = campaign.SkillLevelOf(SecondarySkill.Diplomacy);
+            if (encounter.Kind != EncounterKind.Sentinel || encounter.Commander != null || campaign.IsCompleted(encounter.Id) || diplomacy == SkillLevel.None)
+            {
+                return -1;
+            }
+
+            if (ArmyStrength(campaign.Army) < ArmyStrength(encounter.Army) * Policy.JoinStrengthRatio
+                || Disposition(encounter.Id) >= Policy.Value(SecondarySkill.Diplomacy, diplomacy))
+            {
+                return -1;
+            }
+
+            return WholeGold(ArmyValue(encounter.Army) * Policy.JoinCostMultiplier);
+        }
+
+        /// <summary>The gold surrendering costs: a share of the surviving army's price, cut by Diplomacy.</summary>
+        public int SurrenderPrice(CampaignState campaign, IReadOnlyList<Troop> survivors)
+        {
+            double discount = Policy.SurrenderDiscount(campaign.SkillLevelOf(SecondarySkill.Diplomacy));
+            return WholeGold(ArmyValue(survivors) * Policy.SurrenderCostMultiplier * (1d - discount));
         }
 
         /// <summary>The week of a campaign day, from 1.</summary>
@@ -92,9 +221,11 @@ namespace HeroesOfMetalAge.Domain
             return EquippedBonus(campaign, EquippedStat.Speed);
         }
 
+        /// <summary>Movement points per day on land: the hero's, raised by Logistics.</summary>
         public int DailyMovement(CampaignState campaign)
         {
-            return catalog.Hero(campaign.HeroId).DailyMovement;
+            double movement = catalog.Hero(campaign.HeroId).DailyMovement * (1d + SkillValue(campaign, SecondarySkill.Logistics));
+            return (int)Math.Max(1, Math.Min(int.MaxValue, Math.Round(movement, MidpointRounding.AwayFromZero)));
         }
 
         /// <summary>Recruitment price per creature; the owned-town discount rounds up to whole gold.</summary>
@@ -189,6 +320,13 @@ namespace HeroesOfMetalAge.Domain
 
             campaign.Day++;
             campaign.Movement = DailyMovement(campaign);
+            campaign.Gold = (int)Math.Min(int.MaxValue, (long)campaign.Gold + DailyIncome(campaign));
+            // mana regrows up to the maximum; mana above it (from a full restore before Intelligence was lost) stays
+            int maximumMana = MaximumMana(campaign);
+            if (campaign.Mana < maximumMana)
+            {
+                campaign.Mana = Math.Min(maximumMana, campaign.Mana + ManaRegeneration(campaign));
+            }
             if (isWeekEnd)
             {
                 foreach (string id in Mission.RecruitmentIds)
@@ -324,7 +462,7 @@ namespace HeroesOfMetalAge.Domain
                 return CommandResult.Reject("Invalid movement step.");
             }
 
-            int cost = map.StepCost(campaign.Position, next);
+            int cost = map.StepCost(campaign.Position, next, Pathfinding(campaign));
             if (campaign.Movement < cost)
             {
                 return CommandResult.Reject("Movement spent. End the day to continue.");
@@ -383,7 +521,9 @@ namespace HeroesOfMetalAge.Domain
         }
 
         /// <summary>Applies battle survivors, experience and the rolled rewards exactly once per encounter.</summary>
-        public CommandResult ApplyVictory(CampaignState campaign, EncounterDefinition encounter, IReadOnlyList<Troop> survivors, VictoryRewards rewards)
+        /// <param name="manaLeft">The hero's mana after the battle; negative keeps the campaign's.</param>
+        public CommandResult ApplyVictory(CampaignState campaign, EncounterDefinition encounter, IReadOnlyList<Troop> survivors, VictoryRewards rewards,
+            int manaLeft = -1)
         {
             if (campaign.IsCompleted(encounter.Id))
             {
@@ -410,6 +550,11 @@ namespace HeroesOfMetalAge.Domain
             campaign.InventoryData.AddRange(rewards.ArtefactIds);
             // the blessings of map objects last until the next won battle
             campaign.MoraleBonus = 0;
+            campaign.LuckBonus = 0;
+            if (manaLeft >= 0)
+            {
+                campaign.Mana = Math.Min(MAXIMUM_MANA, manaLeft);
+            }
 
             campaign.CompletedData.Add(encounter.Id);
             if (encounter.Kind == EncounterKind.Town)
@@ -418,6 +563,68 @@ namespace HeroesOfMetalAge.Domain
             }
 
             return CommandResult.Ok();
+        }
+
+        /// <summary>Diplomacy: the hostile army joins for its price (see <see cref="JoinPrice"/>) and counts as resolved.</summary>
+        public CommandResult Hire(CampaignState campaign, EncounterDefinition encounter)
+        {
+            int price = JoinPrice(campaign, encounter);
+            if (price < 0)
+            {
+                return CommandResult.Reject(encounter.Name + " will not join you.");
+            }
+
+            if (price > campaign.Gold)
+            {
+                return CommandResult.Reject("Not enough gold.");
+            }
+
+            List<Troop> merged = Merge(campaign.Army, encounter.Army);
+            if (merged == null)
+            {
+                return CommandResult.Reject("The army cannot hold this group.");
+            }
+
+            campaign.ArmyData.Clear();
+            campaign.ArmyData.AddRange(merged);
+            campaign.Gold -= price;
+            campaign.CompletedData.Add(encounter.Id);
+            return CommandResult.Ok();
+        }
+
+        /// <summary>
+        /// Ends a battle against an enemy hero by paying them off: the surviving army leaves with the hero, the enemy stays
+        /// on the map. Only a commander accepts a surrender.
+        /// </summary>
+        public CommandResult ApplySurrender(CampaignState campaign, EncounterDefinition encounter, IReadOnlyList<Troop> survivors, int manaLeft)
+        {
+            if (encounter.Commander == null)
+            {
+                return CommandResult.Reject("Only an enemy hero accepts a surrender.");
+            }
+
+            if (survivors.Count == 0 || survivors.Count > Mission.ArmySlots)
+            {
+                return CommandResult.Reject("Nobody is left to surrender.");
+            }
+
+            int price = SurrenderPrice(campaign, survivors);
+            if (price > campaign.Gold)
+            {
+                return CommandResult.Reject("Not enough gold to surrender (" + price + ").");
+            }
+
+            campaign.ArmyData.Clear();
+            campaign.ArmyData.AddRange(survivors);
+            campaign.Gold -= price;
+            campaign.Mana = Math.Max(0, Math.Min(MAXIMUM_MANA, manaLeft));
+            return CommandResult.Ok();
+        }
+
+        /// <summary>Restores the hero's mana to the maximum, keeping anything above it.</summary>
+        public void RestoreMana(CampaignState campaign)
+        {
+            campaign.Mana = Math.Max(campaign.Mana, MaximumMana(campaign));
         }
         #endregion
 
@@ -445,6 +652,25 @@ namespace HeroesOfMetalAge.Domain
             {
                 campaign.InventoryData.Add(artefact.Id);
             }
+        }
+
+        /// <summary>Gives exactly the experience the next level needs.</summary>
+        public void DebugLevel(CampaignState campaign)
+        {
+            long next = Policy.Experience.Threshold(Level(campaign) + 1);
+            campaign.Experience = (int)Math.Min(int.MaxValue, Math.Max(campaign.Experience, next));
+        }
+
+        /// <summary>A spell book with every spell and full mana.</summary>
+        public void DebugSpells(CampaignState campaign)
+        {
+            campaign.HasSpellBook = true;
+            foreach (SpellDefinition spell in catalog.Spells)
+            {
+                campaign.SpellData.Add(spell.Id);
+            }
+
+            RestoreMana(campaign);
         }
         #endregion
 
@@ -486,6 +712,12 @@ namespace HeroesOfMetalAge.Domain
             RestoreStock(snapshot, result);
             RestoreMapObjects(snapshot, result);
             ValidateArmies(snapshot, result);
+            RestoreHero(snapshot, result);
+            if (result.Movement > DailyMovement(result))
+            {
+                throw new ArgumentException("Invalid movement.");
+            }
+
             return result;
         }
 
@@ -504,14 +736,13 @@ namespace HeroesOfMetalAge.Domain
         private void ValidateHeader(CampaignSnapshot snapshot)
         {
             bool isValid = snapshot != null
-                && snapshot.version == CampaignSnapshot.CURRENT_VERSION
+                && (snapshot.version == CampaignSnapshot.CURRENT_VERSION || snapshot.version == CampaignSnapshot.OLDEST_MIGRATED_VERSION)
                 && snapshot.missionId == Mission.Id
                 && catalog.HasHero(snapshot.heroId)
                 && snapshot.day >= 1
                 && snapshot.gold >= 0
                 && snapshot.experience >= 0
                 && snapshot.movement >= 0
-                && snapshot.movement <= catalog.Hero(snapshot.heroId).DailyMovement
                 && snapshot.inventory != null
                 && snapshot.completed != null
                 && snapshot.stock != null
@@ -522,11 +753,128 @@ namespace HeroesOfMetalAge.Domain
                 && snapshot.dwellings != null
                 && snapshot.mills != null
                 && Math.Abs(snapshot.morale) <= MAXIMUM_MORALE
+                && Math.Abs(snapshot.luck) <= MAXIMUM_LUCK
                 && (snapshot.townOwnerId == CampaignState.PLAYER_OWNER_ID || snapshot.townOwnerId == Mission.ClanId);
             if (!isValid)
             {
                 throw new ArgumentException("Invalid campaign header or schema.");
             }
+        }
+
+        /// <summary>
+        /// Skills, level-ups, primary stats, the spell book and mana. A version 4 save, from before heroes grew this way, gets
+        /// the hero's starting skills and spells, full mana and every level-up since level 1 still to be granted.
+        /// </summary>
+        private void RestoreHero(CampaignSnapshot snapshot, CampaignState result)
+        {
+            HeroDefinition hero = catalog.Hero(result.HeroId);
+            if (snapshot.version == CampaignSnapshot.OLDEST_MIGRATED_VERSION)
+            {
+                GiveStartingMagicAndSkills(result, hero);
+                result.Mana = MaximumMana(result);
+                return;
+            }
+
+            result.LuckBonus = snapshot.luck;
+            List<int> gains = snapshot.primaryGains ?? new List<int>();
+            int level = Level(result);
+            bool isValidGrowth = gains.Count == CampaignState.PRIMARY_STAT_COUNT
+                && gains.All(gain => gain >= 0)
+                && snapshot.levelsGranted >= 1
+                && snapshot.levelsGranted <= level
+                && gains.Sum(gain => (long)gain) == snapshot.levelsGranted - 1
+                && snapshot.levelsWithoutWisdom >= 0
+                && snapshot.mana >= 0
+                && snapshot.mana <= MAXIMUM_MANA;
+            if (!isValidGrowth)
+            {
+                throw new ArgumentException("Invalid hero growth.");
+            }
+
+            for (int i = 0; i < gains.Count; i++)
+            {
+                result.PrimaryGainData[i] = gains[i];
+            }
+
+            result.LevelsGranted = snapshot.levelsGranted;
+            result.LevelsWithoutWisdom = snapshot.levelsWithoutWisdom;
+            foreach (SkillSnapshot skill in snapshot.skills ?? new List<SkillSnapshot>())
+            {
+                HeroSkill known = ParseSkill(skill);
+                if (known == null || known.Level == SkillLevel.None || result.SkillLevelOf(known.Skill) != SkillLevel.None)
+                {
+                    throw new ArgumentException("Invalid skill.");
+                }
+
+                result.SkillData.Add(known);
+            }
+
+            if (result.SkillData.Count > Policy.MaximumSkills)
+            {
+                throw new ArgumentException("Too many skills.");
+            }
+
+            RestorePendingLevelUp(snapshot, result);
+            result.HasSpellBook = snapshot.spellBook;
+            foreach (string spellId in snapshot.spells ?? new List<string>())
+            {
+                if (!catalog.HasSpell(spellId) || !result.SpellData.Add(spellId))
+                {
+                    throw new ArgumentException("Invalid spell.");
+                }
+            }
+
+            if (!result.HasSpellBook && result.SpellData.Count > 0)
+            {
+                throw new ArgumentException("Spells without a spell book.");
+            }
+
+            result.Mana = snapshot.mana;
+        }
+
+        // a waiting level-up belongs to the last granted level and offers each skill at the level it would reach
+        private void RestorePendingLevelUp(CampaignSnapshot snapshot, CampaignState result)
+        {
+            if (snapshot.pendingLevel == 0)
+            {
+                return;
+            }
+
+            bool isValid = snapshot.pendingLevel == result.LevelsGranted
+                && snapshot.pendingLevel > 1
+                && Enum.TryParse(snapshot.pendingStat, out PrimaryStat stat)
+                && Enum.IsDefined(typeof(PrimaryStat), stat)
+                && snapshot.pendingSkills != null
+                && snapshot.pendingSkills.Count <= 2;
+            if (!isValid)
+            {
+                throw new ArgumentException("Invalid level-up.");
+            }
+
+            List<HeroSkill> options = new List<HeroSkill>();
+            foreach (SkillSnapshot option in snapshot.pendingSkills)
+            {
+                HeroSkill offered = ParseSkill(option);
+                if (offered == null || (int)offered.Level != (int)result.SkillLevelOf(offered.Skill) + 1 || options.Any(other => other.Skill == offered.Skill))
+                {
+                    throw new ArgumentException("Invalid level-up option.");
+                }
+
+                options.Add(offered);
+            }
+
+            result.PendingLevelUp = new LevelUpOffer(snapshot.pendingLevel, (PrimaryStat)Enum.Parse(typeof(PrimaryStat), snapshot.pendingStat), options);
+        }
+
+        private HeroSkill ParseSkill(SkillSnapshot snapshot)
+        {
+            if (snapshot == null || !Enum.TryParse(snapshot.skill, out SecondarySkill skill) || !Enum.IsDefined(typeof(SecondarySkill), skill)
+                || !Policy.HasSkill(skill) || snapshot.level < (int)SkillLevel.None || snapshot.level > (int)SkillLevel.Expert)
+            {
+                return null;
+            }
+
+            return new HeroSkill(skill, (SkillLevel)snapshot.level);
         }
 
         private void RestoreStacks(List<StackSnapshot> snapshots, List<Troop> target)
@@ -876,9 +1224,55 @@ namespace HeroesOfMetalAge.Domain
                     return artefact.DefenseBonus;
                 case EquippedStat.Morale:
                     return artefact.MoraleBonus;
+                case EquippedStat.Luck:
+                    return artefact.LuckBonus;
+                case EquippedStat.SpellPower:
+                    return artefact.SpellPowerBonus;
+                case EquippedStat.Knowledge:
+                    return artefact.KnowledgeBonus;
                 default:
                     return artefact.SpeedBonus;
             }
+        }
+
+        /// <summary>The hero's starting skills, spell book and spells.</summary>
+        private static void GiveStartingMagicAndSkills(CampaignState campaign, HeroDefinition hero)
+        {
+            campaign.SkillData.AddRange(hero.StartingSkills);
+            campaign.HasSpellBook = hero.HasSpellBook;
+            foreach (string spellId in hero.StartingSpellIds)
+            {
+                campaign.SpellData.Add(spellId);
+            }
+        }
+
+        /// <summary>What the army would cost to recruit at full price.</summary>
+        private double ArmyValue(IReadOnlyList<Troop> army)
+        {
+            double value = 0d;
+            foreach (Troop troop in army)
+            {
+                value += (double)catalog.Unit(troop.UnitId).Cost * troop.Count;
+            }
+
+            return value;
+        }
+
+        private static int WholeGold(double gold)
+        {
+            return (int)Math.Max(0, Math.Min(int.MaxValue, Math.Ceiling(gold - 1e-9)));
+        }
+
+        /// <summary>An army's fixed willingness to join, in [0, 1): a stable hash of its ID (FNV-1a), the same on every run.</summary>
+        private static double Disposition(string encounterId)
+        {
+            uint hash = 2166136261;
+            foreach (char character in encounterId)
+            {
+                hash = (hash ^ character) * 16777619;
+            }
+
+            return (hash % 10000u) / 10000d;
         }
 
         private enum EquippedStat
@@ -886,7 +1280,10 @@ namespace HeroesOfMetalAge.Domain
             Attack,
             Defense,
             Speed,
-            Morale
+            Morale,
+            Luck,
+            SpellPower,
+            Knowledge
         }
     }
 }

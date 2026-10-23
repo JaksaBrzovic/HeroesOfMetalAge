@@ -75,7 +75,7 @@ namespace HeroesOfMetalAge.Tests
             Assume.That(catalog.Mission.Combat.MissChance, Is.GreaterThan(0));
             BattleEngine battle = new BattleEngine(catalog, new FixedRandomSource(0), rules.NewCampaign(), catalog.Mission.Encounter(EncounterKind.Sentinel));
             int totalHealth = battle.Combatants.Sum(combatant => combatant.TotalHealth);
-            BattleAi ai = new BattleAi();
+            BattleAi ai = new BattleAi(catalog);
             BattleResolution result = null;
             for (int turn = 0; turn < 50 && (result == null || result.Hits.Count == 0); turn++)
             {
@@ -119,7 +119,7 @@ namespace HeroesOfMetalAge.Tests
         private string PlayOut(int seed)
         {
             BattleEngine battle = new BattleEngine(catalog, new SeededRandomSource(seed), rules.NewCampaign(), catalog.Mission.Encounter(EncounterKind.Sentinel));
-            BattleAi ai = new BattleAi();
+            BattleAi ai = new BattleAi(catalog);
             for (int i = 0; i < 200 && battle.Outcome == BattleOutcome.InProgress; i++)
             {
                 battle.Execute(ai.Choose(battle), battle.Active.IsPlayer);

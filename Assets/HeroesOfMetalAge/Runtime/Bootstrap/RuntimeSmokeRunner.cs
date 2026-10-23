@@ -28,6 +28,7 @@ namespace HeroesOfMetalAge.Bootstrap
         private const float FOLLOW_WAIT_SECONDS = 1.5f;
         private const float END_DAY_PEEK_SECONDS = 1.2f;
         private const float BRIEFING_TIMEOUT_SECONDS = 20f;
+        private const int MAX_LEVEL_UPS = 100;
 
         private readonly List<string> results = new List<string>();
         private GameSession session;
@@ -280,10 +281,16 @@ namespace HeroesOfMetalAge.Bootstrap
                     Check(session.Dialog == DialogKind.Victory, "Battle on the way won: " + session.Encounter.Name);
                     session.ContinueVictory();
                     session.ContinueRewards();
+                    ResolveLevelUps();
                 }
                 else if (session.Dialog == DialogKind.Chest)
                 {
                     session.OpenChest(true);
+                    ResolveLevelUps();
+                }
+                else if (session.Dialog == DialogKind.LevelUp)
+                {
+                    ResolveLevelUps();
                 }
                 else if (session.Dialog == DialogKind.Friendly)
                 {
@@ -298,6 +305,18 @@ namespace HeroesOfMetalAge.Bootstrap
                     return;
                 }
             }
+        }
+
+        /// <summary>Takes the first offered skill of every waiting level-up.</summary>
+        private void ResolveLevelUps()
+        {
+            int choices = 0;
+            while (session.Dialog == DialogKind.LevelUp && choices++ < MAX_LEVEL_UPS)
+            {
+                session.ChooseLevelUpSkill(0);
+            }
+
+            Check(session.Dialog != DialogKind.LevelUp, "Level-ups resolve");
         }
 
         /// <summary>Wears every carried artefact that fits a free place, so the scenario's army can win its battles.</summary>
@@ -331,6 +350,13 @@ namespace HeroesOfMetalAge.Bootstrap
                 if (session.IsBusy)
                 {
                     session.Tick(1);
+                    continue;
+                }
+
+                // with Tactics the stacks stay where they stand
+                if (session.Battle.IsTacticsPhase)
+                {
+                    session.BattleAction(new BattleAction(BattleActionKind.EndTactics));
                     continue;
                 }
 
@@ -375,6 +401,7 @@ namespace HeroesOfMetalAge.Bootstrap
 
             yield return IntroAndWorld(mission, friendly, sentinel, town);
             yield return FirstBattleAndHero(mission, sentinel);
+            yield return HeroGrowthAndMagic(mission);
             yield return TownAndConquest(mission, town);
             yield return BossAndDefeat(boss);
         }
@@ -551,6 +578,81 @@ namespace HeroesOfMetalAge.Bootstrap
             world.ToggleTerrainOverlay();
         }
 
+        /// <summary>A level-up with its choice, the skills tab, the spell shop, the spell book.</summary>
+        private IEnumerator HeroGrowthAndMagic(MissionDefinition mission)
+        {
+            int skills = session.Campaign.Skills.Count;
+            session.DebugLevel();
+            hud.RefreshNow();
+            Check(session.Dialog == DialogKind.LevelUp && hud.LevelUpView.gameObject.activeInHierarchy && session.Campaign.PendingLevelUp.Options.Count > 0,
+                "A new level raises a primary stat and offers secondary skills");
+            yield return Screenshot("16-level-up.png");
+            Click(hud.LevelUpView.OptionCards[0]);
+            ResolveLevelUps();
+            Check(session.Campaign.Skills.Count >= skills && session.Campaign.Skills.Count > 0, "The chosen skill is learned");
+
+            session.ShowHero();
+            hud.HeroView.ShowSkills(true);
+            hud.RefreshNow();
+            Canvas.ForceUpdateCanvases();
+            Check(hud.HeroView.SkillRows.Take(session.Campaign.Skills.Count).All(row => row.HasVisibleIcon), "The skills tab shows every known skill");
+            yield return Screenshot("17-hero-skills.png");
+            hud.HeroView.ShowSkills(false);
+            session.Back();
+
+            MapObjectDefinition shop = mission.Objects.First(mapObject => mapObject.Kind == MapObjectKind.SpellShop);
+            session.DebugGold();
+            TravelTo(shop.Position);
+            hud.RefreshNow();
+            Check(session.Dialog == DialogKind.SpellShop && hud.SpellShopView.gameObject.activeInHierarchy, "The spell shop opens on its cell");
+            yield return ShowCell(shop.Position);
+            yield return Screenshot("19-spell-shop.png");
+            Click(hud.SpellShopView.BookRow);
+            Check(session.Campaign.HasSpellBook, "The spell shop sells a spell book");
+            hud.RefreshNow();
+            Click(hud.SpellShopView.SpellRows[0]);
+            Check(session.Campaign.KnowsSpell(shop.SpellIds[0]), "The spell shop teaches a spell");
+            session.Back();
+
+            session.DebugSpells();
+            session.OpenSpellBook();
+            hud.RefreshNow();
+            Canvas.ForceUpdateCanvases();
+            Check(session.Dialog == DialogKind.SpellBook && hud.SpellBookView.SpellSlots.Count(slot => slot.HasVisibleIcon) > 0, "The spell book shows the known spells");
+            yield return Screenshot("18-spell-book.png");
+            session.Back();
+            Check(session.Dialog == DialogKind.None, "The spell book closes");
+        }
+
+        /// <summary>On the player's first turn: the spell book over the battle, then a spell aimed at an enemy stack with a click.</summary>
+        private IEnumerator CastInBattle()
+        {
+            int ticks = 0;
+            while ((session.IsBusy || session.Battle.IsTacticsPhase || !session.Battle.Active.IsPlayer) && ticks++ < MAX_MOVEMENT_TICKS)
+            {
+                if (session.Battle.IsTacticsPhase && !session.IsBusy)
+                {
+                    session.BattleAction(new BattleAction(BattleActionKind.EndTactics));
+                }
+
+                session.Tick(1);
+            }
+
+            session.OpenSpellBook();
+            hud.RefreshNow();
+            Check(session.Dialog == DialogKind.SpellBook && hud.SpellBookView.gameObject.activeInHierarchy, "The spell book opens over the battle");
+            yield return Screenshot("20-battle-spell-book.png");
+            SpellDefinition spell = session.Catalog.Spells.First(candidate => candidate.Target == SpellTarget.Enemy && candidate.Effect == SpellEffect.Damage
+                && session.Campaign.KnowsSpell(candidate.Id));
+            session.SelectSpell(spell.Id);
+            Check(session.Dialog == DialogKind.None && session.TargetingSpellId == spell.Id, "A spell on a stack waits for its target");
+            Combatant enemy = session.Battle.Combatants.First(combatant => combatant.IsAlive && !combatant.IsPlayer);
+            hud.RefreshNow();
+            yield return null;
+            Check(world.HandleClick(world.ScreenPoint(enemy.Position)) && session.Battle.Player.HasCastThisRound, "A click on an enemy casts the spell");
+            yield return Screenshot("21-battle-spell.png");
+        }
+
         private IEnumerator TownAndConquest(MissionDefinition mission, EncounterDefinition town)
         {
             yield return MapObjects(mission);
@@ -605,6 +707,7 @@ namespace HeroesOfMetalAge.Bootstrap
             Check(session.Dialog == DialogKind.Victory && session.Campaign.IsTownOwned, "Town conquest");
             session.ContinueVictory();
             session.ContinueRewards();
+            ResolveLevelUps();
             session.StationHero();
             Check(session.Campaign.IsHeroHome && session.Campaign.Army.Count == 0, "Hero home slot and army");
             session.Save(false);
@@ -648,11 +751,13 @@ namespace HeroesOfMetalAge.Bootstrap
             TravelTo(boss.Position);
             Check(session.Dialog == DialogKind.Hostile, "Final enemy reached");
             session.FightEncounter();
+            yield return CastInBattle();
             FinishBattle();
             Check(session.Dialog == DialogKind.Victory && session.Campaign.IsCompleted(boss.Id), "Recruited army defeats boss");
             yield return Screenshot("05-victory.png");
             session.ContinueVictory();
             session.ContinueRewards();
+            ResolveLevelUps();
 
             MapObjectDefinition portal = session.Catalog.Mission.Objects.First(mapObject => mapObject.Kind == MapObjectKind.ExitPortal);
             TravelTo(portal.Position);

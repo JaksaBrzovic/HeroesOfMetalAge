@@ -18,7 +18,7 @@ namespace HeroesOfMetalAge.Application
         private readonly ISaveStore save;
         private readonly IRandomSource random;
         private readonly Action<Exception> reportError;
-        private readonly BattleAi ai = new BattleAi();
+        private readonly BattleAi ai;
         private readonly float travelStepSeconds;
         private readonly float enemyTurnSeconds;
         private readonly float battleActionSeconds;
@@ -56,6 +56,8 @@ namespace HeroesOfMetalAge.Application
             this.endDaySeconds = endDaySeconds;
             Rules = new CampaignRules(catalog);
             Objects = new MapObjectRules(catalog, Rules);
+            LevelUps = new LevelUpRules(catalog, Rules);
+            ai = new BattleAi(catalog);
             World = new WorldMap(catalog.Mission);
             Campaign = Rules.NewCampaign();
             Route = route.AsReadOnly();
@@ -66,6 +68,8 @@ namespace HeroesOfMetalAge.Application
         public event Action<string> UnitVoiceRequested;
         public event Action<PlaybackState> PlaybackChanged;
         public event Action<DamageEvent> DamageResolved;
+        /// <summary>A spell was cast in battle; raised after the command succeeded.</summary>
+        public event Action<SpellEvent> SpellResolved;
         /// <summary>
         /// The hero reached a site from the map: a friendly or hostile encounter (raised after its dialog opened) or the
         /// town (after its screen opened). Not raised for development shortcuts.
@@ -79,6 +83,7 @@ namespace HeroesOfMetalAge.Application
         public DefinitionCatalog Catalog { get; }
         public CampaignRules Rules { get; }
         public MapObjectRules Objects { get; }
+        public LevelUpRules LevelUps { get; }
         public WorldMap World { get; }
         public CampaignState Campaign { get; private set; }
         public BattleEngine Battle { get; private set; }
@@ -97,6 +102,8 @@ namespace HeroesOfMetalAge.Application
         public long Revision { get; private set; }
         public int DamageRevision { get; private set; }
         public DamageEvent LastHit { get; private set; }
+        /// <summary>The spell the player picked in battle and is aiming at a hex, or null.</summary>
+        public string TargetingSpellId { get; private set; }
         /// <summary>Seconds the hero takes for one map step while riding.</summary>
         public float TravelStepSeconds => IsSpeedMode ? Math.Min(travelStepSeconds, SPEED_MODE_STEP_SECONDS) : travelStepSeconds;
         /// <summary>Development aid (debug panel): the hero rides almost instantly. Gameplay rules are unchanged.</summary>
@@ -209,9 +216,18 @@ namespace HeroesOfMetalAge.Application
             }
 
             if (Dialog == DialogKind.Friendly || Dialog == DialogKind.Hostile || Dialog == DialogKind.Claim || Dialog == DialogKind.Chest
-                || Dialog == DialogKind.Dwelling || Dialog == DialogKind.Exit)
+                || Dialog == DialogKind.Dwelling || Dialog == DialogKind.Exit || Dialog == DialogKind.SpellShop)
             {
                 Dialog = DialogKind.None;
+            }
+            else if (Dialog == DialogKind.SpellBook)
+            {
+                Dialog = DialogKind.None;
+                RefreshPlayback();
+            }
+            else if (TargetingSpellId != null)
+            {
+                CancelSpell();
             }
             else if (Screen == GameScreen.Hero)
             {
@@ -289,7 +305,7 @@ namespace HeroesOfMetalAge.Application
 
             plannedDestination = target;
             route.Clear();
-            route.AddRange(World.FindRoute(Campaign, target));
+            route.AddRange(World.FindRoute(Campaign, target, Rules.Pathfinding(Campaign)));
             Cue(SoundCue.Click);
             if (route.Count == 0)
             {
@@ -306,7 +322,6 @@ namespace HeroesOfMetalAge.Application
                 return;
             }
 
-            int oldLevel = Rules.Level(Campaign);
             if (!Accept(Objects.OpenChest(Campaign, MapObject, isTakingGold, out VisitOutcome outcome)))
             {
                 return;
@@ -315,8 +330,8 @@ namespace HeroesOfMetalAge.Application
             Dialog = DialogKind.None;
             Cue(SoundCue.Gold);
             Notify(isTakingGold ? "+" + outcome.Gold + " gold from the chest." : "+" + outcome.Experience + " experience from the chest.");
-            CueLevelUp(oldLevel);
             Save(false);
+            OfferLevelUp();
         }
 
         /// <summary>Buys creatures at the open dwelling.</summary>
@@ -334,6 +349,141 @@ namespace HeroesOfMetalAge.Application
             Notify(count + " " + unit.Name + " join your warhost.");
             Save(false);
             return true;
+        }
+
+        /// <summary>Buys the open spell shop's spell book.</summary>
+        public void BuySpellBook()
+        {
+            Revision++;
+            if (Dialog != DialogKind.SpellShop || MapObject == null || !Accept(Objects.BuySpellBook(Campaign, MapObject)))
+            {
+                return;
+            }
+
+            Cue(SoundCue.Gold);
+            Notify("You bought a spell book.");
+            Save(false);
+        }
+
+        /// <summary>Learns a spell the open spell shop sells.</summary>
+        public void BuySpell(string spellId)
+        {
+            Revision++;
+            if (Dialog != DialogKind.SpellShop || MapObject == null || !Accept(Objects.BuySpell(Campaign, MapObject, spellId)))
+            {
+                return;
+            }
+
+            Cue(SoundCue.Blessing);
+            Notify(Catalog.Spell(spellId).Name + " is written into your spell book.");
+            Save(false);
+        }
+
+        /// <summary>Chooses one of the offered skills of the waiting level-up (any index when none is offered).</summary>
+        public void ChooseLevelUpSkill(int optionIndex)
+        {
+            Revision++;
+            if (Dialog != DialogKind.LevelUp)
+            {
+                return;
+            }
+
+            LevelUpOffer offer = Campaign.PendingLevelUp;
+            if (!Accept(LevelUps.Choose(Campaign, optionIndex)))
+            {
+                return;
+            }
+
+            Cue(SoundCue.Click);
+            if (offer != null && optionIndex >= 0 && optionIndex < offer.Options.Count)
+            {
+                HeroSkill chosen = offer.Options[optionIndex];
+                Notify("You learned " + chosen.Level + " " + Catalog.HeroPolicy.Skill(chosen.Skill).Name + ".");
+            }
+
+            Dialog = DialogKind.None;
+            OfferLevelUp();
+            Save(false);
+        }
+
+        /// <summary>Opens the spell book: on the map and the hero screen to read it, in battle on the player's turn to cast.</summary>
+        public void OpenSpellBook()
+        {
+            Revision++;
+            bool isBattleTurn = Screen == GameScreen.Battle && Dialog == DialogKind.None && !IsBusy && Battle != null
+                && Battle.Outcome == BattleOutcome.InProgress && Battle.Active.IsPlayer;
+            if (!CanRunCampaignCommand && !isBattleTurn)
+            {
+                return;
+            }
+
+            if (!Campaign.HasSpellBook)
+            {
+                Notify("Your hero carries no spell book.");
+                return;
+            }
+
+            TargetingSpellId = null;
+            Dialog = DialogKind.SpellBook;
+            Cue(SoundCue.Click);
+            RefreshPlayback();
+        }
+
+        /// <summary>
+        /// Picks a spell in the open spell book during battle: a spell on a stack or an area waits for its target hex
+        /// (<see cref="CastAt"/>), any other is cast at once.
+        /// </summary>
+        public void SelectSpell(string spellId)
+        {
+            Revision++;
+            if (Dialog != DialogKind.SpellBook || Screen != GameScreen.Battle || Battle == null)
+            {
+                return;
+            }
+
+            if (!Battle.CanCast(true, spellId, out string reason))
+            {
+                Notify(reason);
+                return;
+            }
+
+            Dialog = DialogKind.None;
+            RefreshPlayback();
+            SpellDefinition spell = Catalog.Spell(spellId);
+            if (spell.NeedsTarget)
+            {
+                TargetingSpellId = spellId;
+                Notify("Choose a target for " + spell.Name + ". Escape cancels.");
+                return;
+            }
+
+            ResolveBattleAction(new BattleAction(BattleActionKind.CastSpell, default, spellId), true);
+        }
+
+        /// <summary>Casts the spell being aimed at a hex.</summary>
+        public void CastAt(HexPosition target)
+        {
+            Revision++;
+            if (TargetingSpellId == null || Screen != GameScreen.Battle || Dialog != DialogKind.None || IsBusy || Battle == null)
+            {
+                return;
+            }
+
+            if (!Battle.IsValidSpellTarget(TargetingSpellId, true, target))
+            {
+                Notify("That is no target for " + Catalog.Spell(TargetingSpellId).Name + ".");
+                return;
+            }
+
+            string spellId = TargetingSpellId;
+            TargetingSpellId = null;
+            ResolveBattleAction(new BattleAction(BattleActionKind.CastSpell, target, spellId), true);
+        }
+
+        public void CancelSpell()
+        {
+            Revision++;
+            TargetingSpellId = null;
         }
 
         /// <summary>Leaves the mission through the exit portal; only once every required goal is reached.</summary>
@@ -377,7 +527,7 @@ namespace HeroesOfMetalAge.Application
                 return;
             }
 
-            if (Campaign.Movement < World.StepCost(Campaign.Position, route[0]))
+            if (Campaign.Movement < World.StepCost(Campaign.Position, route[0], Rules.Pathfinding(Campaign)))
             {
                 Notify("Not enough movement. End the day [E].");
                 return;
@@ -419,7 +569,9 @@ namespace HeroesOfMetalAge.Application
 
             route.Clear();
             plannedDestination = null;
-            Notify(isNewWeek ? "A new week begins. Town recruitment stocks have grown." : "Day " + Campaign.Day + ". Your movement is restored.");
+            int income = Rules.DailyIncome(Campaign);
+            string estates = income > 0 ? " Your estates bring " + income + " gold." : string.Empty;
+            Notify((isNewWeek ? "A new week begins. Town recruitment stocks have grown." : "Day " + Campaign.Day + ". Your movement is restored.") + estates);
             if (isNewWeek)
             {
                 Cue(SoundCue.Friendly);
@@ -445,7 +597,7 @@ namespace HeroesOfMetalAge.Application
                 return;
             }
 
-            route.AddRange(World.FindRoute(Campaign, target));
+            route.AddRange(World.FindRoute(Campaign, target, Rules.Pathfinding(Campaign)));
             Cue(SoundCue.Click);
             if (route.Count == 0)
             {
@@ -476,7 +628,7 @@ namespace HeroesOfMetalAge.Application
                 mapObject = null;
             }
 
-            if (Campaign.Movement < World.StepCost(Campaign.Position, step))
+            if (Campaign.Movement < World.StepCost(Campaign.Position, step, Rules.Pathfinding(Campaign)))
             {
                 Notify("Movement spent. End the day to continue.");
                 FinishTravel();
@@ -548,6 +700,10 @@ namespace HeroesOfMetalAge.Application
                     Dialog = DialogKind.Exit;
                     Cue(SoundCue.FriendlyEncounter);
                     break;
+                case MapObjectKind.SpellShop:
+                    Dialog = DialogKind.SpellShop;
+                    Cue(SoundCue.FriendlyEncounter);
+                    break;
                 default:
                     ApplyVisit(mapObject);
                     break;
@@ -558,7 +714,6 @@ namespace HeroesOfMetalAge.Application
 
         private void ApplyVisit(MapObjectDefinition mapObject)
         {
-            int oldLevel = Rules.Level(Campaign);
             if (!Accept(Objects.Visit(Campaign, mapObject, out VisitOutcome outcome)))
             {
                 return;
@@ -570,8 +725,8 @@ namespace HeroesOfMetalAge.Application
                 Cue(VisitCue(outcome));
             }
 
-            CueLevelUp(oldLevel);
             Save(false);
+            OfferLevelUp();
         }
 
         private string VisitNotice(VisitOutcome outcome)
@@ -581,6 +736,7 @@ namespace HeroesOfMetalAge.Application
             {
                 return mapObject.Kind == MapObjectKind.Mill ? mapObject.Name + " has paid out this week. Come back next week."
                     : mapObject.Kind == MapObjectKind.MoraleShrine ? "Your warhost is already blessed."
+                    : mapObject.Kind == MapObjectKind.LuckShrine ? "Fortune already smiles on your warhost."
                     : mapObject.Kind == MapObjectKind.AttackShrine || mapObject.Kind == MapObjectKind.DefenseShrine ? mapObject.Name + " has taught you all it can."
                     : mapObject.Description;
             }
@@ -596,6 +752,8 @@ namespace HeroesOfMetalAge.Application
                     return mapObject.Name + ": +" + outcome.DefenseBonus + " defense for good.";
                 case MapObjectKind.MoraleShrine:
                     return mapObject.Name + ": +" + outcome.MoraleBonus + " morale until your next victory.";
+                case MapObjectKind.LuckShrine:
+                    return mapObject.Name + ": +" + outcome.LuckBonus + " luck until your next victory.";
                 case MapObjectKind.Artefact:
                 case MapObjectKind.Prison:
                     return outcome.ArtefactId != null ? "You received " + Catalog.Artefact(outcome.ArtefactId).Name + "." : mapObject.Description;
@@ -621,12 +779,26 @@ namespace HeroesOfMetalAge.Application
             }
         }
 
-        private void CueLevelUp(int oldLevel)
+        /// <summary>
+        /// Grants the next due level-up and opens its dialog, if no other dialog is open; the roll is saved at once, so loading
+        /// never rolls it again. A choice opens the next one (see <see cref="ChooseLevelUpSkill"/>).
+        /// </summary>
+        private void OfferLevelUp()
         {
-            if (Rules.Level(Campaign) > oldLevel)
+            if (Dialog != DialogKind.None || Screen == GameScreen.Battle)
             {
+                return;
+            }
+
+            if (LevelUps.Advance(Campaign, random))
+            {
+                Save(false);
+            }
+
+            if (Campaign.PendingLevelUp != null)
+            {
+                Dialog = DialogKind.LevelUp;
                 Cue(SoundCue.LevelUp);
-                Notify("Level " + Rules.Level(Campaign) + "! Your hero grows stronger.");
             }
         }
 
@@ -746,6 +918,52 @@ namespace HeroesOfMetalAge.Application
             Save(false);
         }
 
+        /// <summary>Diplomacy: the hostile army in the open dialog joins for its price.</summary>
+        public void HireEncounter()
+        {
+            Revision++;
+            if (Dialog != DialogKind.Hostile || Encounter == null || !Accept(Rules.Hire(Campaign, Encounter)))
+            {
+                return;
+            }
+
+            Dialog = DialogKind.None;
+            Cue(SoundCue.Gold);
+            foreach (Troop troop in Encounter.Army)
+            {
+                Voice(troop.UnitId);
+            }
+
+            Notify(Encounter.Name + " join your warhost.");
+            Save(false);
+        }
+
+        /// <summary>Pays off the enemy hero: the battle ends, the surviving army stays with the hero, the enemy on the map.</summary>
+        public void Surrender()
+        {
+            Revision++;
+            bool isPlayerTurn = Screen == GameScreen.Battle && Dialog == DialogKind.None && !IsBusy && Battle != null
+                && Battle.Outcome == BattleOutcome.InProgress && Battle.Active.IsPlayer;
+            if (!isPlayerTurn)
+            {
+                return;
+            }
+
+            int price = Rules.SurrenderPrice(Campaign, Battle.Survivors());
+            if (!Accept(Rules.ApplySurrender(Campaign, Encounter, Battle.Survivors(), Battle.Player.Mana)))
+            {
+                return;
+            }
+
+            Battle = null;
+            TargetingSpellId = null;
+            Screen = Encounter.Kind == EncounterKind.Town ? GameScreen.Town : GameScreen.Adventure;
+            RefreshPlayback();
+            Cue(SoundCue.Gold);
+            Notify("You paid " + Encounter.Commander.Name + " " + price + " gold and rode away with your warhost.");
+            Save(false);
+        }
+
         /// <summary>Starts (or after a defeat, retries) the battle with the current pre-battle army.</summary>
         public void FightEncounter()
         {
@@ -763,6 +981,7 @@ namespace HeroesOfMetalAge.Application
 
             Battle = new BattleEngine(Catalog, random, Campaign, Encounter);
             Victory = null;
+            TargetingSpellId = null;
             battleLog.Clear();
             Screen = GameScreen.Battle;
             Dialog = DialogKind.None;
@@ -774,6 +993,16 @@ namespace HeroesOfMetalAge.Application
                 AddLog("Your warhost fights with " + (Battle.PlayerMorale > 0 ? "good" : "bad") + " morale (" + MoraleText(Battle.PlayerMorale) + ").");
             }
 
+            if (Battle.Enemy.HeroName != null)
+            {
+                AddLog(Battle.Enemy.HeroName + " leads the enemy.");
+            }
+
+            if (Battle.IsTacticsPhase)
+            {
+                AddLog("Tactics: place your stacks in the first " + Battle.TacticsColumns + " columns, then start the battle.");
+            }
+
             ReportMorale();
             CueActiveVoice();
         }
@@ -783,6 +1012,7 @@ namespace HeroesOfMetalAge.Application
             Revision++;
             if (Screen == GameScreen.Battle && Dialog == DialogKind.None && !IsBusy)
             {
+                TargetingSpellId = null;
                 ResolveBattleAction(action, true);
             }
         }
@@ -816,10 +1046,7 @@ namespace HeroesOfMetalAge.Application
             Dialog = DialogKind.None;
             // the victory music, looping while the victory and rewards screens are open, fades out now
             RefreshPlayback();
-            if (Victory.HasLeveledUp)
-            {
-                Cue(SoundCue.LevelUp);
-            }
+            OfferLevelUp();
         }
 
         public void PrepareAfterDefeat()
@@ -849,10 +1076,21 @@ namespace HeroesOfMetalAge.Application
                 AddLog(resolution.Message);
             }
 
+            if (resolution.Spell != null)
+            {
+                ReportSpell(resolution.Spell);
+            }
+
             foreach (DamageEvent hit in resolution.Hits)
             {
                 string verb = hit.IsRetaliation ? " retaliates" : hit.IsRanged ? " shoots" : " strikes";
                 string result = hit.IsMiss ? "miss." : hit.Damage + " damage / " + hit.Casualties + " lost.";
+                if (hit.Luck != 0)
+                {
+                    AddLog(hit.Luck > 0 ? "Good luck! The blow strikes twice as hard." : "Bad luck! The blow lands at half strength.");
+                    Cue(hit.Luck > 0 ? SoundCue.GoodLuck : SoundCue.BadLuck);
+                }
+
                 AddLog(Catalog.Unit(hit.AttackerId).Name + verb + ": " + result);
                 LastHit = hit;
                 DamageRevision++;
@@ -881,7 +1119,7 @@ namespace HeroesOfMetalAge.Application
         {
             int oldLevel = Rules.Level(Campaign);
             VictoryRewards rewards = Rules.RollRewards(Campaign, Encounter, random, victoriesWithoutLegendary);
-            if (!Accept(Rules.ApplyVictory(Campaign, Encounter, Battle.Survivors(), rewards)))
+            if (!Accept(Rules.ApplyVictory(Campaign, Encounter, Battle.Survivors(), rewards, Battle.Player.Mana)))
             {
                 return;
             }
@@ -930,6 +1168,29 @@ namespace HeroesOfMetalAge.Application
                 AddLog(moraleEvent.IsGood ? "High morale! " + unit + " acts again." : "Low morale! " + unit + " freezes.");
                 Cue(moraleEvent.IsGood ? SoundCue.GoodMorale : SoundCue.BadMorale);
             }
+        }
+
+        private void ReportSpell(SpellEvent spell)
+        {
+            Cue(SoundCue.SpellCast);
+            foreach (SpellHit hit in spell.Hits)
+            {
+                string unit = Catalog.Unit(hit.UnitId).Name;
+                if (hit.IsResisted)
+                {
+                    AddLog(unit + " resists the spell.");
+                }
+                else if (hit.Damage > 0)
+                {
+                    AddLog(unit + ": " + hit.Damage + " damage / " + hit.Casualties + " lost.");
+                }
+                else if (hit.Healed > 0)
+                {
+                    AddLog(unit + " is healed by " + hit.Healed + ".");
+                }
+            }
+
+            Publish(SpellResolved, spell);
         }
 
         private void CueActiveVoice()
@@ -998,6 +1259,7 @@ namespace HeroesOfMetalAge.Application
                 Dialog = DialogKind.None;
                 RefreshPlayback();
                 Notify("Campaign loaded.");
+                OfferLevelUp();
             }
             catch (Exception error)
             {
@@ -1058,6 +1320,26 @@ namespace HeroesOfMetalAge.Application
             Revision++;
             Rules.DebugRevealMap(Campaign);
         }
+
+        /// <summary>Gives the experience for the next level and opens its level-up.</summary>
+        public void DebugLevel()
+        {
+            Revision++;
+            if (CanRunCampaignCommand)
+            {
+                Rules.DebugLevel(Campaign);
+                OfferLevelUp();
+            }
+        }
+
+        public void DebugSpells()
+        {
+            Revision++;
+            if (CanRunCampaignCommand)
+            {
+                Rules.DebugSpells(Campaign);
+            }
+        }
         #endregion
 
         private GameScreen HomeScreen()
@@ -1074,6 +1356,11 @@ namespace HeroesOfMetalAge.Application
 
         private void OpenTown()
         {
+            if (Campaign.IsTownOwned && Catalog.HeroPolicy.IsManaRestoredInTown)
+            {
+                Rules.RestoreMana(Campaign);
+            }
+
             Screen = GameScreen.Town;
             Dialog = DialogKind.None;
             RefreshPlayback();
@@ -1091,6 +1378,7 @@ namespace HeroesOfMetalAge.Application
             Victory = null;
             Encounter = null;
             MapObject = null;
+            TargetingSpellId = null;
         }
 
         private bool Accept(CommandResult result)
@@ -1121,7 +1409,9 @@ namespace HeroesOfMetalAge.Application
             Revision++;
             // the hero screen belongs to where the hero stands, so opening it keeps the town or map music
             bool isInTown = Screen == GameScreen.Town || (Screen == GameScreen.Hero && HomeScreen() == GameScreen.Town);
-            PlaybackState state = new PlaybackState(isTraveling, Screen == GameScreen.Battle && Dialog == DialogKind.None, Dialog == DialogKind.Defeat,
+            // the battle music keeps playing while the spell book is open over the battlefield
+            bool isFighting = Screen == GameScreen.Battle && (Dialog == DialogKind.None || Dialog == DialogKind.SpellBook);
+            PlaybackState state = new PlaybackState(isTraveling, isFighting, Dialog == DialogKind.Defeat,
                 isInTown, Dialog == DialogKind.Victory || Dialog == DialogKind.Rewards);
             if (state.Equals(Playback))
             {

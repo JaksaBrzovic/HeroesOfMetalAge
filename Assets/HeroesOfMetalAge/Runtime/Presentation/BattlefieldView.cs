@@ -100,6 +100,7 @@ namespace HeroesOfMetalAge.Presentation
             }
 
             Session.DamageResolved += HandleDamageResolved;
+            Session.SpellResolved += HandleSpellResolved;
         }
 
         public WorldMarker UnitMarker(int combatantId)
@@ -197,6 +198,7 @@ namespace HeroesOfMetalAge.Presentation
             if (context != null)
             {
                 Session.DamageResolved -= HandleDamageResolved;
+                Session.SpellResolved -= HandleSpellResolved;
             }
         }
 
@@ -221,6 +223,12 @@ namespace HeroesOfMetalAge.Presentation
             foreach (WorldMarker previous in unitMarkers.Values)
             {
                 previous.gameObject.SetActive(false);
+            }
+
+            // labels still rising from the previous battle leave with it
+            foreach (FloatingText text in damageTexts)
+            {
+                text.Hide();
             }
 
             foreach (Combatant combatant in battle.Combatants)
@@ -273,6 +281,14 @@ namespace HeroesOfMetalAge.Presentation
                 return color;
             }
 
+            // a spell being aimed lights up every hex it can be cast at
+            if (canAct && Session.TargetingSpellId != null)
+            {
+                color = battle.IsValidSpellTarget(Session.TargetingSpellId, true, position) ? context.Theme.Gold : context.Theme.HexColor;
+                color.a = battle.IsValidSpellTarget(Session.TargetingSpellId, true, position) ? REACHABLE_HEX_ALPHA * 0.6f : HEX_ALPHA;
+                return color;
+            }
+
             if (canAct && battle.IsReachable(position))
             {
                 color = context.Theme.ReachableHexColor;
@@ -307,9 +323,51 @@ namespace HeroesOfMetalAge.Presentation
             target.Flash();
             Color color = hit.IsReceivedByPlayer ? context.Theme.Enemy : context.Theme.Gold;
             NextDamageText().Show("-" + hit.Damage, color, textPosition);
+            if (hit.Luck != 0)
+            {
+                NextDamageText().Show(hit.Luck > 0 ? "LUCKY!" : "UNLUCKY", hit.Luck > 0 ? context.Theme.Friendly : context.Theme.Muted,
+                    textPosition + Vector3.up * (hexWidth * 0.3f));
+            }
             if (hit.Damage >= shakeDamageThreshold)
             {
                 pendingShake = Mathf.Max(pendingShake, 1f);
+            }
+        }
+
+        // every stack a spell reached flashes and shows what it did
+        private void HandleSpellResolved(SpellEvent spell)
+        {
+            foreach (SpellHit hit in spell.Hits)
+            {
+                if (!unitMarkers.TryGetValue(hit.CombatantId, out WorldMarker target))
+                {
+                    continue;
+                }
+
+                Vector3 textPosition = target.Target + Vector3.up * (hexWidth * 0.35f);
+                if (hit.IsResisted)
+                {
+                    NextDamageText().Show("RESISTED", context.Theme.Muted, textPosition);
+                    continue;
+                }
+
+                target.Flash();
+                if (hit.Damage > 0)
+                {
+                    NextDamageText().Show("-" + hit.Damage, hit.IsPlayer ? context.Theme.Enemy : context.Theme.Gold, textPosition);
+                    if (hit.Damage >= shakeDamageThreshold)
+                    {
+                        pendingShake = Mathf.Max(pendingShake, 1f);
+                    }
+                }
+                else if (hit.Healed > 0)
+                {
+                    NextDamageText().Show("+" + hit.Healed, context.Theme.Friendly, textPosition);
+                }
+                else
+                {
+                    NextDamageText().Show(Session.Catalog.Spell(spell.SpellId).Name.ToUpperInvariant(), context.Theme.Friendly, textPosition);
+                }
             }
         }
 

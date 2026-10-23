@@ -1,0 +1,154 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19f8ec7156829bd4d9cf7aacf35312c2, type: 3}
+  m_Name: HeroRules
+  m_EditorClassIdentifier: HeroesOfMetalAge.Infrastructure::HeroesOfMetalAge.Infrastructure.Content.HeroRulesScriptableObject
+  levelExperience: 2c01000058020000c0030000640500004407000060090000b80b00004c0e00003a1100008214000024180000801c0000
+  experienceGrowth: 1.2
+  maximumLevel: 75
+  maximumSkills: 8
+  skills:
+  - skill: 0
+    displayName: Archery
+    description: Ranged shots of your stacks deal more damage.
+    icon: {fileID: 21300000, guid: 362a0520494b1004bb8587f88c70fd03, type: 3}
+    values:
+    - 0.1
+    - 0.25
+    - 0.5
+  - skill: 1
+    displayName: Armorer
+    description: Your stacks take less damage from every strike.
+    icon: {fileID: 21300000, guid: cdf15c58c372b3143873bb832edbbb0a, type: 3}
+    values:
+    - 0.05
+    - 0.1
+    - 0.15
+  - skill: 2
+    displayName: Offense
+    description: Your stacks deal more damage in melee.
+    icon: {fileID: 21300000, guid: f044d4dc74e2ddc448a3ddf95e63456e, type: 3}
+    values:
+    - 0.1
+    - 0.2
+    - 0.3
+  - skill: 3
+    displayName: Diplomacy
+    description: Weaker hostile armies may offer to join you for gold, and surrendering
+      to an enemy hero costs less.
+    icon: {fileID: 21300000, guid: 2b58245850fa96240bd1473de0e324c0, type: 3}
+    values:
+    - 0.25
+    - 0.5
+    - 1
+  - skill: 4
+    displayName: Estates
+    description: Your lands bring gold every day.
+    icon: {fileID: 21300000, guid: 4ada45b049dc43f4a81afeaa29f1bba0, type: 3}
+    values:
+    - 125
+    - 250
+    - 500
+  - skill: 5
+    displayName: Intelligence
+    description: Your hero holds more mana.
+    icon: {fileID: 21300000, guid: 060bf7ca3012b494fbbee5226ec264be, type: 3}
+    values:
+    - 0.25
+    - 0.5
+    - 1
+  - skill: 6
+    displayName: Leadership
+    description: Raises the morale of your army.
+    icon: {fileID: 21300000, guid: ec4a6878108c93c428045646ec1f5423, type: 3}
+    values:
+    - 1
+    - 2
+    - 3
+  - skill: 7
+    displayName: Logistics
+    description: Your hero rides farther every day.
+    icon: {fileID: 21300000, guid: 27dcc0102b4bcaf4ca15dd6fb68160c4, type: 3}
+    values:
+    - 0.1
+    - 0.2
+    - 0.3
+  - skill: 8
+    displayName: Luck
+    description: Raises the luck of your army.
+    icon: {fileID: 21300000, guid: 8773a8038fc75424a8fbe005e4317719, type: 3}
+    values:
+    - 1
+    - 2
+    - 3
+  - skill: 9
+    displayName: Mysticism
+    description: Your hero regains more mana every day.
+    icon: {fileID: 21300000, guid: d498b319f4c67f74188d61042abd4de5, type: 3}
+    values:
+    - 2
+    - 3
+    - 4
+  - skill: 10
+    displayName: Pathfinding
+    description: Rough terrain slows your hero less.
+    icon: {fileID: 21300000, guid: 7e9f53a928e9d3e40ada6dfe1e3613f5, type: 3}
+    values:
+    - 0.25
+    - 0.5
+    - 0.75
+  - skill: 11
+    displayName: Resistance
+    description: Hostile spells may fail against your stacks.
+    icon: {fileID: 21300000, guid: 6d966aa2123f9fe49b9a72321913a8dc, type: 3}
+    values:
+    - 0.05
+    - 0.1
+    - 0.2
+  - skill: 12
+    displayName: Sorcery
+    description: Your spells deal more damage.
+    icon: {fileID: 21300000, guid: 4fcd8c1a2e50ace4dad5a2d46c69fa93, type: 3}
+    values:
+    - 0.05
+    - 0.1
+    - 0.15
+  - skill: 13
+    displayName: Tactics
+    description: Before a battle you place your stacks within the first columns of
+      the field.
+    icon: {fileID: 21300000, guid: 1fadfe83c19957648b40c506aa43802a, type: 3}
+    values:
+    - 2
+    - 3
+    - 5
+  - skill: 14
+    displayName: Wisdom
+    description: Your hero can learn spells of higher levels.
+    icon: {fileID: 21300000, guid: b3c2525d2c29c9c40b926a4a56e12fc6, type: 3}
+    values:
+    - 3
+    - 4
+    - 5
+  luckChance: 0.041666668
+  manaPerKnowledge: 10
+  manaRegeneration: 1
+  spellLevelWithoutWisdom: 2
+  isManaRestoredInTown: 1
+  unpenalizedTerrainCost: 100
+  joinStrengthRatio: 2
+  joinCostMultiplier: 1
+  surrenderCostMultiplier: 0.5
+  surrenderDiscounts:
+  - 0.2
+  - 0.4
+  - 0.6

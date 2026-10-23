@@ -66,12 +66,13 @@ namespace HeroesOfMetalAge.Tests
             Assert.IsFalse(again.IsRewarding);
 
             state = At(horns.Position);
-            Assert.AreEqual(0, rules.Morale(state));
+            // the hero's own morale (Leadership) stays; the blessing comes on top of it
+            int morale = rules.Morale(state);
             objects.Visit(state, horns, out _);
-            Assert.AreEqual(horns.MoraleBonus, rules.Morale(state));
+            Assert.AreEqual(System.Math.Min(CampaignRules.MAXIMUM_MORALE, morale + horns.MoraleBonus), rules.Morale(state));
             EncounterDefinition bandits = catalog.Mission.Encounters.First(encounter => encounter.IsHostile);
             Assert.IsTrue(rules.ApplyVictory(state, bandits, state.Army, new VictoryRewards(1, new string[0], false)).IsSuccess);
-            Assert.AreEqual(0, rules.Morale(state), "the blessing lasts until the next won battle");
+            Assert.AreEqual(morale, rules.Morale(state), "the blessing lasts until the next won battle");
         }
 
         [Test]

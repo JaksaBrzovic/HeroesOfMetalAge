@@ -27,6 +27,11 @@ namespace HeroesOfMetalAge.Presentation
             gameObject.SetActive(true);
         }
 
+        public void Hide()
+        {
+            gameObject.SetActive(false);
+        }
+
         public void Tick(float deltaTime)
         {
             if (!gameObject.activeSelf)

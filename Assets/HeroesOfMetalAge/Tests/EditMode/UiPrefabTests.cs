@@ -41,7 +41,7 @@ namespace HeroesOfMetalAge.Tests
             Assert.AreEqual(CanvasScaler.ScreenMatchMode.Expand, scaler.screenMatchMode);
             Assert.AreEqual(1, root.GetComponentsInChildren<EventSystem>(true).Length);
             Assert.IsNotNull(root.GetComponentInChildren<StandaloneInputModule>(true));
-            Assert.AreEqual(9, root.GetComponentsInChildren<CanvasScreenView>(true).Length);
+            Assert.AreEqual(12, root.GetComponentsInChildren<CanvasScreenView>(true).Length);
         }
 
         [Test]
@@ -61,6 +61,18 @@ namespace HeroesOfMetalAge.Tests
                 Assert.DoesNotThrow(hud.RefreshNow, "town screen");
                 session.ShowHero();
                 Assert.DoesNotThrow(hud.RefreshNow, "hero screen");
+                hud.HeroView.ShowSkills(true);
+                Assert.DoesNotThrow(hud.RefreshNow, "hero screen's skills");
+                session.DebugLevel();
+                Assert.AreEqual(DialogKind.LevelUp, session.Dialog);
+                Assert.DoesNotThrow(hud.RefreshNow, "level-up dialog");
+                Assert.IsTrue(hud.LevelUpView.gameObject.activeSelf);
+                session.ChooseLevelUpSkill(0);
+                session.DebugSpells();
+                session.OpenSpellBook();
+                Assert.DoesNotThrow(hud.RefreshNow, "spell book");
+                Assert.IsTrue(hud.SpellBookView.gameObject.activeSelf);
+                session.Back();
                 hud.OpenSettings();
                 Assert.DoesNotThrow(hud.RefreshNow, "options overlay");
             }

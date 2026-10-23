@@ -15,8 +15,7 @@ MonoBehaviour:
   heroes:
   - id: kael
     displayName: KAEL IRONSONG
-    className: WARLORD
-    faction: Iron Oath
+    classId: warrior
     description: Warlord of the Iron Oath. A leader without a stronghold, riding
       toward the Ashen Pass.
     portrait: {fileID: 21300000, guid: a47e271fced37474ebaf3cc95b37fb6c, type: 3}
@@ -34,10 +33,22 @@ MonoBehaviour:
     mapFramesPerSecond: 11
     baseAttack: 2
     baseDefense: 2
+    baseSpellPower: 1
+    baseKnowledge: 1
     dailyMovement: 1600
-    experiencePerLevel: 300
-    attackPerLevel: 1
-    defenseLevelInterval: 2
     startingArmy:
     - unitId: ironbound
       count: 12
+    startingSkills:
+    - skill: 6
+      level: 1
+    - skill: 2
+      level: 1
+    startsWithSpellBook: 1
+    startingSpellIds:
+    - magic-arrow
+    - cure
+    - bless
+    - haste
+    - slow
+    - lightning-bolt

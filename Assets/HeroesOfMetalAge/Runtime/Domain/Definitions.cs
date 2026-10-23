@@ -157,7 +157,7 @@ namespace HeroesOfMetalAge.Domain
     public sealed class ArtefactDefinition
     {
         public ArtefactDefinition(string id, string name, string description, EquipmentSlot slot, ArtefactRarity rarity, int attackBonus,
-            int defenseBonus, int speedBonus, int moraleBonus = 0)
+            int defenseBonus, int speedBonus, int moraleBonus = 0, int luckBonus = 0, int spellPowerBonus = 0, int knowledgeBonus = 0)
         {
             Id = id;
             Name = name;
@@ -168,6 +168,9 @@ namespace HeroesOfMetalAge.Domain
             DefenseBonus = defenseBonus;
             SpeedBonus = speedBonus;
             MoraleBonus = moraleBonus;
+            LuckBonus = luckBonus;
+            SpellPowerBonus = spellPowerBonus;
+            KnowledgeBonus = knowledgeBonus;
         }
 
         public string Id { get; }
@@ -179,46 +182,77 @@ namespace HeroesOfMetalAge.Domain
         public int DefenseBonus { get; }
         public int SpeedBonus { get; }
         public int MoraleBonus { get; }
+        public int LuckBonus { get; }
+        public int SpellPowerBonus { get; }
+        public int KnowledgeBonus { get; }
     }
 
+    /// <summary>
+    /// A hero: who they are, their class, their primary stats at level 1, movement and what they start with. How they grow
+    /// comes from the class (<see cref="HeroClassDefinition"/>) and the hero rules (<see cref="HeroPolicy"/>).
+    /// </summary>
     public sealed class HeroDefinition
     {
-        public HeroDefinition(string id, string name, string description, string className, string faction, int baseAttack, int baseDefense,
-            int dailyMovement, int experiencePerLevel, int attackPerLevel, int defenseLevelInterval, IEnumerable<Troop> startingArmy)
+        public HeroDefinition(string id, string name, string description, string classId, int baseAttack, int baseDefense, int baseSpellPower,
+            int baseKnowledge, int dailyMovement, IEnumerable<Troop> startingArmy, IEnumerable<HeroSkill> startingSkills = null,
+            bool hasSpellBook = false, IEnumerable<string> startingSpellIds = null)
         {
             Id = id;
             Name = name;
             Description = description;
-            ClassName = className;
-            Faction = faction;
+            ClassId = classId;
             BaseAttack = baseAttack;
             BaseDefense = baseDefense;
+            BaseSpellPower = baseSpellPower;
+            BaseKnowledge = baseKnowledge;
             DailyMovement = dailyMovement;
-            ExperiencePerLevel = experiencePerLevel;
-            AttackPerLevel = attackPerLevel;
-            DefenseLevelInterval = defenseLevelInterval;
             StartingArmy = startingArmy.ToList().AsReadOnly();
+            StartingSkills = (startingSkills ?? Enumerable.Empty<HeroSkill>()).ToList().AsReadOnly();
+            HasSpellBook = hasSpellBook;
+            StartingSpellIds = (startingSpellIds ?? Enumerable.Empty<string>()).ToList().AsReadOnly();
         }
 
         public string Id { get; }
         public string Name { get; }
         public string Description { get; }
-        public string ClassName { get; }
-        public string Faction { get; }
+        public string ClassId { get; }
         public int BaseAttack { get; }
         public int BaseDefense { get; }
+        public int BaseSpellPower { get; }
+        public int BaseKnowledge { get; }
+        /// <summary>Movement points per day on land before Logistics.</summary>
         public int DailyMovement { get; }
-        public int ExperiencePerLevel { get; }
-        public int AttackPerLevel { get; }
-        /// <summary>Defense grows by one every this many levels.</summary>
-        public int DefenseLevelInterval { get; }
         public IReadOnlyList<Troop> StartingArmy { get; }
+        public IReadOnlyList<HeroSkill> StartingSkills { get; }
+        /// <summary>True when the hero starts with a spell book.</summary>
+        public bool HasSpellBook { get; }
+        /// <summary>Spells written in the starting spell book.</summary>
+        public IReadOnlyList<string> StartingSpellIds { get; }
+    }
+
+    /// <summary>The enemy hero leading an army: casts spells in its battles and can be surrendered to.</summary>
+    public sealed class CommanderDefinition
+    {
+        public CommanderDefinition(string name, int spellPower, int mana, IEnumerable<string> spellIds)
+        {
+            Name = name;
+            SpellPower = spellPower;
+            Mana = mana;
+            SpellIds = spellIds.ToList().AsReadOnly();
+        }
+
+        public string Name { get; }
+        public int SpellPower { get; }
+        /// <summary>Mana at the start of each battle.</summary>
+        public int Mana { get; }
+        /// <summary>The spells the commander knows, in the order it prefers them.</summary>
+        public IReadOnlyList<string> SpellIds { get; }
     }
 
     public sealed class EncounterDefinition
     {
         public EncounterDefinition(string id, EncounterKind kind, WorldPosition position, string name, string description, IEnumerable<Troop> army,
-            int rewardExperience, int rewardGold, string rewardArtefactId = null)
+            int rewardExperience, int rewardGold, string rewardArtefactId = null, CommanderDefinition commander = null)
         {
             Id = id;
             Kind = kind;
@@ -229,6 +263,7 @@ namespace HeroesOfMetalAge.Domain
             RewardExperience = rewardExperience;
             RewardGold = rewardGold;
             RewardArtefactId = string.IsNullOrEmpty(rewardArtefactId) ? null : rewardArtefactId;
+            Commander = commander;
         }
 
         public string Id { get; }
@@ -242,6 +277,8 @@ namespace HeroesOfMetalAge.Domain
         public int RewardGold { get; }
         /// <summary>The treasure the army guards: always won with it instead of a rolled artefact. Null for none.</summary>
         public string RewardArtefactId { get; }
+        /// <summary>The enemy hero leading the army, or null for an army without one.</summary>
+        public CommanderDefinition Commander { get; }
         public bool IsHostile => Kind == EncounterKind.Sentinel || Kind == EncounterKind.Boss;
     }
 }

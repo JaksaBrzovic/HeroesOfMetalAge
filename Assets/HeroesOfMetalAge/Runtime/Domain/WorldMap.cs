@@ -46,10 +46,13 @@ namespace HeroesOfMetalAge.Domain
         }
 
         /// <summary>Movement points to step from <paramref name="from"/> into the neighbouring <paramref name="to"/>.</summary>
-        public int StepCost(WorldPosition from, WorldPosition to)
+        /// <param name="pathfinding">The hero's Pathfinding: how much of rough terrain's extra cost is cut.</param>
+        public int StepCost(WorldPosition from, WorldPosition to, TerrainRelief pathfinding = default)
         {
             bool isDiagonal = from.X != to.X && from.Y != to.Y;
-            return mission.TerrainRules.StepCost(Terrain(to), isDiagonal);
+            return pathfinding.ReductionPercent > 0
+                ? mission.TerrainRules.StepCost(Terrain(to), isDiagonal, pathfinding.ReductionPercent, pathfinding.UnpenalizedCost)
+                : mission.TerrainRules.StepCost(Terrain(to), isDiagonal);
         }
 
         /// <summary>The encounter at a position that still matters: towns always, other sites until resolved.</summary>
@@ -99,7 +102,8 @@ namespace HeroesOfMetalAge.Domain
         /// route. Unresolved sites and map objects that stop a ride end a route but are not crossed; unexplored cells are
         /// neither crossed nor reached.
         /// </summary>
-        public IReadOnlyList<WorldPosition> FindRoute(CampaignState campaign, WorldPosition destination)
+        /// <param name="pathfinding">The hero's Pathfinding, so routes prefer what is cheap for this hero.</param>
+        public IReadOnlyList<WorldPosition> FindRoute(CampaignState campaign, WorldPosition destination, TerrainRelief pathfinding = default)
         {
             List<WorldPosition> route = new List<WorldPosition>();
             WorldPosition from = campaign.Position;
@@ -133,7 +137,7 @@ namespace HeroesOfMetalAge.Domain
                     continue;
                 }
 
-                Relax(campaign.Explored, current, from, destination, open, costs, previous);
+                Relax(campaign.Explored, current, from, destination, open, costs, previous, pathfinding);
             }
 
             if (!previous.ContainsKey(destination))
@@ -151,7 +155,7 @@ namespace HeroesOfMetalAge.Domain
         }
 
         private void Relax(ExploredMap explored, WorldPosition current, WorldPosition from, WorldPosition destination, OpenSet open,
-            Dictionary<WorldPosition, RouteCost> costs, Dictionary<WorldPosition, WorldPosition> previous)
+            Dictionary<WorldPosition, RouteCost> costs, Dictionary<WorldPosition, WorldPosition> previous, TerrainRelief pathfinding)
         {
             for (int dy = -1; dy <= 1; dy++)
             {
@@ -164,7 +168,7 @@ namespace HeroesOfMetalAge.Domain
                     }
 
                     int length = dx != 0 && dy != 0 ? DIAGONAL_LENGTH : STRAIGHT_LENGTH;
-                    RouteCost candidate = costs[current].Add(StepCost(current, next), length, Deviation(next, from, destination));
+                    RouteCost candidate = costs[current].Add(StepCost(current, next, pathfinding), length, Deviation(next, from, destination));
                     if (costs.TryGetValue(next, out RouteCost known) && candidate.CompareTo(known) >= 0)
                     {
                         continue;
@@ -305,5 +309,20 @@ namespace HeroesOfMetalAge.Domain
                 heap[b] = value;
             }
         }
+    }
+
+    /// <summary>How much of rough terrain's extra movement cost a hero's Pathfinding cuts. The default cuts nothing.</summary>
+    public readonly struct TerrainRelief
+    {
+        public TerrainRelief(int reductionPercent, int unpenalizedCost)
+        {
+            ReductionPercent = reductionPercent;
+            UnpenalizedCost = unpenalizedCost;
+        }
+
+        /// <summary>Percent of the cost above <see cref="UnpenalizedCost"/> that is cut.</summary>
+        public int ReductionPercent { get; }
+        /// <summary>The cost of plain ground; cheaper or equal terrain is never cut.</summary>
+        public int UnpenalizedCost { get; }
     }
 }
