@@ -23,6 +23,7 @@ namespace HeroesOfMetalAge.Infrastructure.Content
             ContentValidator.ValidateHeroes(heroes, unitIds, mission.ArmySlots);
             ContentValidator.ValidateAudio(audio);
             ContentValidator.ValidateMission(mission, heroes, unitIds);
+            ContentValidator.ValidateMapObjects(mission, unitIds, new HashSet<string>(artefacts.Artefacts.Select(entry => entry.Id)));
 
             MissionDefinition definition = ToDefinition(mission);
             ContentValidator.ValidateMap(definition);
@@ -37,9 +38,9 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         {
             CombatPolicy combat = new CombatPolicy(mission.CombatWidth, mission.CombatHeight, mission.EnemyAttack, mission.EnemyDefense,
                 mission.DefendDamageMultiplier, mission.RangedMeleeDamageMultiplier, mission.AttackDeltaMultiplier, mission.DefenseDeltaMultiplier,
-                mission.MaximumAttackDelta, mission.MaximumDefenseDelta, mission.MissChance);
+                mission.MaximumAttackDelta, mission.MaximumDefenseDelta, mission.MissChance, mission.MoraleChance);
             RewardPolicy rewards = new RewardPolicy(mission.GoldVariation, mission.ArtefactChance, mission.RareChance, mission.LegendaryChance,
-                mission.LegendaryGuaranteeVictories);
+                mission.LegendaryGuaranteeVictories, mission.EpicChance);
             AdventureMapAuthoring map = mission.Map;
             WorldPosition start = new WorldPosition(mission.StartingPosition.x, mission.StartingPosition.y);
             double ownedPriceMultiplier = Math.Round(mission.OwnedRecruitmentMultiplier, PRICE_MULTIPLIER_DECIMALS);
@@ -47,7 +48,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
             return new MissionDefinition(mission.Id, mission.DisplayName, mission.Description, mission.HeroId, mission.ClanId, mission.ClanName,
                 mission.ClanHeroName, mission.StartingGold, mission.ArmySlots, mission.DaysPerWeek, mission.Terrain.ToRules(),
                 ownedPriceMultiplier, map.Width, map.Height, start, map.ReadTerrain(), combat,
-                mission.Encounters.Select(entry => entry.ToDefinition()), mission.RecruitmentUnitIds, rewards);
+                mission.Encounters.Select(entry => entry.ToDefinition()), mission.RecruitmentUnitIds, rewards,
+                mission.MapObjects.Select(entry => entry.ToDefinition()), mission.Objectives.Select(entry => entry.ToDefinition()), mission.ScoutingRadius);
         }
     }
 }

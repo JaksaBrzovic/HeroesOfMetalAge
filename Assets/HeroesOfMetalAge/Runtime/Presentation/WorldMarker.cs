@@ -83,6 +83,20 @@ namespace HeroesOfMetalAge.Presentation
             ApplyColors();
         }
 
+        /// <summary>Height (and widest width) of the figure in cells, e.g. for a building larger than a unit.</summary>
+        public void SetSize(float height, float maxWidth)
+        {
+            iconHeight = Mathf.Max(0.1f, height);
+            maxIconWidth = Mathf.Max(0.1f, maxWidth);
+            FitIcon();
+        }
+
+        /// <summary>Hides or shows the coloured base under the figure; buildings and pickups stand on the map without one.</summary>
+        public void SetBaseVisible(bool isVisible)
+        {
+            baseRenderer.enabled = isVisible;
+        }
+
         /// <summary>A right-facing walk cycle played while the figure moves; empty for still art.</summary>
         public void SetFrames(IReadOnlyList<Sprite> walkFrames, float walkFramesPerSecond)
         {

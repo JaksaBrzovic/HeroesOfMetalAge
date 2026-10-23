@@ -16,19 +16,28 @@ MonoBehaviour:
   speakers:
   - id: kael
     displayName: KAEL IRONSONG
-    portrait: {fileID: 21300000, guid: a47e271fced37474ebaf3cc95b37fb6c, type: 3}
+    portrait: {fileID: 21300000, guid: 7dfff008d102a4544880fe835e3c551d, type: 3}
   - id: lord-varg
     displayName: LORD VARG
-    portrait: {fileID: 0}
+    portrait: {fileID: 21300000, guid: 686059e4372f6b544a5210de3d17d236, type: 3}
   - id: air-guitarists
     displayName: AIR GUITARISTS
-    portrait: {fileID: 21300000, guid: 53c52e4783e7b124b94153082243e9b2, type: 3}
+    portrait: {fileID: 21300000, guid: 07cb1f21f88af0d4fa1c4822f8a681e7, type: 3}
   - id: pass-wardens
     displayName: PASS WARDENS
-    portrait: {fileID: 21300000, guid: 22f5927ff444ef04380073d11f43108d, type: 3}
+    portrait: {fileID: 21300000, guid: f0ae6000f6087304f90e907529a6257a, type: 3}
   - id: black-banner
     displayName: THE BLACK BANNER
     portrait: {fileID: 0}
+  - id: old-skald
+    displayName: THE OLD SKALD
+    portrait: {fileID: 21300000, guid: 4f09065db3bdefa4fa27dbc7b395e1fc, type: 3}
+  - id: chained-maiden
+    displayName: THE CHAINED MAIDEN
+    portrait: {fileID: 21300000, guid: 4bbd998bd907a094cbf126214faf4d63, type: 3}
+  - id: bone-oracle
+    displayName: THE BONE ORACLE
+    portrait: {fileID: 21300000, guid: cdac5cf9d38d28047b8667329f2801f0, type: 3}
   conversations:
   - id: ashen-pass-arrival
     style: 0
@@ -73,7 +82,7 @@ MonoBehaviour:
     lines:
     - id: town-arrival-01
       speakerId: lord-varg
-      text: "Stranče, state your biznis"
+      text: "Stran\u010De, state your biznis"
       voiceOver: {fileID: 0}
   - id: boss-arrival
     style: 1
@@ -81,4 +90,64 @@ MonoBehaviour:
     - id: boss-arrival-01
       speakerId: black-banner
       text: Ti si looood
+      voiceOver: {fileID: 0}
+  - id: quest-bearer
+    style: 0
+    lines:
+    - id: quest-bearer-01
+      speakerId: old-skald
+      text: Hail, warlord of the iron oath. Hear an old man before you ride east.
+      voiceOver: {fileID: 0}
+    - id: quest-bearer-02
+      speakerId: old-skald
+      text: Beyond the clan's castle, past the red tent, horned beasts keep a maiden
+        in chains.
+      voiceOver: {fileID: 0}
+    - id: quest-bearer-03
+      speakerId: old-skald
+      text: Take this red key. The keepers of the tent open only for its bearer.
+      voiceOver: {fileID: 0}
+    - id: quest-bearer-04
+      speakerId: kael
+      text: Then I ride for her.
+      voiceOver: {fileID: 0}
+  - id: red-tent
+    style: 0
+    lines:
+    - id: red-tent-01
+      speakerId: kael
+      text: A red tent bars the way. Somewhere in the green lands someone must hold
+        its key.
+      voiceOver: {fileID: 0}
+  - id: maiden-freed
+    style: 0
+    lines:
+    - id: maiden-freed-01
+      speakerId: chained-maiden
+      text: You broke my chains, rider of the oath.
+      voiceOver: {fileID: 0}
+    - id: maiden-freed-02
+      speakerId: chained-maiden
+      text: The halls of femdom had been restored. Take the chain that bound me;
+        let it bind your enemies.
+      voiceOver: {fileID: 0}
+    - id: maiden-freed-03
+      speakerId: kael
+      text: I will wear it with honour.
+      voiceOver: {fileID: 0}
+  - id: dragon-lore
+    style: 0
+    lines:
+    - id: dragon-lore-01
+      speakerId: bone-oracle
+      text: Bones remember what the living forget.
+      voiceOver: {fileID: 0}
+    - id: dragon-lore-02
+      speakerId: bone-oracle
+      text: Under the burning mountains a dragon sleeps. When the Secret of Metal
+        is sung, it will wake.
+      voiceOver: {fileID: 0}
+    - id: dragon-lore-03
+      speakerId: kael
+      text: Let it sleep. For now.
       voiceOver: {fileID: 0}

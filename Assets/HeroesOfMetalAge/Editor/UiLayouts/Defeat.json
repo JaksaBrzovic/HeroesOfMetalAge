@@ -1,0 +1,79 @@
+{
+  "screen": "Defeat",
+  "backdrop": "DefeatFrame",
+  "fullscreen": false,
+  "frameSize": [
+    925.7,
+    520.8
+  ],
+  "elements": [
+    {
+      "name": "TitleText",
+      "type": "text",
+      "rect": [
+        76.3,
+        91.8,
+        851.3,
+        153.8
+      ],
+      "style": "Display",
+      "size": 37.2,
+      "align": "left",
+      "field": "titleText"
+    },
+    {
+      "name": "BodyText",
+      "type": "text",
+      "rect": [
+        77.5,
+        195.9,
+        851.3,
+        357.1
+      ],
+      "style": "Body",
+      "size": 21.1,
+      "align": "topleft",
+      "field": "bodyText"
+    },
+    {
+      "name": "RetryButton",
+      "type": "framedButton",
+      "rect": [
+        77.5,
+        369.5,
+        325.5,
+        443.9
+      ],
+      "text": "RETRY BATTLE",
+      "size": 21.1,
+      "field": "retryButton"
+    },
+    {
+      "name": "ReturnButton",
+      "type": "framedButton",
+      "rect": [
+        340.4,
+        369.5,
+        588.4,
+        443.9
+      ],
+      "text": "RETURN / PREPARE",
+      "size": 21.1,
+      "field": "returnButton"
+    },
+    {
+      "name": "NewMissionButton",
+      "type": "framedButton",
+      "rect": [
+        603.3,
+        369.5,
+        851.3,
+        443.9
+      ],
+      "text": "NEW MISSION",
+      "size": 21.1,
+      "field": "newMissionButton"
+    }
+  ],
+  "spriteFolder": "Assets/HeroesOfMetalAge/Content/UI/Sprites/Gameplay/Dialog"
+}

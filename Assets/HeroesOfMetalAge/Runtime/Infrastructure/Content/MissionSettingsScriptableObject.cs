@@ -37,9 +37,16 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [SerializeField] private TerrainDatabaseScriptableObject terrain;
         [Tooltip("Cell from the top-left corner of the map; hover the map in the Scene view to read a cell's coordinates.")]
         [SerializeField] private Vector2Int startingPosition = new Vector2Int(2, 5);
+        [Tooltip("Fog of war: how many cells around himself the hero sees as he rides. 0 shows the whole map from the start.")]
+        [Range(0, 20)]
+        [SerializeField] private int scoutingRadius = 6;
         [SerializeField] private List<string> recruitmentUnitIds = new List<string>();
         [Tooltip("Encounter positions are cells from the top-left corner of the map.")]
         [SerializeField] private List<EncounterEntry> encounters = new List<EncounterEntry>();
+        [Tooltip("Pickups, chests, shrines, mills, dwellings, quest givers, gates, captives, oracles and the exit portal.")]
+        [SerializeField] private List<MapObjectEntry> mapObjects = new List<MapObjectEntry>();
+        [Tooltip("The mission's goals in the order the mission panel lists them; the exit portal opens once the required ones are reached.")]
+        [SerializeField] private List<ObjectiveEntry> objectives = new List<ObjectiveEntry>();
 
         [Header("Music")]
         [Tooltip("Plays on the adventure map. Empty leaves the map to the ambient and gallop layers.")]
@@ -73,6 +80,9 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [Tooltip("Chance that a strike misses and deals no damage.")]
         [Range(0f, 0.5f)]
         [SerializeField] private float missChance = 0.15f;
+        [Tooltip("Chance per point of morale that a stack acts again (good morale) or freezes (bad morale).")]
+        [Range(0f, 0.3f)]
+        [SerializeField] private float moraleChance = 0.1f;
 
         [Header("Battle rewards")]
         [Tooltip("Rolled gold is an encounter's gold times a factor between 1 - this and 1 + this.")]
@@ -86,6 +96,9 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [SerializeField] private float rareChance = 0.3f;
         [Range(0f, 1f)]
         [SerializeField] private float legendaryChance = 0.1f;
+        [Tooltip("Chance that a dropped artefact is epic.")]
+        [Range(0f, 1f)]
+        [SerializeField] private float epicChance = 0.15f;
         [Tooltip("Every this many victories bring at least one legendary artefact; 0 turns the guarantee off.")]
         [Min(0)]
         [SerializeField] private int legendaryGuaranteeVictories = 4;
@@ -137,11 +150,14 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         }
 
         public Vector2Int StartingPosition => startingPosition;
+        public int ScoutingRadius => scoutingRadius;
         public IReadOnlyList<string> RecruitmentUnitIds => recruitmentUnitIds;
         public Sprite BattleBackground => battleBackground;
         public SoundDefinition MapMusic => mapMusic;
         public SoundDefinition TownMusic => townMusic;
         public IReadOnlyList<EncounterEntry> Encounters => encounters;
+        public IReadOnlyList<MapObjectEntry> MapObjects => mapObjects ?? (mapObjects = new List<MapObjectEntry>());
+        public IReadOnlyList<ObjectiveEntry> Objectives => objectives ?? (objectives = new List<ObjectiveEntry>());
         public int CombatWidth => combatWidth;
         public int CombatHeight => combatHeight;
         public int EnemyAttack => enemyAttack;
@@ -153,10 +169,12 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public int MaximumAttackDelta => maximumAttackDelta;
         public int MaximumDefenseDelta => maximumDefenseDelta;
         public float MissChance => missChance;
+        public float MoraleChance => moraleChance;
         public float GoldVariation => goldVariation;
         public float ArtefactChance => artefactChance;
         public float RareChance => rareChance;
         public float LegendaryChance => legendaryChance;
+        public float EpicChance => epicChance;
         public int LegendaryGuaranteeVictories => legendaryGuaranteeVictories;
         public float TravelStepSeconds => travelStepSeconds;
         public float EnemyTurnSeconds => enemyTurnSeconds;

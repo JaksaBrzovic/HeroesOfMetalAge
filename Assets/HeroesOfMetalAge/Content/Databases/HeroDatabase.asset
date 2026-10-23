@@ -20,6 +20,8 @@ MonoBehaviour:
     description: Warlord of the Iron Oath. A leader without a stronghold, riding
       toward the Ashen Pass.
     portrait: {fileID: 21300000, guid: a47e271fced37474ebaf3cc95b37fb6c, type: 3}
+    panelPortrait: {fileID: 21300000, guid: 7dfff008d102a4544880fe835e3c551d, type: 3}
+    screenPortrait: {fileID: 21300000, guid: 24161a219cefef6459fd4bc6dfa6a412, type: 3}
     mapFrames:
     - {fileID: 21300000, guid: a47e271fced37474ebaf3cc95b37fb6c, type: 3}
     - {fileID: 21300000, guid: c543ff50bc926b949ac7ececa3a24fce, type: 3}

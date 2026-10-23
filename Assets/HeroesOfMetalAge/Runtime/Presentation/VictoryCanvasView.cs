@@ -10,6 +10,8 @@ namespace HeroesOfMetalAge.Presentation
     {
         [SerializeField] private TMP_Text titleText;
         [SerializeField] private TMP_Text subtitleText;
+        [SerializeField] private TMP_Text experienceText;
+        [SerializeField] private TMP_Text lossesText;
         [SerializeField] private TMP_Text bodyText;
         [SerializeField] private UiWidget continueButton;
 
@@ -20,9 +22,11 @@ namespace HeroesOfMetalAge.Presentation
         {
             VictorySummary result = Session.Victory;
             EncounterDefinition encounter = Session.Encounter;
-            UiBinding.SetText(titleText, encounter.Kind == EncounterKind.Boss ? "THE PASS IS YOURS" : "VICTORY");
+            UiBinding.SetText(titleText, "VICTORY");
             UiBinding.SetText(subtitleText, encounter.Name + " has fallen.");
-            UiBinding.SetText(bodyText, Body(result, encounter.Kind));
+            UiBinding.SetText(experienceText, "EXPERIENCE<pos=45%>+" + result.Experience + " XP");
+            UiBinding.SetText(lossesText, "LOSSES<pos=45%>" + result.Losses + " CREATURES");
+            UiBinding.SetText(bodyText, Closing(result, encounter.Kind));
             UiBinding.SetButton(continueButton, "CLAIM THE SPOILS", true);
         }
 
@@ -30,6 +34,8 @@ namespace HeroesOfMetalAge.Presentation
         {
             Require(titleText, nameof(titleText));
             Require(subtitleText, nameof(subtitleText));
+            Require(experienceText, nameof(experienceText));
+            Require(lossesText, nameof(lossesText));
             Require(bodyText, nameof(bodyText));
             Require(continueButton, nameof(continueButton));
         }
@@ -39,13 +45,12 @@ namespace HeroesOfMetalAge.Presentation
             continueButton.Bind(Session.ContinueVictory);
         }
 
-        private string Body(VictorySummary result, EncounterKind kind)
+        private string Closing(VictorySummary result, EncounterKind kind)
         {
-            string level = result.HasLeveledUp ? "LEVEL UP / Your hero is now level " + Rules.Level(Campaign) + "." : "The road is yours.";
-            string closing = kind == EncounterKind.Boss
-                ? "First mission complete."
-                : kind == EncounterKind.Town ? "This town is now yours." : "The road to the town is open.";
-            return "EXPERIENCE   +" + result.Experience + " XP\nLOSSES   " + result.Losses + " CREATURES\n\n" + level + "\n" + closing;
+            string level = result.HasLeveledUp ? "LEVEL UP! Your hero is now level " + Rules.Level(Campaign) + "." : "The road is yours.";
+            string closing = kind == EncounterKind.Boss ? "The way to the portal lies open."
+                : kind == EncounterKind.Town ? "This town is now yours." : "The road ahead is open.";
+            return level + "\n" + closing;
         }
     }
 }

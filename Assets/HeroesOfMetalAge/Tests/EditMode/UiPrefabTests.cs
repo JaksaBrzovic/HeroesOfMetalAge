@@ -20,7 +20,7 @@ namespace HeroesOfMetalAge.Tests
     /// <summary>The authored uGUI prefabs are complete, wired and initialize against the real content.</summary>
     public class UiPrefabTests
     {
-        private static readonly string[] WidgetPrefabs = { "Button", "ArmySlot", "RecruitmentCard", "ArtefactCard" };
+        private static readonly string[] WidgetPrefabs = { "Button", "HotspotButton", "ArmySlot", "ItemSlot", "ObjectiveRow" };
 
         private GameHud root;
 
@@ -126,6 +126,61 @@ namespace HeroesOfMetalAge.Tests
         }
 
         [Test]
+        public void EveryTextInEveryPrefab_HasATypographyStyleAndShowsItsFont()
+        {
+            TypographySettings typography = ContentAssets.Typography;
+            Assert.IsNotNull(typography, ContentAssets.TYPOGRAPHY_PATH);
+            foreach (TextStyle style in Enum.GetValues(typeof(TextStyle)))
+            {
+                TextStyleEntry entry = typography.Find(style);
+                Assert.IsNotNull(entry, "every style is authored: " + style);
+                Assert.IsNotNull(entry.Font, "every style has a font: " + style);
+                Assert.AreEqual(AtlasPopulationMode.Static, entry.Font.atlasPopulationMode, "static atlases stay unchanged at runtime: " + style);
+                Assert.IsTrue(entry.Font.HasCharacters("Kael Ironsong 1600 / VICTORY!"), "the atlas holds Latin text: " + style);
+            }
+
+            int texts = 0;
+            foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/HeroesOfMetalAge/Prefabs" }))
+            {
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
+                foreach (TMP_Text text in prefab.GetComponentsInChildren<TMP_Text>(true))
+                {
+                    TypographyText typographyText = text.GetComponent<TypographyText>();
+                    string where = prefab.name + "/" + text.name;
+                    Assert.IsNotNull(typographyText, where + " has a style");
+                    Assert.AreSame(typography, typographyText.Settings, where + " uses the shared typography");
+                    Assert.AreSame(typography.Find(typographyText.Style).Font, text.font, where + " shows its style's font");
+                    texts++;
+                }
+            }
+
+            Assert.Greater(texts, 50);
+        }
+
+        [Test]
+        public void EndDayHourglass_PlaysItsPaintedFramesOverTheSequence()
+        {
+            EndDayView view = Object.Instantiate(ContentAssets.EndDayOverlayPrefab);
+            try
+            {
+                view.Initialize();
+                Assert.AreEqual(32, view.FrameCount);
+                view.Show(0f);
+                Sprite first = view.CurrentFrame;
+                Assert.AreEqual(0, view.FrameAt(0f));
+                Assert.AreEqual(view.FrameCount - 1, view.FrameAt(1f));
+                Assert.Less(view.FrameAt(0.5f), 8, "the sand runs slowly through the first eight frames for most of the time");
+                Assert.Greater(view.FrameAt(0.95f), 8, "the turn comes at the end");
+                view.Show(0.95f);
+                Assert.AreNotSame(first, view.CurrentFrame);
+            }
+            finally
+            {
+                Object.DestroyImmediate(view.gameObject);
+            }
+        }
+
+        [Test]
         public void Sliders_ConstrainDrivenGeometry()
         {
             foreach (Slider slider in root.GetComponentsInChildren<Slider>(true))
@@ -172,6 +227,11 @@ namespace HeroesOfMetalAge.Tests
                 Assert.IsTrue(panel.CueWidgets.All(widget => widget.Button != null), "every cue button is clickable");
                 Assert.AreEqual("Ambient Layer", panel.CueWidgets[0].name);
                 Assert.AreEqual(session.Catalog.Units[0].Name + " Voice", panel.CueWidgets[expected - session.Catalog.Units.Count].name);
+                Assert.IsFalse(panel.IsSoundsTabOpen, "the panel opens on its general tab");
+                Assert.IsTrue(panel.CueWidgets.All(widget => !widget.gameObject.activeInHierarchy), "the sound buttons wait in their own tab");
+                panel.ShowTab(true);
+                Assert.IsTrue(panel.CueWidgets.All(widget => widget.gameObject.activeInHierarchy));
+                Assert.IsFalse(panel.SpeedButton.gameObject.activeInHierarchy, "the options stay on the general tab");
             }
             finally
             {
@@ -245,6 +305,8 @@ namespace HeroesOfMetalAge.Tests
         private static void RideToFriendlyEncounter(GameSession session)
         {
             EncounterDefinition friendly = session.Catalog.Mission.Encounters.First(encounter => encounter.Kind == EncounterKind.Friendly);
+            // the fog of war would hide the destination
+            session.DebugRevealMap();
             for (int day = 0; day < 10 && session.Dialog == DialogKind.None; day++)
             {
                 session.Plan(friendly.Position);

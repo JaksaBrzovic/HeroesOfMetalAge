@@ -1,0 +1,92 @@
+{
+  "screen": "Dialog",
+  "backdrop": "DialogFrame",
+  "fullscreen": false,
+  "frameSize": [
+    925.7,
+    520.8
+  ],
+  "elements": [
+    {
+      "name": "TitleText",
+      "type": "text",
+      "rect": [
+        76.3,
+        91.8,
+        851.3,
+        153.8
+      ],
+      "style": "Title",
+      "size": 39.7,
+      "align": "left",
+      "field": "titleText"
+    },
+    {
+      "name": "SubtitleText",
+      "type": "text",
+      "rect": [
+        77.5,
+        194.7,
+        851.3,
+        233.1
+      ],
+      "style": "Heading",
+      "size": 21.1,
+      "align": "left",
+      "field": "subtitleText"
+    },
+    {
+      "name": "BodyText",
+      "type": "text",
+      "rect": [
+        77.5,
+        239.3,
+        851.3,
+        357.1
+      ],
+      "style": "Body",
+      "size": 21.1,
+      "align": "topleft",
+      "field": "bodyText"
+    },
+    {
+      "name": "PrimaryButton",
+      "type": "button",
+      "rect": [
+        82.5,
+        366.4,
+        449.5,
+        450.1
+      ],
+      "label": [
+        104.2,
+        381.9,
+        429.7,
+        434.6
+      ],
+      "text": "WELCOME THEM",
+      "size": 23.6,
+      "field": "primaryButton"
+    },
+    {
+      "name": "SecondaryButton",
+      "type": "button",
+      "rect": [
+        476.2,
+        366.4,
+        843.2,
+        450.1
+      ],
+      "label": [
+        497.9,
+        381.9,
+        821.5,
+        434.6
+      ],
+      "text": "LEAVE",
+      "size": 23.6,
+      "field": "secondaryButton"
+    }
+  ],
+  "spriteFolder": "Assets/HeroesOfMetalAge/Content/UI/Sprites/Gameplay/Dialog"
+}

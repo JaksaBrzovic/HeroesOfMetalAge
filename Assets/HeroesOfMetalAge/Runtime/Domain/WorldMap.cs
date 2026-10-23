@@ -13,11 +13,13 @@ namespace HeroesOfMetalAge.Domain
 
         private readonly MissionDefinition mission;
         private readonly Dictionary<WorldPosition, EncounterDefinition> sites;
+        private readonly Dictionary<WorldPosition, MapObjectDefinition> objects;
 
         public WorldMap(MissionDefinition mission)
         {
             this.mission = mission;
             sites = mission.Encounters.ToDictionary(encounter => encounter.Position);
+            objects = mission.Objects.ToDictionary(mapObject => mapObject.Position);
         }
 
         public int Width => mission.Width;
@@ -61,6 +63,17 @@ namespace HeroesOfMetalAge.Domain
             return encounter.Kind == EncounterKind.Town || !campaign.IsCompleted(encounter.Id) ? encounter : null;
         }
 
+        /// <summary>The map object at a position that is still there: taken pickups and opened gates are gone.</summary>
+        public MapObjectDefinition ObjectAt(CampaignState campaign, WorldPosition position)
+        {
+            if (!objects.TryGetValue(position, out MapObjectDefinition mapObject))
+            {
+                return null;
+            }
+
+            return mapObject.IsRemovedWhenVisited && campaign.IsVisited(mapObject.Id) ? null : mapObject;
+        }
+
         /// <summary>One step to a neighbouring cell; diagonals may not cut a blocked corner.</summary>
         public bool CanStep(WorldPosition from, WorldPosition to)
         {
@@ -83,13 +96,14 @@ namespace HeroesOfMetalAge.Domain
         /// Cheapest route from the hero to <paramref name="destination"/>, excluding the start. Among equally cheap routes the
         /// shortest on the map wins (a diagonal step is longer than a straight one), then the one closest to the straight line
         /// to the destination; remaining ties are broken by row, then column, so the same request always returns the same
-        /// route. Unresolved sites end a route but are not crossed.
+        /// route. Unresolved sites and map objects that stop a ride end a route but are not crossed; unexplored cells are
+        /// neither crossed nor reached.
         /// </summary>
         public IReadOnlyList<WorldPosition> FindRoute(CampaignState campaign, WorldPosition destination)
         {
             List<WorldPosition> route = new List<WorldPosition>();
             WorldPosition from = campaign.Position;
-            if (!IsWalkable(destination) || from == destination)
+            if (!IsWalkable(destination) || !campaign.Explored.IsExplored(destination) || from == destination)
             {
                 return route.AsReadOnly();
             }
@@ -113,12 +127,13 @@ namespace HeroesOfMetalAge.Domain
                     break;
                 }
 
-                if (current != from && Site(campaign, current) != null)
+                MapObjectDefinition mapObject = ObjectAt(campaign, current);
+                if (current != from && (Site(campaign, current) != null || (mapObject != null && mapObject.StopsPassage)))
                 {
                     continue;
                 }
 
-                Relax(current, from, destination, open, costs, previous);
+                Relax(campaign.Explored, current, from, destination, open, costs, previous);
             }
 
             if (!previous.ContainsKey(destination))
@@ -135,7 +150,7 @@ namespace HeroesOfMetalAge.Domain
             return route.AsReadOnly();
         }
 
-        private void Relax(WorldPosition current, WorldPosition from, WorldPosition destination, OpenSet open,
+        private void Relax(ExploredMap explored, WorldPosition current, WorldPosition from, WorldPosition destination, OpenSet open,
             Dictionary<WorldPosition, RouteCost> costs, Dictionary<WorldPosition, WorldPosition> previous)
         {
             for (int dy = -1; dy <= 1; dy++)
@@ -143,7 +158,7 @@ namespace HeroesOfMetalAge.Domain
                 for (int dx = -1; dx <= 1; dx++)
                 {
                     WorldPosition next = new WorldPosition(current.X + dx, current.Y + dy);
-                    if (!CanStep(current, next))
+                    if (!CanStep(current, next) || !explored.IsExplored(next))
                     {
                         continue;
                     }

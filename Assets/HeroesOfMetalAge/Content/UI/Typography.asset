@@ -1,0 +1,115 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50ba58d7bdf96a1438b4636276159710, type: 3}
+  m_Name: Typography
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.TypographySettings
+  styles:
+  - style: 0
+    font: {fileID: 11400000, guid: d1631ec6ead0e014da3f673efd0f717d, type: 2}
+    material: {fileID: 2100000, guid: 3aee8875dbe67ae43a22b5e90a40b9fb, type: 2}
+    sizeScale: 1
+    characterSpacing: 2
+    lineSpacing: 0
+    isUpperCase: 0
+    hasGradient: 1
+    gradientTop: {r: 1, g: 0.9, b: 0.58, a: 1}
+    gradientBottom: {r: 0.86, g: 0.5, b: 0.16, a: 1}
+  - style: 1
+    font: {fileID: 11400000, guid: 5a75d7e523d989e4f847040c372ee5a1, type: 2}
+    material: {fileID: 2100000, guid: 62a69023cf45ba04b9be5f11372bec6a, type: 2}
+    sizeScale: 1
+    characterSpacing: 1
+    lineSpacing: 0
+    isUpperCase: 0
+    hasGradient: 0
+    gradientTop: {r: 1, g: 1, b: 1, a: 1}
+    gradientBottom: {r: 1, g: 1, b: 1, a: 1}
+  - style: 2
+    font: {fileID: 11400000, guid: 627314f0e07c3a444865bda327e6199c, type: 2}
+    material: {fileID: 2100000, guid: 83666fccd2ad7374bb7d493c36dd3ab3, type: 2}
+    sizeScale: 1
+    characterSpacing: 2
+    lineSpacing: 0
+    isUpperCase: 1
+    hasGradient: 0
+    gradientTop: {r: 1, g: 1, b: 1, a: 1}
+    gradientBottom: {r: 1, g: 1, b: 1, a: 1}
+  - style: 3
+    font: {fileID: 11400000, guid: 627314f0e07c3a444865bda327e6199c, type: 2}
+    material: {fileID: 2100000, guid: 83666fccd2ad7374bb7d493c36dd3ab3, type: 2}
+    sizeScale: 1
+    characterSpacing: 1
+    lineSpacing: 0
+    isUpperCase: 1
+    hasGradient: 0
+    gradientTop: {r: 1, g: 1, b: 1, a: 1}
+    gradientBottom: {r: 1, g: 1, b: 1, a: 1}
+  - style: 4
+    font: {fileID: 11400000, guid: 9b46cf012b0fb5343b3ebf46aaa3b519, type: 2}
+    material: {fileID: 2100000, guid: 73903628feaba5f47b0913e17cb6cbd2, type: 2}
+    sizeScale: 0.95
+    characterSpacing: 1
+    lineSpacing: 0
+    isUpperCase: 1
+    hasGradient: 0
+    gradientTop: {r: 1, g: 1, b: 1, a: 1}
+    gradientBottom: {r: 1, g: 1, b: 1, a: 1}
+  - style: 5
+    font: {fileID: 11400000, guid: 2cc9a52fe26b8ca4c9359844ba06012b, type: 2}
+    material: {fileID: 2100000, guid: 0029e69da154bcc4f8fa1c628f46c5b7, type: 2}
+    sizeScale: 1.1
+    characterSpacing: 0
+    lineSpacing: 0
+    isUpperCase: 0
+    hasGradient: 0
+    gradientTop: {r: 1, g: 1, b: 1, a: 1}
+    gradientBottom: {r: 1, g: 1, b: 1, a: 1}
+  - style: 6
+    font: {fileID: 11400000, guid: 627314f0e07c3a444865bda327e6199c, type: 2}
+    material: {fileID: 2100000, guid: 83666fccd2ad7374bb7d493c36dd3ab3, type: 2}
+    sizeScale: 1
+    characterSpacing: 0
+    lineSpacing: 0
+    isUpperCase: 0
+    hasGradient: 0
+    gradientTop: {r: 1, g: 1, b: 1, a: 1}
+    gradientBottom: {r: 1, g: 1, b: 1, a: 1}
+  - style: 7
+    font: {fileID: 11400000, guid: c137c0832c344b44083d27e2d77b9402, type: 2}
+    material: {fileID: 0}
+    sizeScale: 1.05
+    characterSpacing: 0
+    lineSpacing: -4
+    isUpperCase: 0
+    hasGradient: 0
+    gradientTop: {r: 1, g: 1, b: 1, a: 1}
+    gradientBottom: {r: 1, g: 1, b: 1, a: 1}
+  - style: 8
+    font: {fileID: 11400000, guid: 8df5f4aec7b66ef458b1f882bf6cb803, type: 2}
+    material: {fileID: 2100000, guid: a656172fe6a6efa4d81a105cb6244efa, type: 2}
+    sizeScale: 1
+    characterSpacing: 1
+    lineSpacing: 0
+    isUpperCase: 0
+    hasGradient: 0
+    gradientTop: {r: 1, g: 1, b: 1, a: 1}
+    gradientBottom: {r: 1, g: 1, b: 1, a: 1}
+  - style: 9
+    font: {fileID: 11400000, guid: d1631ec6ead0e014da3f673efd0f717d, type: 2}
+    material: {fileID: 2100000, guid: 7e419805b1a61ca4bad55786a316ad27, type: 2}
+    sizeScale: 1
+    characterSpacing: 1
+    lineSpacing: 0
+    isUpperCase: 0
+    hasGradient: 1
+    gradientTop: {r: 1, g: 0.9, b: 0.58, a: 1}
+    gradientBottom: {r: 0.86, g: 0.5, b: 0.16, a: 1}

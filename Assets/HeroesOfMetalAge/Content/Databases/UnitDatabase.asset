@@ -18,6 +18,7 @@ MonoBehaviour:
     description: Stage-hardened brawler; swings his flight case like a battering
       ram
     portrait: {fileID: 21300000, guid: 22f5927ff444ef04380073d11f43108d, type: 3}
+    cardPortrait: {fileID: 21300000, guid: f0ae6000f6087304f90e907529a6257a, type: 3}
     walkFrames:
     - {fileID: 21300000, guid: 22f5927ff444ef04380073d11f43108d, type: 3}
     - {fileID: 21300000, guid: 2c095b3fde3b2144b9d0b2c2cf5caf2b, type: 3}
@@ -43,6 +44,7 @@ MonoBehaviour:
     displayName: AIR GUITARIST
     description: Ranged / riffs strike from afar, half damage in melee
     portrait: {fileID: 21300000, guid: 53c52e4783e7b124b94153082243e9b2, type: 3}
+    cardPortrait: {fileID: 21300000, guid: 710f93fbff815044b8abf3e31be5ba0e, type: 3}
     walkFrames:
     - {fileID: 21300000, guid: 53c52e4783e7b124b94153082243e9b2, type: 3}
     - {fileID: 21300000, guid: b1c31bca95bf380409ea45a81163ffbc, type: 3}
@@ -65,9 +67,10 @@ MonoBehaviour:
     ranged: 1
     voice: {fileID: 11400000, guid: f7759a0e39d52544dbeada57f86350fb, type: 2}
   - id: doom-rider
-    displayName: DOOM RIDER
-    description: Heavy cavalry
-    portrait: {fileID: 0}
+    displayName: BERSERKER
+    description: Frenzied melee powerhouse, fearsome in close combat.
+    portrait: {fileID: 21300000, guid: 464a4963346f04d44a4cfa918384ca14, type: 3}
+    cardPortrait: {fileID: 21300000, guid: 9a94a51724633144a89365c5a9ad2116, type: 3}
     walkFrames: []
     walkFramesPerSecond: 8
     placeholderIcon: rider
@@ -81,3 +84,21 @@ MonoBehaviour:
     weeklyGrowth: 4
     ranged: 0
     voice: {fileID: 11400000, guid: 26ce2d11f751506489324181d501cca6, type: 2}
+  - id: minotaur
+    displayName: MINOTAUR
+    description: Horned brutes of the ash wastes; they guard what they do not understand.
+    portrait: {fileID: 21300000, guid: 6e5379996d82f5148a5bcdfdc0d49e93, type: 3}
+    cardPortrait: {fileID: 21300000, guid: 6e5379996d82f5148a5bcdfdc0d49e93, type: 3}
+    walkFrames: []
+    walkFramesPerSecond: 8
+    placeholderIcon: axe
+    health: 60
+    minimumDamage: 9
+    maximumDamage: 15
+    attack: 11
+    defense: 9
+    speed: 6
+    recruitmentCost: 450
+    weeklyGrowth: 0
+    ranged: 0
+    voice: {fileID: 11400000, guid: 850867283634418faa546a6bf5ab319b, type: 2}

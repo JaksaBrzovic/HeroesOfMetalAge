@@ -44,7 +44,7 @@ namespace HeroesOfMetalAge.Presentation
             UiBinding.SetText(statsText, "HP " + active.TotalHealth + " / SPEED " + battle.Speed(active)
                 + "\nDAMAGE " + unit.MinimumDamage + "-" + unit.MaximumDamage + " PER CREATURE\n"
                 + (unit.IsRanged ? "RANGED ATTACK" : "MELEE / ONE RETALIATION PER ROUND"));
-            UiBinding.SetSprite(portraitImage, Context.UnitIcon(active.UnitId), Context.UnitTint(active.UnitId, active.IsPlayer));
+            UiBinding.SetSprite(portraitImage, Context.UnitCard(active.UnitId), Context.UnitTint(active.UnitId, active.IsPlayer));
             UiBinding.SetText(logText, string.Join("\n", Session.BattleLog));
             UiBinding.SetButton(defendButton, "DEFEND", canAct);
             UiBinding.SetButton(passButton, "PASS TURN", canAct);

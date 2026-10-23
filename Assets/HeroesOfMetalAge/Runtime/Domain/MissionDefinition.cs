@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,7 +8,7 @@ namespace HeroesOfMetalAge.Domain
     public sealed class CombatPolicy
     {
         public CombatPolicy(int width, int height, int enemyAttack, int enemyDefense, double defenseMultiplier, double rangedMeleeMultiplier,
-            double attackStep, double defenseStep, int maximumAttackDelta, int maximumDefenseDelta, double missChance)
+            double attackStep, double defenseStep, int maximumAttackDelta, int maximumDefenseDelta, double missChance, double moraleChance = 0)
         {
             Width = width;
             Height = height;
@@ -20,6 +21,7 @@ namespace HeroesOfMetalAge.Domain
             MaximumAttackDelta = maximumAttackDelta;
             MaximumDefenseDelta = maximumDefenseDelta;
             MissChance = missChance;
+            MoraleChance = moraleChance;
         }
 
         public int Width { get; }
@@ -36,6 +38,11 @@ namespace HeroesOfMetalAge.Domain
         public int MaximumDefenseDelta { get; }
         /// <summary>Chance in [0, 1) that a strike misses and deals no damage.</summary>
         public double MissChance { get; }
+        /// <summary>
+        /// Chance per point of morale: with good morale a stack that attacked or moved acts once more, with bad morale a stack
+        /// freezes and loses its turn.
+        /// </summary>
+        public double MoraleChance { get; }
     }
 
     /// <summary>
@@ -44,13 +51,15 @@ namespace HeroesOfMetalAge.Domain
     /// </summary>
     public sealed class RewardPolicy
     {
-        public RewardPolicy(double goldVariation, double artefactChance, double rareChance, double legendaryChance, int legendaryGuaranteeVictories)
+        public RewardPolicy(double goldVariation, double artefactChance, double rareChance, double legendaryChance, int legendaryGuaranteeVictories,
+            double epicChance = 0)
         {
             GoldVariation = goldVariation;
             ArtefactChance = artefactChance;
             RareChance = rareChance;
             LegendaryChance = legendaryChance;
             LegendaryGuaranteeVictories = legendaryGuaranteeVictories;
+            EpicChance = epicChance;
         }
 
         /// <summary>Rolled gold is the encounter's gold times a factor in [1 - variation, 1 + variation].</summary>
@@ -60,6 +69,8 @@ namespace HeroesOfMetalAge.Domain
         /// <summary>Chance that a dropped artefact is rare; the rest after rare and legendary is common.</summary>
         public double RareChance { get; }
         public double LegendaryChance { get; }
+        /// <summary>Chance that a dropped artefact is epic (between rare and legendary).</summary>
+        public double EpicChance { get; }
         /// <summary>Every this many victories bring at least one legendary artefact; 0 turns the guarantee off.</summary>
         public int LegendaryGuaranteeVictories { get; }
     }
@@ -68,12 +79,12 @@ namespace HeroesOfMetalAge.Domain
     public sealed class MissionDefinition
     {
         private readonly TerrainType[] terrain;
-        private readonly Dictionary<EncounterKind, EncounterDefinition> encountersByKind;
 
         public MissionDefinition(string id, string name, string description, string heroId, string clanId, string clanName, string clanHeroName,
             int startingGold, int armySlots, int daysPerWeek, TerrainRules terrainRules, double ownedPriceMultiplier, int width, int height,
             WorldPosition start, TerrainType[] terrain, CombatPolicy combat, IEnumerable<EncounterDefinition> encounters, IEnumerable<string> recruitmentIds,
-            RewardPolicy rewards)
+            RewardPolicy rewards, IEnumerable<MapObjectDefinition> objects = null, IEnumerable<ObjectiveDefinition> objectives = null,
+            int scoutingRadius = 0)
         {
             Id = id;
             Name = name;
@@ -95,7 +106,10 @@ namespace HeroesOfMetalAge.Domain
             Encounters = encounters.ToList().AsReadOnly();
             RecruitmentIds = recruitmentIds.ToList().AsReadOnly();
             Rewards = rewards;
-            encountersByKind = Encounters.ToDictionary(encounter => encounter.Kind);
+            Objects = (objects ?? Enumerable.Empty<MapObjectDefinition>()).ToList().AsReadOnly();
+            Objectives = (objectives ?? Enumerable.Empty<ObjectiveDefinition>()).ToList().AsReadOnly();
+            Town = Encounters.FirstOrDefault(encounter => encounter.Kind == EncounterKind.Town);
+            ScoutingRadius = Math.Max(0, scoutingRadius);
         }
 
         public string Id { get; }
@@ -118,16 +132,38 @@ namespace HeroesOfMetalAge.Domain
         public IReadOnlyList<EncounterDefinition> Encounters { get; }
         public IReadOnlyList<string> RecruitmentIds { get; }
         public RewardPolicy Rewards { get; }
+        public IReadOnlyList<MapObjectDefinition> Objects { get; }
+        public IReadOnlyList<ObjectiveDefinition> Objectives { get; }
+        /// <summary>The mission's one town.</summary>
+        public EncounterDefinition Town { get; }
+        /// <summary>Fog of war: how many cells around himself the hero sees. 0 shows the whole map from the start.</summary>
+        public int ScoutingRadius { get; }
 
         public TerrainType TerrainAt(WorldPosition position)
         {
             return terrain[position.Y * Width + position.X];
         }
 
-        /// <summary>The single encounter of a kind; the first mission has exactly one of each.</summary>
+        /// <summary>The first encounter of a kind in authored order.</summary>
+        /// <exception cref="InvalidOperationException">The mission has none of that kind.</exception>
         public EncounterDefinition Encounter(EncounterKind kind)
         {
-            return encountersByKind[kind];
+            return Encounters.First(encounter => encounter.Kind == kind);
+        }
+
+        public EncounterDefinition FindEncounter(string encounterId)
+        {
+            return Encounters.FirstOrDefault(encounter => encounter.Id == encounterId);
+        }
+
+        public MapObjectDefinition FindObject(string objectId)
+        {
+            return Objects.FirstOrDefault(mapObject => mapObject.Id == objectId);
+        }
+
+        public bool HasObject(string objectId)
+        {
+            return FindObject(objectId) != null;
         }
 
         public bool HasEncounter(string encounterId)

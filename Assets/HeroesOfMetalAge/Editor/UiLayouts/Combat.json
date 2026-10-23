@@ -1,0 +1,255 @@
+{
+  "screen": "Combat",
+  "backdrop": "CombatFrame",
+  "viewport": [
+    25.3,
+    166.4,
+    1318.3,
+    964.1
+  ],
+  "elements": [
+    {
+      "name": "DayText",
+      "type": "text",
+      "rect": [
+        1010.5,
+        20.7,
+        1240.2,
+        71.2
+      ],
+      "style": "Number",
+      "size": 25.2,
+      "align": "center",
+      "field": "header.dayText"
+    },
+    {
+      "name": "GoldText",
+      "type": "text",
+      "rect": [
+        1355.0,
+        23.0,
+        1521.5,
+        68.9
+      ],
+      "style": "Number",
+      "size": 29.8,
+      "align": "left",
+      "field": "header.goldText"
+    },
+    {
+      "name": "HeroButton",
+      "type": "button",
+      "rect": [
+        1538.8,
+        13.8,
+        1711.0,
+        75.7
+      ],
+      "label": [
+        1590.4,
+        25.2,
+        1705.3,
+        66.6
+      ],
+      "text": "HERO [H]",
+      "size": 20.7,
+      "field": "header.heroButton"
+    },
+    {
+      "name": "OptionsButton",
+      "type": "button",
+      "rect": [
+        1722.5,
+        13.8,
+        1892.4,
+        75.7
+      ],
+      "label": [
+        1774.2,
+        25.2,
+        1883.3,
+        66.6
+      ],
+      "text": "OPTIONS",
+      "size": 20.7,
+      "field": "header.optionsButton"
+    },
+    {
+      "name": "TitleText",
+      "type": "text",
+      "rect": [
+        109.1,
+        101.0,
+        803.8,
+        149.2
+      ],
+      "style": "Title",
+      "size": 39.0,
+      "align": "left",
+      "field": "titleText"
+    },
+    {
+      "name": "TurnText",
+      "type": "text",
+      "rect": [
+        803.8,
+        105.6,
+        1268.9,
+        146.9
+      ],
+      "style": "Label",
+      "size": 23.0,
+      "align": "right",
+      "field": "turnText"
+    },
+    {
+      "name": "CouncilTitle",
+      "type": "text",
+      "rect": [
+        1372.2,
+        133.1,
+        1722.5,
+        183.6
+      ],
+      "style": "Heading",
+      "size": 36.7,
+      "align": "left",
+      "text": "WAR COUNCIL"
+    },
+    {
+      "name": "ActorPortrait",
+      "type": "image",
+      "rect": [
+        1366.5,
+        220.4,
+        1522.7,
+        384.5
+      ],
+      "field": "portraitImage"
+    },
+    {
+      "name": "ActorText",
+      "type": "text",
+      "rect": [
+        1547.9,
+        223.8,
+        1883.3,
+        266.3
+      ],
+      "style": "Title",
+      "size": 28.7,
+      "align": "left",
+      "field": "actorText"
+    },
+    {
+      "name": "StatsText",
+      "type": "text",
+      "rect": [
+        1550.2,
+        273.2,
+        1883.3,
+        378.7
+      ],
+      "style": "Label",
+      "size": 19.5,
+      "align": "topleft",
+      "field": "statsText"
+    },
+    {
+      "name": "DefendButton",
+      "type": "button",
+      "rect": [
+        1352.7,
+        436.1,
+        1610.0,
+        524.5
+      ],
+      "label": [
+        1449.2,
+        456.8,
+        1601.9,
+        505.0
+      ],
+      "text": "DEFEND",
+      "size": 23.0,
+      "field": "defendButton"
+    },
+    {
+      "name": "PassButton",
+      "type": "button",
+      "rect": [
+        1619.1,
+        436.1,
+        1874.1,
+        524.5
+      ],
+      "label": [
+        1697.2,
+        456.8,
+        1866.0,
+        505.0
+      ],
+      "text": "PASS TURN",
+      "size": 23.0,
+      "field": "passButton"
+    },
+    {
+      "name": "LogTitle",
+      "type": "text",
+      "rect": [
+        1375.7,
+        577.3,
+        1837.3,
+        628.9
+      ],
+      "style": "Heading",
+      "size": 36.7,
+      "align": "left",
+      "text": "BATTLE CHRONICLE"
+    },
+    {
+      "name": "LogText",
+      "type": "text",
+      "rect": [
+        1378.0,
+        656.5,
+        1874.1,
+        952.6
+      ],
+      "style": "Body",
+      "size": 20.7,
+      "align": "topleft",
+      "field": "logText"
+    },
+    {
+      "name": "HelpText",
+      "type": "text",
+      "rect": [
+        178.0,
+        982.4,
+        849.8,
+        1023.8
+      ],
+      "style": "Label",
+      "size": 19.5,
+      "align": "left",
+      "field": "footer.helpText"
+    },
+    {
+      "name": "AudioText",
+      "type": "text",
+      "rect": [
+        1504.3,
+        982.4,
+        1728.2,
+        1023.8
+      ],
+      "style": "Label",
+      "size": 19.5,
+      "align": "right",
+      "field": "footer.audioText"
+    }
+  ],
+  "fullscreen": true,
+  "spriteFolder": "Assets/HeroesOfMetalAge/Content/UI/Sprites/Gameplay/Combat"
+}

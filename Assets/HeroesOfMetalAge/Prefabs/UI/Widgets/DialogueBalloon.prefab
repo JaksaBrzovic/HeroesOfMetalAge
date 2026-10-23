@@ -146,6 +146,7 @@ GameObject:
   - component: {fileID: 2149741860162710299}
   - component: {fileID: 8219246256772789584}
   - component: {fileID: 7409536578822248560}
+  - component: {fileID: 1907154939449828496}
   m_Layer: 5
   m_Name: ContinueText
   m_TagString: Untagged
@@ -202,8 +203,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: NEXT
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 9b46cf012b0fb5343b3ebf46aaa3b519, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 73903628feaba5f47b0913e17cb6cbd2, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -227,17 +228,17 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 16
-  m_fontSizeBase: 16
+  m_fontSize: 15.2
+  m_fontSizeBase: 15.2
   m_fontWeight: 400
   m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontSizeMin: 17.1
+  m_fontSizeMax: 68.4
+  m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 1024
   m_textAlignment: 65535
-  m_characterSpacing: 0
+  m_characterSpacing: 1
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
@@ -272,6 +273,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1907154939449828496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1892253517447022513}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adc649689f4db9f40b91e711247ff587, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.TypographyText
+  settings: {fileID: 11400000, guid: b13b3743e4002df499aa1e75c31ed64d, type: 2}
+  style: 4
+  appliedScale: 0.95
 --- !u!1 &3653015214114854843
 GameObject:
   m_ObjectHideFlags: 0
@@ -396,6 +412,7 @@ GameObject:
   - component: {fileID: 4513097815147971577}
   - component: {fileID: 6483669959552752606}
   - component: {fileID: 6874117031915877979}
+  - component: {fileID: 6132756577489796181}
   m_Layer: 5
   m_Name: LineText
   m_TagString: Untagged
@@ -452,8 +469,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Line text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 2cc9a52fe26b8ca4c9359844ba06012b, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 0029e69da154bcc4f8fa1c628f46c5b7, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -477,13 +494,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 30
-  m_fontSizeBase: 30
+  m_fontSize: 33
+  m_fontSizeBase: 33
   m_fontWeight: 400
   m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 17
+  m_fontSizeMin: 19.800001
+  m_fontSizeMax: 79.200005
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -522,6 +539,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6132756577489796181
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6045170889036946203}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adc649689f4db9f40b91e711247ff587, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.TypographyText
+  settings: {fileID: 11400000, guid: b13b3743e4002df499aa1e75c31ed64d, type: 2}
+  style: 5
+  appliedScale: 1.1
 --- !u!1 &7869100623796407818
 GameObject:
   m_ObjectHideFlags: 0

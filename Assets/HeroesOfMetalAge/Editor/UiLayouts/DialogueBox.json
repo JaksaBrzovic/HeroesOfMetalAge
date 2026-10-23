@@ -1,0 +1,65 @@
+{
+  "screen": "DialogueBox",
+  "backdrop": "DialogueBoxFrame",
+  "fullscreen": false,
+  "frameSize": [
+    1152.0,
+    328.8
+  ],
+  "elements": [
+    {
+      "name": "PortraitImage",
+      "type": "image",
+      "rect": [
+        49.8,
+        37.8,
+        266.4,
+        258.0
+      ],
+      "field": "portraitImage"
+    },
+    {
+      "name": "SpeakerNameText",
+      "type": "text",
+      "rect": [
+        301.8,
+        57.0,
+        1102.8,
+        108.0
+      ],
+      "style": "Title",
+      "size": 36.0,
+      "align": "left",
+      "field": "speakerNameText"
+    },
+    {
+      "name": "LineText",
+      "type": "text",
+      "rect": [
+        301.8,
+        126.0,
+        1102.8,
+        204.0
+      ],
+      "style": "Body",
+      "size": 27.6,
+      "align": "topleft",
+      "field": "lineText"
+    },
+    {
+      "name": "ContinueText",
+      "type": "text",
+      "rect": [
+        934.8,
+        208.2,
+        1102.8,
+        258.0
+      ],
+      "style": "Button",
+      "size": 20.4,
+      "align": "center",
+      "field": "continueText"
+    }
+  ],
+  "spriteFolder": "Assets/HeroesOfMetalAge/Content/UI/Sprites/Gameplay/DialogueBox"
+}

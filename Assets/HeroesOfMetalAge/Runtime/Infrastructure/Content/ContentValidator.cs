@@ -4,6 +4,7 @@ using System.Linq;
 using HeroesOfMetalAge.Application;
 using HeroesOfMetalAge.Domain;
 using MLin.Audio;
+using UnityEngine;
 
 namespace HeroesOfMetalAge.Infrastructure.Content
 {
@@ -61,7 +62,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                     && Enum.IsDefined(typeof(ArtefactRarity), artefact.Rarity)
                     && InRange(artefact.AttackBonus, 0, MAX_STAT)
                     && InRange(artefact.DefenseBonus, 0, MAX_STAT)
-                    && InRange(artefact.SpeedBonus, 0, MAX_SPEED);
+                    && InRange(artefact.SpeedBonus, 0, MAX_SPEED)
+                    && InRange(artefact.MoraleBonus, -CampaignRules.MAXIMUM_MORALE, CampaignRules.MAXIMUM_MORALE);
                 Require(isValid, "Invalid artefact " + artefact.Id);
             }
         }
@@ -147,10 +149,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                 Require(isValidReward, "Invalid reward: " + encounter.Id);
             }
 
-            foreach (EncounterKind kind in Enum.GetValues(typeof(EncounterKind)))
-            {
-                Require(mission.Encounters.Count(encounter => encounter.Kind == kind) == 1, "First mission requires one " + kind + " encounter.");
-            }
+            // armies of every kind may repeat, but a mission has exactly one town
+            Require(mission.Encounters.Count(encounter => encounter.Kind == EncounterKind.Town) == 1, "A mission requires exactly one town.");
 
             Require(mission.Encounters.Select(encounter => encounter.Position).Distinct().Count() == mission.Encounters.Count, "Overlapping encounters.");
             ValidateCombat(mission);
@@ -160,11 +160,91 @@ namespace HeroesOfMetalAge.Infrastructure.Content
             Require(mission.TownMusic == null || (mission.TownMusic.HasClips && mission.TownMusic.Loop), "The mission's town music must have looping clips.");
         }
 
+        /// <summary>Map objects and goals: unique IDs, inside the map, free cells and known references for each kind.</summary>
+        public static void ValidateMapObjects(MissionSettingsScriptableObject mission, HashSet<string> unitIds, HashSet<string> artefactIds)
+        {
+            AdventureMapAuthoring map = mission.Map;
+            Require(AllPresent(mission.MapObjects) && AllPresent(mission.Objectives), "The mission contains a missing map object or goal.");
+            if (mission.MapObjects.Count > 0)
+            {
+                RequireUniqueIds(mission.MapObjects.Select(entry => entry.Id), "map object");
+            }
+
+            HashSet<string> encounterIds = new HashSet<string>(mission.Encounters.Select(entry => entry.Id));
+            HashSet<Vector2Int> taken = new HashSet<Vector2Int>(mission.Encounters.Select(entry => entry.Position));
+            HashSet<string> keys = new HashSet<string>();
+            foreach (MapObjectEntry mapObject in mission.MapObjects)
+            {
+                string name = "map object " + mapObject.Id;
+                Require(Enum.IsDefined(typeof(MapObjectKind), mapObject.Kind), "Unknown kind of " + name);
+                Require(InRange(mapObject.Position.x, 0, map.Width - 1) && InRange(mapObject.Position.y, 0, map.Height - 1), name + " is outside the map.");
+                Require(taken.Add(mapObject.Position), name + " shares its cell with another site.");
+                Require(!encounterIds.Contains(mapObject.Id), name + " uses an encounter's ID.");
+                Require(string.IsNullOrEmpty(mapObject.ArtefactId) || artefactIds.Contains(mapObject.ArtefactId), name + " gives an unknown artefact.");
+                switch (mapObject.Kind)
+                {
+                    case MapObjectKind.GoldPile:
+                    case MapObjectKind.Mill:
+                        Require(mapObject.Gold > 0, name + " needs gold.");
+                        break;
+                    case MapObjectKind.TreasureChest:
+                        Require(mapObject.Gold > 0 && mapObject.Experience > 0, name + " needs both gold and experience to choose from.");
+                        break;
+                    case MapObjectKind.Artefact:
+                        Require(!string.IsNullOrEmpty(mapObject.ArtefactId), name + " needs its artefact.");
+                        break;
+                    case MapObjectKind.AttackShrine:
+                        Require(mapObject.AttackBonus > 0, name + " needs an attack bonus.");
+                        break;
+                    case MapObjectKind.DefenseShrine:
+                        Require(mapObject.DefenseBonus > 0, name + " needs a defense bonus.");
+                        break;
+                    case MapObjectKind.MoraleShrine:
+                        Require(mapObject.MoraleBonus > 0, name + " needs a morale bonus.");
+                        break;
+                    case MapObjectKind.Dwelling:
+                        Require(unitIds.Contains(mapObject.UnitId) && mapObject.WeeklyGrowth > 0, name + " needs a known unit and weekly growth.");
+                        break;
+                    case MapObjectKind.QuestGiver:
+                        if (!string.IsNullOrEmpty(mapObject.KeyId))
+                        {
+                            keys.Add(mapObject.KeyId);
+                        }
+
+                        break;
+                }
+            }
+
+            foreach (MapObjectEntry gate in mission.MapObjects.Where(entry => entry.Kind == MapObjectKind.BorderGate))
+            {
+                Require(!string.IsNullOrEmpty(gate.KeyId) && keys.Contains(gate.KeyId), "Border gate " + gate.Id + " needs a key some quest giver hands over.");
+            }
+
+            HashSet<string> objectIds = new HashSet<string>(mission.MapObjects.Select(entry => entry.Id));
+            if (mission.Objectives.Count > 0)
+            {
+                RequireUniqueIds(mission.Objectives.Select(entry => entry.Id), "goal");
+            }
+
+            foreach (ObjectiveEntry objective in mission.Objectives)
+            {
+                bool isValid = !string.IsNullOrWhiteSpace(objective.Text) && (objective.Kind == ObjectiveKind.DefeatEncounter ? encounterIds.Contains(objective.TargetId)
+                    : objective.Kind == ObjectiveKind.VisitObject ? objectIds.Contains(objective.TargetId)
+                    : objective.Kind == ObjectiveKind.OwnArtefact ? artefactIds.Contains(objective.TargetId)
+                    : objective.Value > 1);
+                Require(isValid, "Invalid goal " + objective.Id);
+            }
+        }
+
         public static void ValidateMap(MissionDefinition definition)
         {
             WorldMap map = new WorldMap(definition);
             Require(map.IsWalkable(definition.Start), "Starting position is blocked.");
             Require(definition.Encounters.All(encounter => map.IsWalkable(encounter.Position)), "An encounter is on blocked terrain.");
+            foreach (MapObjectDefinition mapObject in definition.Objects)
+            {
+                Require(map.IsWalkable(mapObject.Position), "Map object " + mapObject.Id + " is on blocked terrain.");
+            }
         }
 
         public static void Require(bool condition, string message)
@@ -202,7 +282,10 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                 && mission.ArtefactChance <= 1
                 && mission.RareChance >= 0
                 && mission.LegendaryChance >= 0
-                && mission.RareChance + mission.LegendaryChance <= 1
+                && mission.EpicChance >= 0
+                && mission.RareChance + mission.LegendaryChance + mission.EpicChance <= 1
+                && mission.MoraleChance >= 0
+                && mission.MoraleChance * CampaignRules.MAXIMUM_MORALE < 1
                 && mission.LegendaryGuaranteeVictories >= 0;
             Require(isValid, "Invalid battle reward settings.");
         }

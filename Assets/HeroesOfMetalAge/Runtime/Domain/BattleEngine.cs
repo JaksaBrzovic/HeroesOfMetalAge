@@ -15,6 +15,8 @@ namespace HeroesOfMetalAge.Domain
         private readonly int heroAttack;
         private readonly int heroDefense;
         private readonly int heroSpeedBonus;
+        private readonly int playerMorale;
+        private readonly List<MoraleEvent> moraleEvents = new List<MoraleEvent>();
         private readonly List<Combatant> combatants = new List<Combatant>();
         private readonly List<Combatant> turnOrder = new List<Combatant>();
         private readonly HashSet<HexPosition> reachable = new HashSet<HexPosition>();
@@ -28,6 +30,7 @@ namespace HeroesOfMetalAge.Domain
             heroAttack = rules.Attack(campaign);
             heroDefense = rules.Defense(campaign);
             heroSpeedBonus = rules.SpeedBonus(campaign);
+            playerMorale = rules.Morale(campaign);
             Combatants = combatants.AsReadOnly();
 
             for (int i = 0; i < campaign.Army.Count; i++)
@@ -50,6 +53,8 @@ namespace HeroesOfMetalAge.Domain
         public int Round { get; private set; }
         public BattleOutcome Outcome { get; private set; }
         public CombatPolicy Policy => catalog.Mission.Combat;
+        /// <summary>The player's morale for this battle; the enemy fights at zero.</summary>
+        public int PlayerMorale => playerMorale;
 
         /// <summary>Creatures the player has lost so far.</summary>
         public int Losses
@@ -103,6 +108,14 @@ namespace HeroesOfMetalAge.Domain
         public bool IsAdjacent(Combatant a, Combatant b)
         {
             return HexGrid.Distance(a.Position, b.Position) == 1;
+        }
+
+        /// <summary>Morale events since the last call (also the ones from setting up the battle), oldest first.</summary>
+        public IReadOnlyList<MoraleEvent> TakeMoraleEvents()
+        {
+            List<MoraleEvent> events = new List<MoraleEvent>(moraleEvents);
+            moraleEvents.Clear();
+            return events.AsReadOnly();
         }
 
         public IReadOnlyList<Troop> Survivors()
@@ -167,8 +180,19 @@ namespace HeroesOfMetalAge.Domain
             UpdateOutcome();
             if (Outcome == BattleOutcome.InProgress)
             {
-                turnIndex++;
-                ActivateNext();
+                // good morale: a stack that moved or struck may act once more this round
+                bool hasActed = action.Kind == BattleActionKind.MoveOrAttack;
+                if (hasActed && Active.IsAlive && !Active.HasMoraleBonus && RollsMorale(Active))
+                {
+                    Active.HasMoraleBonus = true;
+                    moraleEvents.Add(new MoraleEvent(Active.Id, Active.UnitId, Active.IsPlayer, true));
+                    CalculateReach();
+                }
+                else
+                {
+                    turnIndex++;
+                    ActivateNext();
+                }
             }
 
             return new BattleResolution(CommandResult.Ok(), hits, message);
@@ -217,6 +241,7 @@ namespace HeroesOfMetalAge.Domain
             {
                 combatant.HasRetaliated = false;
                 combatant.IsDefending = false;
+                combatant.HasMoraleBonus = false;
             }
 
             turnOrder.Clear();
@@ -244,7 +269,46 @@ namespace HeroesOfMetalAge.Domain
 
             Active = turnOrder[turnIndex];
             Active.IsDefending = false;
+            // bad morale: the stack freezes and loses its turn, unless it is the last one still able to act this round
+            if (MoraleOf(Active) < 0 && RollsMorale(Active) && HasAnotherLivingStack(Active))
+            {
+                moraleEvents.Add(new MoraleEvent(Active.Id, Active.UnitId, Active.IsPlayer, false));
+                turnIndex++;
+                ActivateNext();
+                return;
+            }
+
             CalculateReach();
+        }
+
+        private int MoraleOf(Combatant combatant)
+        {
+            return combatant.IsPlayer ? playerMorale : 0;
+        }
+
+        // no roll at zero morale or chance, so battles without morale replay exactly as before
+        private bool RollsMorale(Combatant combatant)
+        {
+            int morale = MoraleOf(combatant);
+            if (morale == 0 || Policy.MoraleChance <= 0)
+            {
+                return false;
+            }
+
+            return random.NextValue() < Math.Abs(morale) * Policy.MoraleChance;
+        }
+
+        private bool HasAnotherLivingStack(Combatant combatant)
+        {
+            foreach (Combatant other in combatants)
+            {
+                if (other != combatant && other.IsAlive && other.IsPlayer == combatant.IsPlayer)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void CalculateReach()

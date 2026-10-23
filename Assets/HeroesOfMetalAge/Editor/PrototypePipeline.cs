@@ -13,14 +13,15 @@ namespace HeroesOfMetalAge.EditorTools
     /// <summary>
     /// Command-line entry points (Tools/Build.ps1): generate the bootstrap scene from the authored assets and build the
     /// Windows player. The scene is the only generated asset; databases, maps and prefabs are authored and never rebuilt
-    /// (missing dialogue, end-of-day and main menu assets are seeded once, see <see cref="DialogueAssetSeeder"/>,
-    /// <see cref="EndDayAssetSeeder"/> and <see cref="MainMenuAssetSeeder"/>).
+    /// (missing dialogue, end-of-day, main menu, visual style and gameplay UI assets are seeded once, see
+    /// <see cref="DialogueAssetSeeder"/>, <see cref="EndDayAssetSeeder"/>, <see cref="MainMenuAssetSeeder"/>,
+    /// <see cref="VisualStyleSeeder"/> and <see cref="GameplayUiSeeder"/>).
     /// The cameras come with the World prefab.
     /// </summary>
     public static class PrototypePipeline
     {
         private const string PLAYER_PATH = "Builds/Windows/HeroesOfMetalAge.exe";
-        private const string BUNDLE_VERSION = "0.7.0";
+        private const string BUNDLE_VERSION = "0.8.0";
         private const int DEFAULT_SCREEN_WIDTH = 1920;
         private const int DEFAULT_SCREEN_HEIGHT = 1080;
         private const int LEGACY_INPUT_MANAGER = 0;
@@ -30,11 +31,14 @@ namespace HeroesOfMetalAge.EditorTools
         [MenuItem("Tools/Heroes of Metal Age/Generate scene")]
         public static void Setup()
         {
+            MissionContentSeeder.CreateMissingAssets();
             ContentAssets.LoadCatalog();
             DialogueAssetSeeder.CreateMissingAssets();
             EndDayAssetSeeder.CreateMissingAssets();
             MainMenuAssetSeeder.CreateMissingAssets();
             BriefingAssetSeeder.CreateMissingAssets();
+            VisualStyleSeeder.CreateMissingAssets();
+            GameplayUiSeeder.CreateMissingAssets();
             RequireAsset(ContentAssets.RootPrefab, ContentAssets.UI_FOLDER + "/GameUiRoot.prefab");
             RequireAsset(ContentAssets.DebugPanelPrefab, ContentAssets.UI_FOLDER + "/Screens/DebugPanel.prefab");
             RequireAsset(ContentAssets.WorldPrefab, ContentAssets.WORLD_FOLDER + "/World.prefab");

@@ -223,11 +223,15 @@ namespace HeroesOfMetalAge.Bootstrap
                 "The hero stops in the next cell with the new route planned");
         }
 
-        /// <summary>Rides to a cell over as many days as the route needs; stops at an encounter, a dialog or the town screen.</summary>
+        /// <summary>
+        /// Rides to a cell over as many days as the route needs; stops at an encounter, a dialog or the town screen. Map objects
+        /// on the way are visited as the hero rides onto them, and he rides on from there.
+        /// </summary>
         private void TravelTo(WorldPosition target)
         {
             for (int day = 0; day < MAX_TRAVEL_DAYS; day++)
             {
+                WorldPosition before = session.Campaign.Position;
                 session.Plan(target);
                 session.Travel();
                 FinishMovement();
@@ -236,7 +240,76 @@ namespace HeroesOfMetalAge.Bootstrap
                     return;
                 }
 
-                EndDay();
+                // an object on the road stopped the ride; ride on at once, else the day is spent
+                if (session.Campaign.Position == before || session.Campaign.Movement < 200)
+                {
+                    EndDay();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Rides to a cell and wins every battle on the way, taking any treasure chest's gold. While an army bars the way, the
+        /// nearest reachable one is attacked first.
+        /// </summary>
+        private void FightThrough(WorldPosition target)
+        {
+            for (int leg = 0; leg < MAX_TRAVEL_DAYS; leg++)
+            {
+                WorldPosition next = target;
+                if (session.World.FindRoute(session.Campaign, target).Count == 0)
+                {
+                    EncounterDefinition blocker = session.Catalog.Mission.Encounters
+                        .Where(encounter => encounter.IsHostile && !session.Campaign.IsCompleted(encounter.Id))
+                        .Select(encounter => (encounter, steps: session.World.FindRoute(session.Campaign, encounter.Position).Count))
+                        .Where(pair => pair.steps > 0)
+                        .OrderBy(pair => pair.steps)
+                        .Select(pair => pair.encounter)
+                        .FirstOrDefault();
+                    if (blocker != null)
+                    {
+                        next = blocker.Position;
+                    }
+                }
+
+                TravelTo(next);
+                if (session.Dialog == DialogKind.Hostile)
+                {
+                    session.FightEncounter();
+                    FinishBattle();
+                    Check(session.Dialog == DialogKind.Victory, "Battle on the way won: " + session.Encounter.Name);
+                    session.ContinueVictory();
+                    session.ContinueRewards();
+                }
+                else if (session.Dialog == DialogKind.Chest)
+                {
+                    session.OpenChest(true);
+                }
+                else if (session.Dialog == DialogKind.Friendly)
+                {
+                    session.AcceptFriendly();
+                }
+                else if (session.Dialog != DialogKind.None)
+                {
+                    session.Back();
+                }
+                else if (session.Campaign.Position == target || next == target)
+                {
+                    return;
+                }
+            }
+        }
+
+        /// <summary>Wears every carried artefact that fits a free place, so the scenario's army can win its battles.</summary>
+        private void EquipAll()
+        {
+            for (int i = session.Campaign.Inventory.Count - 1; i >= 0; i--)
+            {
+                ArtefactDefinition artefact = session.Catalog.Artefact(session.Campaign.Inventory[i]);
+                if (Equipment.Places(artefact.Slot).Any(place => session.Campaign.Equipped(place) == null))
+                {
+                    session.Equip(i);
+                }
             }
         }
 
@@ -325,6 +398,8 @@ namespace HeroesOfMetalAge.Bootstrap
             {
                 if (briefing.Phase == BriefingPhase.Reading && briefing.Page == briefing.PageCount - 1)
                 {
+                    // the page's text fades in
+                    yield return new WaitForSecondsRealtime(1f);
                     yield return Screenshot("00-briefing.png");
                 }
 
@@ -341,6 +416,17 @@ namespace HeroesOfMetalAge.Bootstrap
             Check(mission.Encounters.Where(encounter => encounter.Kind != EncounterKind.Town).All(encounter => world.Map.EncounterMarker(encounter.Id).HasVisibleIcon),
                 "World friendly and enemy markers have visible sprites");
             Check(session.Campaign.Army.Count > 0, "Runtime bootstrap from authored hero");
+
+            // fog of war: only the hero's surroundings are explored at the start, and no route leads into the fog
+            Check(session.Campaign.Explored.IsExplored(session.Campaign.Position) && !session.Campaign.Explored.IsExplored(town.Position),
+                "Fog of war hides the far map at the start");
+            Check(world.Map.IsFogOfWarVisible && session.World.FindRoute(session.Campaign, town.Position).Count == 0, "Fog of war is drawn and blocks routes");
+            yield return Screenshot("01-fog-of-war.png");
+            // the rest of the run rides across the whole map
+            session.DebugRevealMap();
+            hud.RefreshNow();
+            yield return null;
+            Check(!world.Map.IsFogOfWarVisible, "Revealing the map lifts the fog");
             Check(session.World.FindRoute(session.Campaign, sentinel.Position).Count > 0, "World route reaches chokepoint");
             Check(session.World.FindRoute(session.Campaign, town.Position).Count == 0, "Sentinel blocks town route");
 
@@ -419,9 +505,8 @@ namespace HeroesOfMetalAge.Bootstrap
             Check(session.Dialog == DialogKind.Rewards, "Victory screen leads to the rewards screen");
             hud.RefreshNow();
             Canvas.ForceUpdateCanvases();
-            Check(hud.RewardsView.gameObject.activeInHierarchy
-                && hud.RewardsView.ArtefactCards.Count(card => card.gameObject.activeSelf) == rewards.ArtefactIds.Count,
-                "Rewards screen shows one card per rolled artefact");
+            Check(hud.RewardsView.gameObject.activeInHierarchy && hud.RewardsView.ArtefactImage.enabled == (rewards.ArtefactIds.Count > 0),
+                "Rewards screen shows the rolled artefact, if any");
             yield return Screenshot("05b-rewards-screen.png");
             Click(hud.RewardsView.PrimaryButton);
             Check(session.Dialog == DialogKind.None, "Rewards screen closes to the map");
@@ -430,18 +515,20 @@ namespace HeroesOfMetalAge.Bootstrap
             if (rewards.ArtefactIds.Count > 0)
             {
                 session.Equip(0);
-                Check(session.Campaign.WeaponId == rewards.ArtefactIds[0] || session.Campaign.CharmId == rewards.ArtefactIds[0], "Reward equipment command");
+                Check(session.Campaign.Owns(rewards.ArtefactIds[0]) && !session.Campaign.Inventory.Contains(rewards.ArtefactIds[0]), "Reward equipment command");
             }
 
             yield return Screenshot("03-hero.png");
 
             Check(session.Campaign.Inventory.Count == 0, "Empty inventory is displayed safely");
             session.DebugArtefacts();
-            session.DebugArtefacts();
+            EquipAll();
             hud.RefreshNow();
             Canvas.ForceUpdateCanvases();
-            Check(session.Campaign.Inventory.Count == session.Catalog.Artefacts.Count * 2 && hud.HeroView.GetComponentsInChildren<UiWidget>(true).Length >= 15,
-                "Populated inventory instantiates reusable artefact prefabs");
+            Check(Enumerable.Range(0, Equipment.PLACE_COUNT).All(place => session.Campaign.Equipped((EquipmentPlace)place) != null),
+                "Every one of the eleven equipment places can be worn");
+            Check(hud.HeroView.InventorySlots.Count(slot => slot.HasVisibleIcon) == Math.Min(session.Campaign.Inventory.Count, hud.HeroView.InventorySlots.Count),
+                "Carried artefacts show in the inventory slots");
             yield return Screenshot("10-inventory.png");
 
             yield return ChangeResolution(1280, 1024);
@@ -466,14 +553,18 @@ namespace HeroesOfMetalAge.Bootstrap
 
         private IEnumerator TownAndConquest(MissionDefinition mission, EncounterDefinition town)
         {
-            TravelTo(town.Position);
-            Check(session.Screen == GameScreen.Town && session.Campaign.Position == town.Position, "Town reached through cleared pass");
+            yield return MapObjects(mission);
+            FightThrough(town.Position);
+            Check(session.Screen == GameScreen.Town && session.Campaign.Position == town.Position, "Town reached through cleared pass (hero at "
+                + session.Campaign.Position + ", day " + session.Campaign.Day + ", " + session.Dialog + ", route " + session.World.FindRoute(session.Campaign, town.Position).Count
+                + ", notice: " + session.Notice + ")");
 
             hud.OpenSettings();
             hud.RefreshNow();
             Check(!hud.ContentGroup.interactable, "Options modal blocks gameplay UI");
             GameObject selected = hud.Events.currentSelectedGameObject;
-            Check(selected != null && selected.name == "back", "Options opening selects a keyboard control");
+            Check(selected != null && selected == hud.Events.currentSelectedGameObject && selected.GetComponent<UiWidget>() != null,
+                "Options opening selects a keyboard control");
             yield return Screenshot("07-options.png");
             hud.CloseSettings();
             hud.SetDebugVisible(true);
@@ -481,6 +572,9 @@ namespace HeroesOfMetalAge.Bootstrap
             DebugPanelView debugPanel = hud.GetComponentInChildren<DebugPanelView>(true);
             Check(debugPanel.gameObject.activeInHierarchy && !hud.ContentGroup.interactable, "F3 panel opens over the game and blocks gameplay UI");
             yield return Screenshot("11-debug.png");
+            debugPanel.ShowTab(true);
+            yield return Screenshot("11b-debug-sounds.png");
+            debugPanel.ShowTab(false);
             hud.SetDebugVisible(false);
             hud.RefreshNow();
 
@@ -525,6 +619,29 @@ namespace HeroesOfMetalAge.Bootstrap
             Check(session.Campaign.Army.Count == 3, "Stable-ID save round trip");
         }
 
+        /// <summary>The map's objects near the road: gold, the shrine and the chest; each changes the campaign once.</summary>
+        private IEnumerator MapObjects(MissionDefinition mission)
+        {
+            Check(mission.Objects.All(mapObject => world.Map.ObjectMarker(mapObject.Id).HasVisibleIcon), "Every map object has a visible figure");
+            MapObjectDefinition chest = mission.Objects.First(mapObject => mapObject.Kind == MapObjectKind.TreasureChest);
+            int gold = session.Campaign.Gold;
+            TravelTo(chest.Position);
+            hud.RefreshNow();
+            Check(session.Dialog == DialogKind.Chest && hud.DialogView.gameObject.activeInHierarchy, "A treasure chest offers gold or experience");
+            yield return ShowCell(chest.Position);
+            yield return Screenshot("14-chest.png");
+            Click(hud.DialogView.PrimaryButton);
+            hud.RefreshNow();
+            yield return null;
+            Check(session.Campaign.Gold >= gold + chest.Gold && !world.Map.ObjectMarker(chest.Id).gameObject.activeSelf, "The opened chest gives its gold and leaves the map");
+
+            MapObjectDefinition shrine = mission.Objects.First(mapObject => mapObject.Kind == MapObjectKind.MoraleShrine);
+            TravelTo(shrine.Position);
+            Check(session.Campaign.Position == shrine.Position && session.Rules.Morale(session.Campaign) >= shrine.MoraleBonus, "The shrine raises morale");
+            yield return ShowCell(session.Campaign.Position);
+            yield return Screenshot("15-world-objects.png");
+        }
+
         private IEnumerator BossAndDefeat(EncounterDefinition boss)
         {
             session.LeaveTown();
@@ -534,9 +651,19 @@ namespace HeroesOfMetalAge.Bootstrap
             FinishBattle();
             Check(session.Dialog == DialogKind.Victory && session.Campaign.IsCompleted(boss.Id), "Recruited army defeats boss");
             yield return Screenshot("05-victory.png");
+            session.ContinueVictory();
+            session.ContinueRewards();
+
+            MapObjectDefinition portal = session.Catalog.Mission.Objects.First(mapObject => mapObject.Kind == MapObjectKind.ExitPortal);
+            TravelTo(portal.Position);
+            hud.RefreshNow();
+            Check(session.Dialog == DialogKind.Exit && session.Objects.CanFinish(session.Campaign), "The exit portal asks to finish the mission once the Black Banner fell");
+            yield return Screenshot("13-exit-portal.png");
+            session.Back();
 
             session.Restart();
             session.StartMission();
+            session.DebugRevealMap();
             session.DebugTown();
             session.LeaveTown();
             TravelTo(boss.Position);

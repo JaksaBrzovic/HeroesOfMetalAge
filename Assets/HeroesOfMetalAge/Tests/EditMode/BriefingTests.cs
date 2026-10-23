@@ -127,14 +127,15 @@ namespace HeroesOfMetalAge.Tests
         }
 
         [Test]
-        public void BriefingContent_TellsTheMissionsStoryOnTwoPages()
+        public void BriefingContent_TellsTheMissionsStoryOnThreePages()
         {
             System.Collections.Generic.IReadOnlyList<string> pages = ContentAssets.Mission.BriefingPages;
 
-            Assert.AreEqual(2, pages.Count);
+            Assert.AreEqual(3, pages.Count);
             StringAssert.StartsWith("On the first day, our hero collects his friends", pages[0]);
             StringAssert.Contains("\n", pages[0], "the second sentence starts a new line");
             StringAssert.Contains("passage of Psur", pages[1]);
+            StringAssert.Contains("maiden", pages[2], "the last page tells of the mission's goals");
             Assert.IsTrue(ContentAssets.Audio.Sound(SoundCue.BriefingExplosion).HasClips, "the boom has a clip");
         }
 

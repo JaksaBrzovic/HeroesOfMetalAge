@@ -45,6 +45,10 @@ MonoBehaviour:
   arrowHit: {fileID: 11400000, guid: 983c4f0bf35c51b45ba406d8b076ec13, type: 2}
   arrowMiss: {fileID: 11400000, guid: 9f3714fd1ce8a3443920abb5cd3e1c94, type: 2}
   heavyHit: {fileID: 11400000, guid: 8e4c600edf289b14896117a7482c244e, type: 2}
+  goodMorale: {fileID: 11400000, guid: bcbec91106e7442daed91badb928dfde, type: 2}
+  badMorale: {fileID: 11400000, guid: 0a92b6d50b1c476ea5fe8b5917c05360, type: 2}
+  blessing: {fileID: 11400000, guid: 27c4992f36ef4083ba85cee65380ee15, type: 2}
+  gateOpened: {fileID: 11400000, guid: a853fff727894c1e889c70fa7c24a550, type: 2}
   heavyHitThreshold: 45
   meleeImpactSeconds: 0.12
   rangedImpactSeconds: 0.3

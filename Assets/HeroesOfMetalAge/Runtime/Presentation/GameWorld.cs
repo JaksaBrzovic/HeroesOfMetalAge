@@ -18,6 +18,8 @@ namespace HeroesOfMetalAge.Presentation
         private const float DRAG_THRESHOLD_PIXELS = 6f;
         private const float PAN_CELLS_PER_SECOND = 12f;
         private const float FOLLOW_SETTLE_SECONDS = 0.6f;
+        // each notch of the mouse wheel scales the cell size by this factor
+        private const float ZOOM_STEP = 1.15f;
 
         [SerializeField] private WorldCamera worldCamera;
         [Tooltip("Parent of the mission's adventure map instance.")]
@@ -36,11 +38,14 @@ namespace HeroesOfMetalAge.Presentation
         private Vector2 lastPointerPosition;
         private bool isPressed;
         private bool isDragging;
+        private float mapPixelsPerCell;
 
         public Transform Maps => maps;
         public AdventureMapView Map => map;
         public BattlefieldView Battlefield => battlefield;
         public WorldCamera Camera => worldCamera;
+        /// <summary>The map cell's size on screen now, in UI design pixels; the mouse wheel zooms it.</summary>
+        public float MapPixelsPerCell => mapPixelsPerCell;
 
         private GameSession Session => hud.Context.Session;
 
@@ -55,6 +60,7 @@ namespace HeroesOfMetalAge.Presentation
             hud = gameHud;
             map = adventureMap;
             map.Initialize(hud.Context);
+            mapPixelsPerCell = map.DisplayPixelsPerCell;
             battlefield.Initialize(hud.Context);
             followedHeroPosition = Session.Campaign.Position;
             LateUpdate();
@@ -135,6 +141,7 @@ namespace HeroesOfMetalAge.Presentation
             if (Session.Screen == GameScreen.Adventure)
             {
                 HandlePanKeys();
+                HandleZoom();
                 HandleHover();
             }
 
@@ -191,7 +198,7 @@ namespace HeroesOfMetalAge.Presentation
             RectTransform viewport = hud.WorldView.MapViewport;
             Rect bounds = map.Bounds;
             bounds.position += (Vector2)map.transform.position;
-            worldCamera.SetViewport(viewport, viewport.rect.height / (2f * map.DisplayPixelsPerCell), bounds);
+            worldCamera.SetViewport(viewport, viewport.rect.height / (2f * mapPixelsPerCell), bounds);
 
             Vector2 hero = map.HeroMarker.transform.position;
             if (isScreenChanged)
@@ -234,6 +241,39 @@ namespace HeroesOfMetalAge.Presentation
             {
                 worldCamera.Shake();
             }
+        }
+
+        /// <summary>Sets the map cell's size on screen, keeping the world point under <paramref name="screenPoint"/> in place.</summary>
+        public void Zoom(float pixelsPerCell, Vector2 screenPoint)
+        {
+            float target = Mathf.Clamp(pixelsPerCell, map.MinimumPixelsPerCell, map.MaximumPixelsPerCell);
+            if (Mathf.Approximately(target, mapPixelsPerCell))
+            {
+                return;
+            }
+
+            Vector3 before = worldCamera.ScreenToWorld(screenPoint);
+            mapPixelsPerCell = target;
+            RectTransform viewport = hud.WorldView.MapViewport;
+            Rect bounds = map.Bounds;
+            bounds.position += (Vector2)map.transform.position;
+            worldCamera.SetViewport(viewport, viewport.rect.height / (2f * mapPixelsPerCell), bounds);
+            worldCamera.Apply(0f);
+            Vector3 after = worldCamera.ScreenToWorld(screenPoint);
+            worldCamera.Pan(before - after);
+            followTime = 0f;
+        }
+
+        private void HandleZoom()
+        {
+            float wheel = Input.mouseScrollDelta.y;
+            Vector2 pointer = Input.mousePosition;
+            if (wheel == 0f || !worldCamera.ContainsScreenPoint(pointer) || IsOverUi(pointer))
+            {
+                return;
+            }
+
+            Zoom(mapPixelsPerCell * Mathf.Pow(ZOOM_STEP, wheel), pointer);
         }
 
         private void HandlePanKeys()

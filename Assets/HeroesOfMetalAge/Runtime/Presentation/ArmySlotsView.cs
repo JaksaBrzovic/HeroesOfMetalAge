@@ -5,26 +5,26 @@ using UnityEngine;
 
 namespace HeroesOfMetalAge.Presentation
 {
-    /// <summary>A row of army slots instantiated from the slot prefab, one per mission army slot.</summary>
+    /// <summary>
+    /// A row of army slots authored in the screen prefab over the slot frames of its artwork, one per mission army slot.
+    /// Each slot shows the unit's portrait, its count and, where the slot has a name label, the unit's name.
+    /// </summary>
     public sealed class ArmySlotsView : MonoBehaviour
     {
-        [SerializeField] private UiWidget slotPrefab;
-        [SerializeField] private RectTransform content;
+        [SerializeField] private List<UiWidget> slots = new List<UiWidget>();
 
-        private readonly List<UiWidget> slots = new List<UiWidget>();
         private CanvasViewContext context;
 
+        public IReadOnlyList<UiWidget> Slots => slots;
+
+        /// <exception cref="InvalidOperationException">There are fewer slots than the mission's army has.</exception>
         public void Initialize(CanvasViewContext viewContext)
         {
-            if (slotPrefab == null || content == null)
-            {
-                throw new InvalidOperationException($"ArmySlotsView on '{name}' is missing its slot prefab or content.");
-            }
-
             context = viewContext;
-            for (int i = 0; i < context.Session.Catalog.Mission.ArmySlots; i++)
+            int needed = context.Session.Catalog.Mission.ArmySlots;
+            if (slots.Count < needed || slots.Exists(slot => slot == null))
             {
-                slots.Add(Instantiate(slotPrefab, content));
+                throw new InvalidOperationException($"ArmySlotsView on '{name}' needs {needed} assigned slots.");
             }
         }
 
@@ -43,7 +43,7 @@ namespace HeroesOfMetalAge.Presentation
 
                 Troop troop = army[i];
                 string unitName = context.Session.Catalog.Unit(troop.UnitId).Name;
-                slot.Display(unitName, string.Empty, troop.Count.ToString(), context.UnitIcon(troop.UnitId), context.UnitTint(troop.UnitId, isPlayer),
+                slot.Display(unitName, string.Empty, troop.Count.ToString(), context.UnitCard(troop.UnitId), context.UnitTint(troop.UnitId, isPlayer),
                     onSlotClicked != null);
                 if (onSlotClicked != null)
                 {

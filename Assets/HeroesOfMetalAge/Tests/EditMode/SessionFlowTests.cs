@@ -36,6 +36,30 @@ namespace HeroesOfMetalAge.Tests
         }
 
         [Test]
+        public void SpeedMode_RidesAlmostAtOnceWithoutChangingTheRules()
+        {
+            GameSession session = NewSession();
+            float normal = session.TravelStepSeconds;
+            session.IsSpeedMode = true;
+            Assert.Less(session.TravelStepSeconds, normal);
+            Assert.LessOrEqual(session.TravelStepSeconds, 0.02f);
+
+            WorldPosition target = NearbyCell(session);
+            session.Plan(target);
+            int cost = session.Campaign.Movement;
+            session.Travel();
+            for (int frame = 0; frame < 10 && session.IsTraveling; frame++)
+            {
+                session.Tick(0.02f);
+            }
+
+            Assert.AreEqual(target, session.Campaign.Position, "the hero arrives within a few frames");
+            Assert.Less(session.Campaign.Movement, cost, "movement is still spent");
+            session.IsSpeedMode = false;
+            Assert.AreEqual(normal, session.TravelStepSeconds);
+        }
+
+        [Test]
         public void Ride_DropsTheCellsTheHeroEntered()
         {
             GameSession session = NewSession();
@@ -90,6 +114,8 @@ namespace HeroesOfMetalAge.Tests
         {
             GameSession session = CampaignTestUtility.NewSession(ContentAssets.LoadCatalog(), new MemorySaveStore());
             session.StartMission();
+            // the routes below lead towards the sentinel, beyond the hero's sight
+            session.DebugRevealMap();
             return session;
         }
 

@@ -4,25 +4,29 @@ using UnityEngine;
 
 namespace HeroesOfMetalAge.Presentation
 {
-    /// <summary>Bottom bar: controls help and the current audio state.</summary>
+    /// <summary>The bottom bar of a screen: controls help and, where the artwork has room, the current audio state.</summary>
     public sealed class FooterView : MonoBehaviour
     {
         [SerializeField] private TMP_Text helpText;
+        [Tooltip("Optional: screens without room for it leave it empty.")]
         [SerializeField] private TMP_Text audioText;
 
-        /// <exception cref="InvalidOperationException">A text reference is missing on the Footer prefab.</exception>
+        /// <exception cref="InvalidOperationException">The help text is missing on the screen prefab.</exception>
         public void Initialize()
         {
-            if (helpText == null || audioText == null)
+            if (helpText == null)
             {
-                throw new InvalidOperationException($"FooterView on '{name}' has unassigned references. Assign them in the Footer prefab.");
+                throw new InvalidOperationException($"FooterView on '{name}' has no help text. Assign it in the screen prefab.");
             }
         }
 
         public void Display(string help, string audio)
         {
             UiBinding.SetText(helpText, help);
-            UiBinding.SetText(audioText, audio);
+            if (audioText != null)
+            {
+                UiBinding.SetText(audioText, audio);
+            }
         }
     }
 }

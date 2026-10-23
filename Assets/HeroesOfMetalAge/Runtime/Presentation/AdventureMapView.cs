@@ -9,7 +9,7 @@ namespace HeroesOfMetalAge.Presentation
 {
     /// <summary>
     /// The adventure map in the world: the painted map image, the hidden terrain logic layer, the hero, encounter and town
-    /// markers and the planned route. Map cells are one world unit; rows of <see cref="WorldPosition"/> count from the top
+    /// markers, the planned route and the fog of war over unexplored land. Map cells are one world unit; rows of <see cref="WorldPosition"/> count from the top
     /// while grid rows count from the bottom, which is converted only here.
     /// </summary>
     public sealed class AdventureMapView : MonoBehaviour
@@ -18,14 +18,18 @@ namespace HeroesOfMetalAge.Presentation
         private const float ROUTE_STEP_SIZE = 0.22f;
         private const float ROUTE_END_SIZE = 0.42f;
         private const float MARKER_BASE_BLEND = 0.45f;
+        // buildings may be wider than tall
+        private const float OBJECT_WIDTH_FACTOR = 1.6f;
 
         [SerializeField] private Grid grid;
         [SerializeField] private SpriteRenderer background;
         [Tooltip("Renderer of the terrain logic layer; hidden in the game, shown with the development panel's TERRAIN OVERLAY.")]
         [SerializeField] private TilemapRenderer terrainOverlay;
-        [Tooltip("Size of one cell on screen, in UI design pixels (the 1600x900 frame). 0 shows the image at its own pixel size.")]
+        [Tooltip("Size of one cell on screen at the start, in UI design pixels (the 1920x1080 frame). 0 shows the image at its own pixel size.")]
         [Min(0f)]
         [SerializeField] private float displayPixelsPerCell;
+        [Tooltip("Smallest and largest cell on screen (design pixels) the mouse wheel zooms between.")]
+        [SerializeField] private Vector2 zoomPixelsPerCell = new Vector2(32f, 64f);
         [Tooltip("Off when the town is painted on the map image; its cell stays clickable.")]
         [SerializeField] private bool showTownMarker = true;
 
@@ -35,23 +39,33 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private Transform towns;
         [SerializeField] private Transform friendlyUnits;
         [SerializeField] private Transform enemies;
+        [Tooltip("Parent of the map objects: pickups, chests, shrines, mills, dwellings, quest givers, gates, captives and portals.")]
+        [SerializeField] private Transform mapObjects;
         [SerializeField] private WorldMarker markerPrefab;
         [SerializeField] private SpriteRenderer routeStepPrefab;
         [SerializeField] private SpriteRenderer hoverCell;
+        [Tooltip("Fog of war over the unexplored cells; sorted above the markers. Its sprite is drawn at run time.")]
+        [SerializeField] private SpriteRenderer fogOfWar;
 
         private readonly Dictionary<string, WorldMarker> encounterMarkers = new Dictionary<string, WorldMarker>();
+        private readonly Dictionary<string, WorldMarker> objectMarkers = new Dictionary<string, WorldMarker>();
         private readonly List<SpriteRenderer> routeSteps = new List<SpriteRenderer>();
         private CanvasViewContext context;
         private WorldMarker heroMarker;
+        private FogOfWarLayer fogLayer;
 
         public WorldMarker HeroMarker => heroMarker;
         public bool IsTerrainOverlayVisible => terrainOverlay.enabled;
+        /// <summary>False once the whole map is explored.</summary>
+        public bool IsFogOfWarVisible => fogOfWar.enabled;
 
         /// <summary>The map area in this object's space, one unit per cell.</summary>
         public Rect Bounds => new Rect(0f, 0f, World.Width, World.Height);
 
         /// <summary>Cell size on screen in UI design pixels; the map image's own pixels per cell unless overridden.</summary>
         public float DisplayPixelsPerCell => displayPixelsPerCell > 0f ? displayPixelsPerCell : background.sprite.pixelsPerUnit;
+        public float MinimumPixelsPerCell => Mathf.Min(zoomPixelsPerCell.x, DisplayPixelsPerCell);
+        public float MaximumPixelsPerCell => Mathf.Max(zoomPixelsPerCell.y, DisplayPixelsPerCell);
 
         private GameSession Session => context.Session;
         private WorldMap World => context.Session.World;
@@ -60,7 +74,8 @@ namespace HeroesOfMetalAge.Presentation
         public void Initialize(CanvasViewContext viewContext)
         {
             if (grid == null || background == null || background.sprite == null || terrainOverlay == null || route == null || heroes == null
-                || towns == null || friendlyUnits == null || enemies == null || markerPrefab == null || routeStepPrefab == null || hoverCell == null)
+                || towns == null || friendlyUnits == null || enemies == null || mapObjects == null || markerPrefab == null || routeStepPrefab == null
+                || hoverCell == null || fogOfWar == null)
             {
                 throw new InvalidOperationException($"AdventureMapView on '{name}' has unassigned references. Assign them in the map prefab.");
             }
@@ -68,6 +83,9 @@ namespace HeroesOfMetalAge.Presentation
             context = viewContext;
             terrainOverlay.enabled = false;
             hoverCell.gameObject.SetActive(false);
+            // the fog's sprite starts at the map's bottom-left corner, one world unit per cell like the grid
+            fogOfWar.transform.localPosition = transform.InverseTransformPoint(grid.CellToWorld(Vector3Int.zero));
+            fogLayer = new FogOfWarLayer(fogOfWar, World.Width, World.Height);
             heroMarker = Instantiate(markerPrefab, heroes);
             FigureAnimation ride = context.Media.HeroAnimation(Session.Campaign.HeroId);
             heroMarker.SetFrames(ride.Frames, ride.FramesPerSecond);
@@ -83,7 +101,25 @@ namespace HeroesOfMetalAge.Presentation
                 encounterMarkers.Add(encounter.Id, marker);
             }
 
+            foreach (MapObjectDefinition mapObject in Session.Catalog.Mission.Objects)
+            {
+                WorldMarker marker = Instantiate(markerPrefab, mapObjects);
+                marker.name = mapObject.Name;
+                marker.Place(CellCenter(mapObject.Position));
+                marker.SetFacing(false, false);
+                MapFigure figure = context.Media.ObjectFigure(mapObject.Id);
+                marker.SetSize(figure.Height, figure.Height * OBJECT_WIDTH_FACTOR);
+                marker.SetBaseVisible(false);
+                marker.Display(figure.Sprite != null ? figure.Sprite : context.Theme.MapObject, Color.white, Color.clear, string.Empty);
+                objectMarkers.Add(mapObject.Id, marker);
+            }
+
             Refresh();
+        }
+
+        public WorldMarker ObjectMarker(string objectId)
+        {
+            return objectMarkers[objectId];
         }
 
         public WorldMarker EncounterMarker(string encounterId)
@@ -112,8 +148,10 @@ namespace HeroesOfMetalAge.Presentation
         public void Refresh()
         {
             RefreshEncounters();
+            RefreshObjects();
             RefreshHero();
             RefreshRoute();
+            fogLayer.Show(Session.Campaign.Explored);
         }
 
         public void Tick(float deltaTime)
@@ -123,6 +161,13 @@ namespace HeroesOfMetalAge.Presentation
 
         public void ShowHover(WorldPosition position)
         {
+            // unexplored land gives nothing away, not even whether it can be crossed
+            if (!Session.Campaign.Explored.IsExplored(position))
+            {
+                HideHover();
+                return;
+            }
+
             hoverCell.gameObject.SetActive(true);
             hoverCell.transform.localPosition = CellCenter(position);
             hoverCell.color = World.IsWalkable(position) ? context.Theme.Gold : context.Theme.Enemy;
@@ -136,6 +181,11 @@ namespace HeroesOfMetalAge.Presentation
         public void SetTerrainOverlayVisible(bool isVisible)
         {
             terrainOverlay.enabled = isVisible;
+        }
+
+        private void OnDestroy()
+        {
+            fogLayer?.Dispose();
         }
 
         private Vector3Int GridCell(WorldPosition position)
@@ -177,9 +227,21 @@ namespace HeroesOfMetalAge.Presentation
 
                 Color side = encounter.Kind == EncounterKind.Friendly ? context.Theme.Friendly : context.Theme.Enemy;
                 string leaderId = encounter.Army[0].UnitId;
+                Sprite figure = context.Media.EncounterFigure(encounter.Id);
                 // authored art keeps its colours; placeholder icons show the side
-                Color tint = context.Media.Unit(leaderId) != null ? Color.white : side;
-                marker.Display(context.UnitIcon(leaderId), tint, BaseColor(side), ArmySize(encounter.Army).ToString());
+                Color tint = figure != null || context.Media.Unit(leaderId) != null ? Color.white : side;
+                marker.Display(figure != null ? figure : context.UnitIcon(leaderId), tint, BaseColor(side), ArmySize(encounter.Army).ToString());
+            }
+        }
+
+        // taken pickups, opened chests and gates and freed captives leave the map
+        private void RefreshObjects()
+        {
+            CampaignState campaign = Session.Campaign;
+            foreach (MapObjectDefinition mapObject in Session.Catalog.Mission.Objects)
+            {
+                bool isThere = !(mapObject.IsRemovedWhenVisited && campaign.IsVisited(mapObject.Id));
+                UiBinding.SetVisible(objectMarkers[mapObject.Id].gameObject, isThere);
             }
         }
 

@@ -172,6 +172,41 @@ namespace HeroesOfMetalAge.Application
             return Choose(FrontEndChoice.Quit, FrontEndPhase.Quitting);
         }
 
+        /// <summary>
+        /// Skips New Game's black, verses and title straight to the burn (the mission is already set up on black); during the
+        /// burn it starts the mission at once.
+        /// </summary>
+        /// <returns>False outside the intro.</returns>
+        public bool SkipIntro()
+        {
+            if (Phase == FrontEndPhase.Black || Phase == FrontEndPhase.Verses || Phase == FrontEndPhase.Title)
+            {
+                Enter(FrontEndPhase.Burning);
+                return true;
+            }
+
+            if (Phase == FrontEndPhase.Burning)
+            {
+                Enter(FrontEndPhase.Playing);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Back to the main menu from the mission, e.g. after it was finished at the exit portal.</summary>
+        /// <returns>False unless the mission is being played.</returns>
+        public bool ReturnToMenu()
+        {
+            if (Phase != FrontEndPhase.Playing)
+            {
+                return false;
+            }
+
+            Enter(FrontEndPhase.MainMenu);
+            return true;
+        }
+
         /// <summary>Advances the timed phases; driven by the presentation with unscaled frame time.</summary>
         public void Tick(float deltaSeconds)
         {

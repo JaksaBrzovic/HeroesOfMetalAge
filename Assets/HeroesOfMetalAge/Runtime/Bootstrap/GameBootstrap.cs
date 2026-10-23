@@ -25,6 +25,7 @@ namespace HeroesOfMetalAge.Bootstrap
         // automated runs use their own file so they can never touch the player's campaign
         private const string SMOKE_TEST_CAMPAIGN_FILE = "refactor-smoke-campaign.json";
         private const int SMOKE_TEST_SEED = 42;
+        private const string SKIP_INTRO_PREFERENCE = "dev.clickToSkipIntro";
 
         [SerializeField] private UnitDatabaseScriptableObject units;
         [SerializeField] private ArtefactDatabaseScriptableObject artefacts;
@@ -78,15 +79,26 @@ namespace HeroesOfMetalAge.Bootstrap
                 unitDatabase.Units.ToDictionary(entry => entry.Id, entry => new FigureAnimation(entry.WalkFrames, entry.WalkFramesPerSecond)),
                 heroDatabase.Heroes.ToDictionary(entry => entry.Id, entry => new FigureAnimation(entry.MapFrames, entry.MapFramesPerSecond)),
                 missionSettings.Encounters.ToDictionary(entry => entry.Id, entry => entry.BattleBackground),
-                missionSettings.BattleBackground);
+                missionSettings.BattleBackground,
+                heroDatabase.Heroes.ToDictionary(entry => entry.Id, entry => entry.ScreenPortrait),
+                missionSettings.MapObjects.ToDictionary(entry => entry.Id, entry => new MapFigure(entry.Sprite, entry.MapHeight)),
+                missionSettings.Encounters.Where(entry => entry.MapSprite != null).ToDictionary(entry => entry.Id, entry => entry.MapSprite),
+                heroDatabase.Heroes.ToDictionary(entry => entry.Id, entry => entry.PanelPortrait),
+                unitDatabase.Units.ToDictionary(entry => entry.Id, entry => entry.CardPortrait));
         }
 
-        /// <summary>The conversation each mission site plays when the hero reaches it, by encounter ID.</summary>
+        /// <summary>The conversation each mission site plays when the hero reaches it, by encounter or map object ID.</summary>
         public static IReadOnlyDictionary<string, string> SiteConversations(MissionSettingsScriptableObject missionSettings)
         {
-            return missionSettings.Encounters
+            Dictionary<string, string> conversations = missionSettings.Encounters
                 .Where(entry => !string.IsNullOrWhiteSpace(entry.ArrivalConversationId))
                 .ToDictionary(entry => entry.Id, entry => entry.ArrivalConversationId);
+            foreach (MapObjectEntry mapObject in missionSettings.MapObjects.Where(entry => !string.IsNullOrWhiteSpace(entry.ArrivalConversationId)))
+            {
+                conversations.Add(mapObject.Id, mapObject.ArrivalConversationId);
+            }
+
+            return conversations;
         }
 
         private void Awake()
@@ -162,6 +174,8 @@ namespace HeroesOfMetalAge.Bootstrap
 
             FrontEndView frontEndView = Instantiate(frontEndPrefab);
             frontEndView.Initialize(frontEnd, audio, frontEndSettings.Credits);
+            // the exit portal ends the mission; for now it leads back to the main menu
+            session.MissionFinished += () => frontEnd.ReturnToMenu();
             // the flow, the session and the HUD live as long as this composition root, so the handler is never removed
             frontEnd.PhaseChanged += phase =>
             {
@@ -197,6 +211,15 @@ namespace HeroesOfMetalAge.Bootstrap
                 debugPanel.Initialize(session, audio, world.ToggleTerrainOverlay);
                 hud.AttachDebugPanel(debugPanel);
                 AddDialogueAuditions(debugPanel, dialogue);
+                debugPanel.AddAction("Reveal map", session.DebugRevealMap);
+                // remembered between runs: the panel cannot be opened while the intro plays
+                frontEndView.IsIntroSkippedOnClick = PlayerPrefs.GetInt(SKIP_INTRO_PREFERENCE, 0) == 1;
+                debugPanel.AddToggle("Click to skip intro", () => frontEndView.IsIntroSkippedOnClick, isOn =>
+                {
+                    frontEndView.IsIntroSkippedOnClick = isOn;
+                    PlayerPrefs.SetInt(SKIP_INTRO_PREFERENCE, isOn ? 1 : 0);
+                    PlayerPrefs.Save();
+                });
             }
 
             if (isSmokeTest)
@@ -223,7 +246,7 @@ namespace HeroesOfMetalAge.Bootstrap
             foreach (DialogueConversationEntry conversation in dialogueDatabase.Conversations)
             {
                 string conversationId = conversation.Id;
-                debugPanel.AddAction("Dialogue " + conversationId,
+                debugPanel.AddAction(conversationId,
                     () => dialogue.Play(conversationId, new Vector2(UnityEngine.Random.value, UnityEngine.Random.value)));
             }
         }

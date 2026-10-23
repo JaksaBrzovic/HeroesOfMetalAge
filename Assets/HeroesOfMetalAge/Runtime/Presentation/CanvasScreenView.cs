@@ -11,6 +11,15 @@ namespace HeroesOfMetalAge.Presentation
     /// </summary>
     public abstract class CanvasScreenView : MonoBehaviour
     {
+        [Tooltip("The screen's own top bar, if its artwork has one.")]
+        [SerializeField] private HeaderView header;
+        [Tooltip("The screen's own bottom bar, if its artwork has one.")]
+        [SerializeField] private FooterView footer;
+
+        /// <summary>The screen's top bar, or null.</summary>
+        public HeaderView Header => header;
+        /// <summary>The screen's bottom bar, or null.</summary>
+        public FooterView Footer => footer;
         protected CanvasViewContext Context { get; private set; }
         protected GameSession Session => Context.Session;
         protected CampaignState Campaign => Session.Campaign;

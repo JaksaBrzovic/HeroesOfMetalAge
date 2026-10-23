@@ -88,7 +88,9 @@ Postoji dijagonalno kretanje bez presijecanja blokiranih kutova. Klik odabire od
 
 E završava dan i obnavlja dnevni budžet. Tjedan traje 7 dana; zalihe rastu na danima 8, 15, 22 itd. Nove jedinice dodaju se preostalim zalihama.
 
-Fog of war, rudnici, skupljanje resursa na mapi, više heroja, proceduralne mape i neprijateljski strateški potezi nisu dio opisanog prototipa. Njihova potreba i pravila: **otvoreno**.
+**Implementirano (2026-10-22): fog of war.** Kao u Heroes 3, heroj vidi okruglo područje oko sebe (Scouting Radius u AshenPass.asset, zadano 6 ćelija; 0 isključuje fog). Polje koje je jednom viđeno ostaje istraženo do kraja kampanje. Rute ne ulaze u neistraženo i ne završavaju u njemu, a hover tamo ništa ne otkriva. Na mapi je fog tamni sloj s mekim, blago nazubljenim rubom iznad markera. Istražena polja spremaju se u save (polje `explored`, i dalje verzija 4); stariji save bez tog polja učita se s istraženom samo okolinom heroja. F3 panel ima REVEAL MAP za razvoj. Watchtower i slični objekti koji otkrivaju dio mape: **prijedlog**.
+
+Rudnici, skupljanje resursa na mapi, više heroja, proceduralne mape i neprijateljski strateški potezi nisu dio opisanog prototipa. Njihova potreba i pravila: **otvoreno**.
 
 **Dogovoreni smjer (2026-10-12):** za početak koristiti jednu fiksnu ilustriranu pozadinu Ashen Passa, bez vizualnih tileova; logičku mrežu i prohodnost prilagoditi slici.
 
@@ -342,6 +344,7 @@ Kriteriji prve misije: pridruživanje, pobjeda na prolazu, opremanje nagrade, ku
 | 2026-10-13 | 0.7 | Pauza od 1,5 s nakon svake akcije u borbi (Battle Action Seconds) | EditMode testovi i scenarij cijele misije u buildu |
 | 2026-10-13 | 0.7 | Glazba mape i grada po misiji (overworld, Market Day; underworld tema pripremljena za buduću podzemnu mapu); pauza od 2 s prije ekrana pobjede/poraza (Battle Result Seconds) | EditMode testovi i scenarij cijele misije u buildu |
 | 2026-10-13 | 0.7 | Snimljeni zvukovi za borbu (intro i petlja), poraz, kopita, mač i strijelu (zamah/pogodak/promašaj), susrete, pobjedu i legendary item; ekrani Victory, Rewards i Defeat; nasumične nagrade (uvijek gold, najviše jedan artefakt, rarity, zajamčen legendary najkasnije svake četvrte pobjede); promašaji u borbi | EditMode testovi i scenarij cijele misije u buildu |
+| 2026-10-20 | 0.8 | Proširena karta Ashen Passa (100 × 61, logički sloj iz boja slike); 9 vojski, 16 objekata (zlato, škrinja zlato/XP, koloseum +napad, bastion +obrana, svetište morala, mlin, logor Roadieja, skald s crvenim ključem, crveni šator, okovana djeva s epic artefaktom, koštani orakul, Vrata vatre kao izlaz); 5 ciljeva (Black Banner obavezan), izlaz vodi u main menu; moral (dodatni potez / smrzavanje); 11 mjesta opreme i 28 artefakata s ikonama; minotaur i berserker; novi UI izrezan iz mockupova; heavy metal fontovi po stilovima (Typography.asset); zlato na hover svih stavki menija; save v4 | 124 EditMode testa; scenarij cijele misije u buildu (do Vrata vatre) sa screenshotovima |
 | 2026-10-17 | 0.7 | Priča na početku misije na velikom svitku s nuklearnom eksplozijom, trešnjom ekrana i bačenim svitkom; Load Game učitava spremljenu kampanju | Kompilacija izvan Editora i pregled eksplozije izvan Unityja; EditMode testovi još nisu pokrenuti |
 | 2026-10-16 | 0.7 | Kamera menija prati miš i njiše se kad miš miruje; nova grafika i animacije za paklenu rupu, svitak i choppera; Load Game: kamera upada u rupu | Kompilacija izvan Editora i simulacija pada izvan Unityja; EditMode testovi još nisu pokrenuti |
 | 2026-10-16 | 0.7 | Parallax pozadina main menua: 11 slojeva i kamera koja se prirodno njiše kao na vjetru | Kompilacija izvan Editora i provjera pomaka na slojevima izvan Unityja; EditMode testovi još nisu pokrenuti |

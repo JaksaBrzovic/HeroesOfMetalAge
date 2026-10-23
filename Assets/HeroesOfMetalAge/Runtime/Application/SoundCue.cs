@@ -28,7 +28,15 @@ namespace HeroesOfMetalAge.Application
         ArrowHit,
         ArrowMiss,
         /// <summary>Layered over a sword or arrow hit that deals heavy damage.</summary>
-        HeavyHit
+        HeavyHit,
+        /// <summary>A stack's good morale lets it act again.</summary>
+        GoodMorale,
+        /// <summary>A stack's bad morale freezes it.</summary>
+        BadMorale,
+        /// <summary>A shrine raises the hero's attack, defense or morale.</summary>
+        Blessing,
+        /// <summary>A border gate opens for its key.</summary>
+        GateOpened
     }
 
     /// <summary>The synchronized music layers, in mixing order.</summary>

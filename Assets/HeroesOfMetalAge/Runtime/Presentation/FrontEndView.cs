@@ -89,11 +89,19 @@ namespace HeroesOfMetalAge.Presentation
             }
         }
 
+        /// <summary>Development option: a mouse click skips the intro (see <see cref="FrontEndFlow.SkipIntro"/>).</summary>
+        public bool IsIntroSkippedOnClick { get; set; }
+
         private void Update()
         {
             if (flow == null)
             {
                 return;
+            }
+
+            if (IsIntroSkippedOnClick && Input.GetMouseButtonDown(0))
+            {
+                flow.SkipIntro();
             }
 
             flow.Tick(Time.unscaledDeltaTime);

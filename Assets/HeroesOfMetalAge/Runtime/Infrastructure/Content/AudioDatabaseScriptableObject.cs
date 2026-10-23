@@ -82,6 +82,16 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [Tooltip("The huge explosion over the briefing scroll's first page.")]
         [SerializeField] private SoundDefinition briefingExplosion;
 
+        [Header("Map objects and morale")]
+        [Tooltip("A stack's good morale lets it act again.")]
+        [SerializeField] private SoundDefinition goodMorale;
+        [Tooltip("A stack's bad morale freezes it.")]
+        [SerializeField] private SoundDefinition badMorale;
+        [Tooltip("A shrine raises attack, defense or morale.")]
+        [SerializeField] private SoundDefinition blessing;
+        [Tooltip("A border gate opens for its key.")]
+        [SerializeField] private SoundDefinition gateOpened;
+
         [Header("Strikes")]
         [SerializeField] private SoundDefinition swordSwing;
         [SerializeField] private SoundDefinition swordHit;
@@ -188,6 +198,14 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                     return arrowMiss;
                 case SoundCue.HeavyHit:
                     return heavyHit;
+                case SoundCue.GoodMorale:
+                    return goodMorale;
+                case SoundCue.BadMorale:
+                    return badMorale;
+                case SoundCue.Blessing:
+                    return blessing;
+                case SoundCue.GateOpened:
+                    return gateOpened;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(cue), cue, "No sound field for this cue.");
             }

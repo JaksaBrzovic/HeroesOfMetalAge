@@ -1,0 +1,271 @@
+{
+  "screen": "Adventure",
+  "backdrop": "AdventureFrame",
+  "viewport": [
+    21.8,
+    81.5,
+    1302.2,
+    997.4
+  ],
+  "elements": [
+    {
+      "name": "PortraitImage",
+      "type": "image",
+      "rect": [
+        1351.6,
+        127.4,
+        1508.9,
+        332.8
+      ],
+      "field": "portraitImage"
+    },
+    {
+      "name": "HeroText",
+      "type": "text",
+      "rect": [
+        1538.8,
+        133.1,
+        1871.8,
+        183.6
+      ],
+      "style": "Title",
+      "size": 39.0,
+      "align": "left",
+      "field": "heroText"
+    },
+    {
+      "name": "LevelText",
+      "type": "text",
+      "rect": [
+        1538.8,
+        185.9,
+        1871.8,
+        218.1
+      ],
+      "style": "Label",
+      "size": 24.1,
+      "align": "left",
+      "field": "levelText"
+    },
+    {
+      "name": "MovementText",
+      "type": "text",
+      "rect": [
+        1590.4,
+        255.9,
+        1871.8,
+        291.5
+      ],
+      "style": "Label",
+      "size": 24.1,
+      "align": "left",
+      "field": "movementText"
+    },
+    {
+      "name": "MovementBar",
+      "type": "bar",
+      "rect": [
+        1558.3,
+        307.6,
+        1862.6,
+        330.5
+      ],
+      "sprite": "MovementBarFill",
+      "field": "movementBarImage"
+    },
+    {
+      "name": "WarhostTitle",
+      "type": "text",
+      "rect": [
+        1343.5,
+        369.6,
+        1630.6,
+        413.2
+      ],
+      "style": "Heading",
+      "size": 32.1,
+      "align": "left",
+      "text": "YOUR WARHOST"
+    },
+    {
+      "name": "ArmySlots",
+      "type": "slots",
+      "rects": [
+        1338.9,
+        421.2,
+        1421.6,
+        558.9,
+        1425.1,
+        421.2,
+        1497.4,
+        558.9,
+        1502.0,
+        421.2,
+        1574.4,
+        558.9,
+        1578.9,
+        421.2,
+        1651.3,
+        558.9,
+        1655.9,
+        421.2,
+        1728.2,
+        558.9,
+        1732.8,
+        421.2,
+        1805.2,
+        558.9,
+        1809.8,
+        421.2,
+        1884.4,
+        558.9
+      ],
+      "field": "armySlots"
+    },
+    {
+      "name": "MissionTitle",
+      "type": "text",
+      "rect": [
+        1345.8,
+        608.3,
+        1527.3,
+        654.2
+      ],
+      "style": "Heading",
+      "size": 32.1,
+      "align": "left",
+      "text": "MISSION"
+    },
+    {
+      "name": "Objectives",
+      "type": "objectives",
+      "rect": [
+        1357.3,
+        665.7,
+        1660.5,
+        835.5
+      ],
+      "rows": 5,
+      "field": "objectiveRows"
+    },
+    {
+      "name": "DayText",
+      "type": "text",
+      "rect": [
+        987.6,
+        20.7,
+        1202.3,
+        71.2
+      ],
+      "style": "Number",
+      "size": 25.2,
+      "align": "center",
+      "color": "ink",
+      "field": "header.dayText"
+    },
+    {
+      "name": "GoldText",
+      "type": "text",
+      "rect": [
+        1303.3,
+        25.2,
+        1475.6,
+        66.6
+      ],
+      "style": "Number",
+      "size": 29.8,
+      "align": "left",
+      "field": "header.goldText"
+    },
+    {
+      "name": "HeroButton",
+      "type": "button",
+      "rect": [
+        1488.2,
+        16.1,
+        1667.4,
+        75.7
+      ],
+      "label": [
+        1552.5,
+        25.2,
+        1661.6,
+        66.6
+      ],
+      "text": "HERO [H]",
+      "size": 20.7,
+      "field": "header.heroButton"
+    },
+    {
+      "name": "OptionsButton",
+      "type": "button",
+      "rect": [
+        1678.9,
+        16.1,
+        1851.1,
+        75.7
+      ],
+      "label": [
+        1736.3,
+        25.2,
+        1845.4,
+        66.6
+      ],
+      "text": "OPTIONS",
+      "size": 20.7,
+      "field": "header.optionsButton"
+    },
+    {
+      "name": "HelpText",
+      "type": "text",
+      "rect": [
+        183.7,
+        1005.4,
+        1612.2,
+        1051.3
+      ],
+      "style": "Label",
+      "size": 19.5,
+      "align": "center",
+      "field": "footer.helpText"
+    },
+    {
+      "name": "RideButton",
+      "type": "button",
+      "rect": [
+        1349.3,
+        860.8,
+        1605.4,
+        948.0
+      ],
+      "label": [
+        1429.7,
+        881.4,
+        1598.5,
+        927.4
+      ],
+      "text": "RIDE [SPACE]",
+      "field": "rideButton"
+    },
+    {
+      "name": "EndDayButton",
+      "type": "button",
+      "rect": [
+        1613.4,
+        860.8,
+        1802.9,
+        948.0
+      ],
+      "label": [
+        1697.2,
+        881.4,
+        1805.2,
+        927.4
+      ],
+      "text": "END DAY",
+      "field": "endDayButton"
+    }
+  ],
+  "fullscreen": true,
+  "spriteFolder": "Assets/HeroesOfMetalAge/Content/UI/Sprites/Gameplay/Adventure"
+}

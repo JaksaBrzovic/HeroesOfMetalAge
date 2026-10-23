@@ -15,81 +15,484 @@ MonoBehaviour:
   id: ashen-pass
   displayName: THE ASHEN PASS
   heroId: kael
-  description: Across the pass, the Ashen Clan sells steel. Beyond it, the Black
-    Banner waits.
+  description: Across the pass, the Ashen Clan sells steel. Beyond its castle the
+    Black Banner holds the gate of fire, and in the burning east a maiden waits in
+    chains.
+  briefingPages:
+  - 'On the first day, our hero collects his friends and like minded folks around
+    the land.
+
+    Because at this point, he is looking for success in an external
+    world, the overworld of humans.'
+  - He will search for the Secret of Metal in riches, women and victory. He needs
+    to penetrate through the tight passage of Psur to the east.
+  - Beyond the clan's castle the Black Banner holds the gate of fire. In the burning
+    east a maiden is chained among horned beasts, and under the mountains something
+    old is sleeping.
   clanId: ashen-clan
   clanName: Ashen Clan
   clanHeroName: Lord Varg
-  townPortrait: {fileID: 0}
+  townPortrait: {fileID: 21300000, guid: 5846b09a327840441835ca8eff6d0b4b, type: 3}
   startingGold: 1600
   armySlots: 7
   daysPerWeek: 7
   ownedRecruitmentMultiplier: 0.55
   map: {fileID: 8507097743292139526, guid: 0baf0b2a643f39148832e2881d47c6a5, type: 3}
   terrain: {fileID: 11400000, guid: 33418e1c302a9d14999b2563017f9af2, type: 2}
-  startingPosition: {x: 2, y: 14}
+  startingPosition: {x: 3, y: 30}
   recruitmentUnitIds:
   - ironbound
   - ash-archer
   - doom-rider
   encounters:
-  - id: friendly
+  - id: willing
     displayName: THE WILLING
     kind: 0
-    position: {x: 13, y: 14}
+    position: {x: 7, y: 26}
     description: We heard the iron oath. Let us ride with you.
     army:
     - unitId: ash-archer
       count: 6
     rewardExperience: 0
     rewardGold: 0
+    rewardArtefactId: 
     battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
+    mapSprite: {fileID: 0}
     arrivalConversationId: friendly-arrival
+  - id: road-crew
+    displayName: THE ROAD CREW
+    kind: 0
+    position: {x: 41, y: 42}
+    description: Your amps are loud, your cause is louder. We carry your gear.
+    army:
+    - unitId: ironbound
+      count: 8
+    rewardExperience: 0
+    rewardGold: 0
+    rewardArtefactId: 
+    battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
+    mapSprite: {fileID: 0}
+    arrivalConversationId: 
+  - id: bandits
+    displayName: FOREST BANDITS
+    kind: 1
+    position: {x: 30, y: 36}
+    description: Cutthroats who sell what they steal from the road.
+    army:
+    - unitId: ironbound
+      count: 9
+    - unitId: ash-archer
+      count: 4
+    rewardExperience: 150
+    rewardGold: 300
+    rewardArtefactId: 
+    battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
+    mapSprite: {fileID: 0}
+    arrivalConversationId: 
+  - id: iron-reavers
+    displayName: THE IRON REAVERS
+    kind: 1
+    position: {x: 45, y: 14}
+    description: Raiders camped on a buried treasure. They swear it is cursed and
+      will not leave it.
+    army:
+    - unitId: doom-rider
+      count: 3
+    - unitId: ironbound
+      count: 10
+    rewardExperience: 300
+    rewardGold: 400
+    rewardArtefactId: gloves-of-metal
+    battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
+    mapSprite: {fileID: 0}
+    arrivalConversationId: 
   - id: sentinel
     displayName: THE PASS WARDENS
     kind: 1
-    position: {x: 21, y: 15}
+    position: {x: 58, y: 29}
     description: The wardens block the only passage through the ridge and refuse
       to join.
     army:
     - unitId: ironbound
-      count: 10
-    rewardExperience: 180
+      count: 14
+    - unitId: ash-archer
+      count: 6
+    rewardExperience: 200
     rewardGold: 500
+    rewardArtefactId: 
     battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
+    mapSprite: {fileID: 0}
     arrivalConversationId: sentinel-arrival
   - id: town
     displayName: ASHEN HOLD
     kind: 2
-    position: {x: 32, y: 13}
+    position: {x: 72, y: 27}
     description: The Ashen Clan will not surrender its ancestral forges. Defeat its
       defenders to claim the town.
     army:
     - unitId: ironbound
-      count: 13
+      count: 16
     - unitId: ash-archer
-      count: 5
-    rewardExperience: 250
-    rewardGold: 300
+      count: 8
+    rewardExperience: 300
+    rewardGold: 400
+    rewardArtefactId: 
     battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
+    mapSprite: {fileID: 0}
     arrivalConversationId: town-arrival
+  - id: revenants
+    displayName: ASH REVENANTS
+    kind: 1
+    position: {x: 80, y: 37}
+    description: The dead of the ash wastes still march.
+    army:
+    - unitId: doom-rider
+      count: 5
+    - unitId: ash-archer
+      count: 10
+    rewardExperience: 300
+    rewardGold: 500
+    rewardArtefactId: 
+    battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
+    mapSprite: {fileID: 0}
+    arrivalConversationId: 
+  - id: minotaurs
+    displayName: THE MINOTAUR PACK
+    kind: 1
+    position: {x: 87, y: 48}
+    description: Horned brutes guard the chained maiden.
+    army:
+    - unitId: minotaur
+      count: 6
+    rewardExperience: 450
+    rewardGold: 600
+    rewardArtefactId: 
+    battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
+    mapSprite: {fileID: 21300000, guid: 6e5379996d82f5148a5bcdfdc0d49e93, type: 3}
+    arrivalConversationId: 
   - id: boss
     displayName: THE BLACK BANNER
     kind: 3
-    position: {x: 44, y: 15}
-    description: A stronger warhost awaits. Recruit at the town and equip your reward
-      before challenging them.
+    position: {x: 85, y: 30}
+    description: The enemy beyond the castle holds the gate of fire. Recruit and
+      equip your best before challenging them.
     army:
     - unitId: ironbound
-      count: 18
+      count: 24
     - unitId: ash-archer
-      count: 9
+      count: 14
     - unitId: doom-rider
-      count: 3
-    rewardExperience: 450
-    rewardGold: 900
+      count: 6
+    rewardExperience: 600
+    rewardGold: 1200
+    rewardArtefactId: 
     battleBackground: {fileID: 21300000, guid: a898de74fea957f42938664ecef3fad2, type: 3}
+    mapSprite: {fileID: 0}
     arrivalConversationId: boss-arrival
+  mapObjects:
+  - id: spilled-purse
+    displayName: A SPILLED PURSE
+    kind: 0
+    position: {x: 11, y: 29}
+    description: Someone fled in a hurry.
+    sprite: {fileID: 21300000, guid: 8fd4a366def6bb44e8b5b26be47c30f7, type: 3}
+    mapHeight: 0.8
+    gold: 400
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: 
+  - id: bandit-hoard
+    displayName: THE BANDITS' HOARD
+    kind: 0
+    position: {x: 20, y: 46}
+    description: Hidden under a fallen pine.
+    sprite: {fileID: 21300000, guid: 8fd4a366def6bb44e8b5b26be47c30f7, type: 3}
+    mapHeight: 0.8
+    gold: 600
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: 
+  - id: ash-tribute
+    displayName: A TRIBUTE IN ASH
+    kind: 0
+    position: {x: 79, y: 32}
+    description: Coins left for gods who stopped listening.
+    sprite: {fileID: 21300000, guid: 8fd4a366def6bb44e8b5b26be47c30f7, type: 3}
+    mapHeight: 0.8
+    gold: 800
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: 
+  - id: old-chest
+    displayName: AN OLD CHEST
+    kind: 1
+    position: {x: 21, y: 18}
+    description: Iron bands, a broken lock and the glint of gold.
+    sprite: {fileID: 21300000, guid: 649c320e1bf1f8342a0078ec5f834415, type: 3}
+    mapHeight: 1
+    gold: 1000
+    experience: 500
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: 
+  - id: lost-buckler
+    displayName: A LOST BUCKLER
+    kind: 2
+    position: {x: 20, y: 30}
+    description: A shield lies in the grass.
+    sprite: {fileID: 21300000, guid: bdfd83cad955e224fa9585d1de90861d, type: 3}
+    mapHeight: 0.9
+    gold: 0
+    experience: 0
+    artefactId: roadie-buckler
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: 
+  - id: horned-ring
+    displayName: A RING IN THE ASH
+    kind: 2
+    position: {x: 74, y: 44}
+    description: A ring glows in the ash.
+    sprite: {fileID: 21300000, guid: bdfd83cad955e224fa9585d1de90861d, type: 3}
+    mapHeight: 0.9
+    gold: 0
+    experience: 0
+    artefactId: ring-of-the-horned-god
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: 
+  - id: colosseum
+    displayName: THE BLOODY COLOSSEUM
+    kind: 3
+    position: {x: 11, y: 8}
+    description: The old arena still teaches the sword.
+    sprite: {fileID: 21300000, guid: 199d669d8793ac64c8fc33a7935fe617, type: 3}
+    mapHeight: 1.3
+    gold: 0
+    experience: 0
+    artefactId: 
+    attackBonus: 2
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: 
+  - id: iron-bastion
+    displayName: THE IRON BASTION
+    kind: 4
+    position: {x: 16, y: 37}
+    description: Its veterans teach you to hold the line.
+    sprite: {fileID: 21300000, guid: 7e917b551aac6f845a542c1a1980a1dd, type: 3}
+    mapHeight: 1.3
+    gold: 0
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 2
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: 
+  - id: shrine-of-horns
+    displayName: SHRINE OF THE HORNS
+    kind: 5
+    position: {x: 37, y: 29}
+    description: Raise the horns and the warhost roars.
+    sprite: {fileID: 21300000, guid: b4e0e393bae48e14cbdca6a16f8cd77d, type: 3}
+    mapHeight: 1.2
+    gold: 0
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 2
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: 
+  - id: watermill
+    displayName: THE OLD WATERMILL
+    kind: 6
+    position: {x: 32, y: 6}
+    description: The miller pays his tithe to whoever protects the road.
+    sprite: {fileID: 21300000, guid: 8c3d86a2a95b4cb46a70ed3a02093feb, type: 3}
+    mapHeight: 1.2
+    gold: 750
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: 
+  - id: roadie-camp
+    displayName: ROADIE CAMP
+    kind: 7
+    position: {x: 29, y: 54}
+    description: Roadies between tours, looking for work.
+    sprite: {fileID: 21300000, guid: 36c6033fbb9b4b141866d49e5a11554b, type: 3}
+    mapHeight: 1.2
+    gold: 0
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: ironbound
+    weeklyGrowth: 8
+    keyId: 
+    arrivalConversationId: 
+  - id: old-skald
+    displayName: THE OLD SKALD
+    kind: 8
+    position: {x: 8, y: 51}
+    description: The skald has told you all he knows.
+    sprite: {fileID: 21300000, guid: 4f09065db3bdefa4fa27dbc7b395e1fc, type: 3}
+    mapHeight: 1.1
+    gold: 0
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: red key
+    arrivalConversationId: quest-bearer
+  - id: red-tent
+    displayName: THE RED TENT
+    kind: 9
+    position: {x: 85, y: 48}
+    description: The keepers of the red tent let only the bearer of their key pass.
+    sprite: {fileID: 21300000, guid: 91424aeb5a587ac42b374b52f553514b, type: 3}
+    mapHeight: 1.2
+    gold: 0
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: red key
+    arrivalConversationId: red-tent
+  - id: chained-maiden
+    displayName: THE CHAINED MAIDEN
+    kind: 10
+    position: {x: 90, y: 48}
+    description: The halls of femdom had been restored.
+    sprite: {fileID: 21300000, guid: 4bbd998bd907a094cbf126214faf4d63, type: 3}
+    mapHeight: 1.4
+    gold: 0
+    experience: 0
+    artefactId: chain-of-the-iron-maiden
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: maiden-freed
+  - id: bone-oracle
+    displayName: THE BONE ORACLE
+    kind: 11
+    position: {x: 89, y: 15}
+    description: The bones have told you of the sleeping dragon.
+    sprite: {fileID: 21300000, guid: cdac5cf9d38d28047b8667329f2801f0, type: 3}
+    mapHeight: 1.2
+    gold: 0
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: dragon-lore
+  - id: gate-of-fire
+    displayName: THE GATE OF FIRE
+    kind: 12
+    position: {x: 89, y: 30}
+    description: The gate of fire burns open.
+    sprite: {fileID: 21300000, guid: c7978503eff807a479f385870299f93b, type: 3}
+    mapHeight: 1.6
+    gold: 0
+    experience: 0
+    artefactId: 
+    attackBonus: 0
+    defenseBonus: 0
+    moraleBonus: 0
+    unitId: 
+    weeklyGrowth: 0
+    keyId: 
+    arrivalConversationId: 
+  objectives:
+  - id: defeat-black-banner
+    text: Defeat the Black Banner
+    kind: 0
+    targetId: boss
+    value: 0
+    isRequired: 1
+  - id: free-the-maiden
+    text: Free the chained maiden
+    kind: 1
+    targetId: chained-maiden
+    value: 0
+    isRequired: 0
+  - id: gloves-of-metal
+    text: Find the Gloves of Metal
+    kind: 2
+    targetId: gloves-of-metal
+    value: 0
+    isRequired: 0
+  - id: sleeping-dragon
+    text: Learn of the sleeping dragon
+    kind: 1
+    targetId: bone-oracle
+    value: 0
+    isRequired: 0
+  - id: level-five
+    text: Reach level 5
+    kind: 3
+    targetId: 
+    value: 5
+    isRequired: 0
   mapMusic: {fileID: 11400000, guid: a2d7c21ab5e37b34b83075de8fbdf453, type: 2}
   townMusic: {fileID: 11400000, guid: 9a8672c4507648848abe74174be57351, type: 2}
   battleBackground: {fileID: 21300000, guid: e52792718e4c79f40a5c7793e8007878, type: 3}
@@ -104,16 +507,15 @@ MonoBehaviour:
   maximumAttackDelta: 30
   maximumDefenseDelta: 28
   missChance: 0.15
+  moraleChance: 0.1
   goldVariation: 0.25
   artefactChance: 0.5
   rareChance: 0.3
   legendaryChance: 0.1
+  epicChance: 0.15
   legendaryGuaranteeVictories: 4
   travelStepSeconds: 1
   enemyTurnSeconds: 0.7
   battleActionSeconds: 1.5
   battleResultSeconds: 2
   endDaySeconds: 3
-  briefingPages:
-  - "On the first day, our hero collects his friends and like minded folks around the land.\nBecause at this point, he is looking for success in an external world, the overworld of humans."
-  - He will search for the Secret of Metal in riches, women and victory. He needs to penetrate through the tight passage of Psur to the east.

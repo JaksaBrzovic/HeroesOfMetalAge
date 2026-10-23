@@ -33,6 +33,12 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private Sprite axe;
         [SerializeField] private Sprite bow;
         [SerializeField] private Sprite rider;
+        [Tooltip("Shown on a map object that has no sprite of its own.")]
+        [SerializeField] private Sprite mapObject;
+
+        [Header("Marks")]
+        [Tooltip("Ticks a reached goal and the mute toggle.")]
+        [SerializeField] private Sprite checkMark;
 
         public TMP_FontAsset Font => font;
         public Color Background => background;
@@ -50,6 +56,8 @@ namespace HeroesOfMetalAge.Presentation
         public Sprite Axe => axe;
         public Sprite Bow => bow;
         public Sprite Rider => rider;
+        public Sprite MapObject => mapObject;
+        public Sprite CheckMark => checkMark;
 
         /// <summary>Placeholder creature art for a unit's icon key; unknown keys use the axe.</summary>
         public Sprite Unit(string iconKey)

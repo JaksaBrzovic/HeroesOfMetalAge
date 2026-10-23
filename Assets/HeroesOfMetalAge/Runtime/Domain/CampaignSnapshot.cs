@@ -20,10 +20,19 @@ namespace HeroesOfMetalAge.Domain
         public int count;
     }
 
+    /// <summary>A count by stable ID: a dwelling's stock or the week a mill last paid out.</summary>
+    [Serializable]
+    public sealed class CountSnapshot
+    {
+        public string id;
+        public int count;
+    }
+
     [Serializable]
     public sealed class CampaignSnapshot
     {
-        public const int CURRENT_VERSION = 3;
+        // version 4: the expanded map, map objects, keys, morale and eleven equipment places
+        public const int CURRENT_VERSION = 4;
 
         public int version;
         public int day;
@@ -35,10 +44,20 @@ namespace HeroesOfMetalAge.Domain
         public string missionId;
         public string heroId;
         public string townOwnerId;
-        public string weaponId;
-        public string charmId;
         public bool heroHome;
         public bool recruited;
+        public int morale;
+        /// <summary>
+        /// Explored cells as packed bits in Base64 (see <see cref="ExploredMap"/>). Saves made before the fog of war have none
+        /// and load with only the hero's surroundings explored.
+        /// </summary>
+        public string explored;
+        /// <summary>One artefact ID per equipment place in <see cref="EquipmentPlace"/> order, empty where nothing is worn.</summary>
+        public List<string> equipped;
+        public List<string> visited;
+        public List<string> keys;
+        public List<CountSnapshot> dwellings;
+        public List<CountSnapshot> mills;
         public List<StackSnapshot> army;
         public List<StackSnapshot> garrison;
         public List<StockSnapshot> stock;

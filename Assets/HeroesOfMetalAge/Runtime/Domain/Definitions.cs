@@ -1,12 +1,80 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace HeroesOfMetalAge.Domain
 {
+    /// <summary>
+    /// The kind of an artefact, which decides where the hero wears it. Values are stored in the artefact database, so
+    /// existing values never change; new kinds go at the end. <see cref="Charm"/> is worn as the amulet.
+    /// </summary>
     public enum EquipmentSlot
     {
         Weapon,
-        Charm
+        Charm,
+        Head,
+        Shield,
+        Gloves,
+        Torso,
+        /// <summary>Worn on either hand: the left ring place first, then the right.</summary>
+        Ring,
+        Necklace,
+        Sash,
+        Boots
+    }
+
+    /// <summary>The eleven places on the hero where artefacts are worn, in the order the hero screen lists them.</summary>
+    public enum EquipmentPlace
+    {
+        Head,
+        LeftArm,
+        RightArm,
+        Gloves,
+        Torso,
+        LeftRing,
+        RightRing,
+        Amulet,
+        Necklace,
+        Sash,
+        Boots
+    }
+
+    public static class Equipment
+    {
+        public const int PLACE_COUNT = 11;
+
+        /// <summary>The places an artefact of the slot can be worn in, preferred first.</summary>
+        public static EquipmentPlace[] Places(EquipmentSlot slot)
+        {
+            switch (slot)
+            {
+                case EquipmentSlot.Weapon:
+                    return new[] { EquipmentPlace.RightArm };
+                case EquipmentSlot.Charm:
+                    return new[] { EquipmentPlace.Amulet };
+                case EquipmentSlot.Head:
+                    return new[] { EquipmentPlace.Head };
+                case EquipmentSlot.Shield:
+                    return new[] { EquipmentPlace.LeftArm };
+                case EquipmentSlot.Gloves:
+                    return new[] { EquipmentPlace.Gloves };
+                case EquipmentSlot.Torso:
+                    return new[] { EquipmentPlace.Torso };
+                case EquipmentSlot.Ring:
+                    return new[] { EquipmentPlace.LeftRing, EquipmentPlace.RightRing };
+                case EquipmentSlot.Necklace:
+                    return new[] { EquipmentPlace.Necklace };
+                case EquipmentSlot.Sash:
+                    return new[] { EquipmentPlace.Sash };
+                default:
+                    return new[] { EquipmentPlace.Boots };
+            }
+        }
+
+        public static bool Fits(EquipmentSlot slot, EquipmentPlace place)
+        {
+            return Array.IndexOf(Places(slot), place) >= 0;
+        }
     }
 
     /// <summary>
@@ -36,7 +104,9 @@ namespace HeroesOfMetalAge.Domain
     {
         Common,
         Rare,
-        Legendary
+        Legendary,
+        /// <summary>Between rare and legendary; stored after them because the values are saved in the artefact database.</summary>
+        Epic
     }
 
     public enum EncounterKind
@@ -87,7 +157,7 @@ namespace HeroesOfMetalAge.Domain
     public sealed class ArtefactDefinition
     {
         public ArtefactDefinition(string id, string name, string description, EquipmentSlot slot, ArtefactRarity rarity, int attackBonus,
-            int defenseBonus, int speedBonus)
+            int defenseBonus, int speedBonus, int moraleBonus = 0)
         {
             Id = id;
             Name = name;
@@ -97,6 +167,7 @@ namespace HeroesOfMetalAge.Domain
             AttackBonus = attackBonus;
             DefenseBonus = defenseBonus;
             SpeedBonus = speedBonus;
+            MoraleBonus = moraleBonus;
         }
 
         public string Id { get; }
@@ -107,6 +178,7 @@ namespace HeroesOfMetalAge.Domain
         public int AttackBonus { get; }
         public int DefenseBonus { get; }
         public int SpeedBonus { get; }
+        public int MoraleBonus { get; }
     }
 
     public sealed class HeroDefinition
@@ -146,7 +218,7 @@ namespace HeroesOfMetalAge.Domain
     public sealed class EncounterDefinition
     {
         public EncounterDefinition(string id, EncounterKind kind, WorldPosition position, string name, string description, IEnumerable<Troop> army,
-            int rewardExperience, int rewardGold)
+            int rewardExperience, int rewardGold, string rewardArtefactId = null)
         {
             Id = id;
             Kind = kind;
@@ -156,6 +228,7 @@ namespace HeroesOfMetalAge.Domain
             Army = army.ToList().AsReadOnly();
             RewardExperience = rewardExperience;
             RewardGold = rewardGold;
+            RewardArtefactId = string.IsNullOrEmpty(rewardArtefactId) ? null : rewardArtefactId;
         }
 
         public string Id { get; }
@@ -167,5 +240,8 @@ namespace HeroesOfMetalAge.Domain
         public int RewardExperience { get; }
         /// <summary>Typical gold for winning; the rolled amount varies around it (see <see cref="RewardPolicy"/>).</summary>
         public int RewardGold { get; }
+        /// <summary>The treasure the army guards: always won with it instead of a rolled artefact. Null for none.</summary>
+        public string RewardArtefactId { get; }
+        public bool IsHostile => Kind == EncounterKind.Sentinel || Kind == EncounterKind.Boss;
     }
 }

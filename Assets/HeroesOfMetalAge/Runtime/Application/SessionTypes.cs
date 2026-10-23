@@ -22,7 +22,13 @@ namespace HeroesOfMetalAge.Application
         Victory,
         /// <summary>The spoils of the battle just won, shown after the victory screen.</summary>
         Rewards,
-        Defeat
+        Defeat,
+        /// <summary>A treasure chest: take its gold or its experience.</summary>
+        Chest,
+        /// <summary>A dwelling's creatures for sale.</summary>
+        Dwelling,
+        /// <summary>The exit portal asks whether to finish the mission.</summary>
+        Exit
     }
 
     /// <summary>Where the player is, for the music tracks and layers and the riding loop.</summary>

@@ -64,6 +64,23 @@ namespace HeroesOfMetalAge.Domain
         public bool IsMiss { get; }
     }
 
+    /// <summary>A stack's morale showed: with good morale it acts again, with bad morale it froze and lost its turn.</summary>
+    public readonly struct MoraleEvent
+    {
+        public MoraleEvent(int combatantId, string unitId, bool isPlayer, bool isGood)
+        {
+            CombatantId = combatantId;
+            UnitId = unitId;
+            IsPlayer = isPlayer;
+            IsGood = isGood;
+        }
+
+        public int CombatantId { get; }
+        public string UnitId { get; }
+        public bool IsPlayer { get; }
+        public bool IsGood { get; }
+    }
+
     /// <summary>Result of one battle action: the command result and every hit in resolution order.</summary>
     public sealed class BattleResolution
     {

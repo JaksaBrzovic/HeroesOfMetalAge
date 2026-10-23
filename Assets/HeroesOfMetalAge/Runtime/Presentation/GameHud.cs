@@ -14,17 +14,15 @@ namespace HeroesOfMetalAge.Presentation
     {
         private const float NOTICE_SECONDS = 5f;
         private const float HIT_SECONDS = 1.5f;
-        private const string ADVENTURE_HELP = "CLICK TO PLAN / AGAIN OR SPACE TO RIDE / ARROWS OR DRAG TO LOOK AROUND / E END DAY / H HERO";
+        private const string ADVENTURE_HELP = "CLICK TO PLAN / AGAIN OR SPACE TO RIDE / DRAG TO LOOK / WHEEL TO ZOOM / E END DAY / H HERO";
         private const string BATTLE_HELP = "CLICK A BLUE HEX TO MOVE / CLICK AN ENEMY TO ATTACK / RANGED STACKS STRIKE FROM AFAR";
-        private const string MENU_HELP = "ESC RETURN / F3 DEVELOPMENT PANEL / M MUTE";
+        private const string MENU_HELP = "ESC RETURN / D DEBUG PANEL / M MUTE";
 
         [SerializeField] private UiTheme theme;
         [SerializeField] private RectTransform designFrame;
         [SerializeField] private EventSystem eventSystem;
 
         [Header("Chrome")]
-        [SerializeField] private HeaderView header;
-        [SerializeField] private FooterView footer;
         [SerializeField] private NotificationsView notifications;
         [SerializeField] private CanvasGroup contentGroup;
         [SerializeField] private CanvasGroup dialogGroup;
@@ -91,6 +89,35 @@ namespace HeroesOfMetalAge.Presentation
         public DefeatCanvasView DefeatView => defeatView;
         public EndDayView EndDayView => endDayView;
         public EventSystem Events => eventSystem;
+
+        private CanvasScreenView[] Screens => new CanvasScreenView[]
+        {
+            worldView, combatView, townView, heroView, dialogView, victoryView, rewardsView, defeatView, settingsView
+        };
+
+        /// <summary>The top bar of the screen on display (the world, battle, town or hero screen).</summary>
+        public HeaderView ActiveHeader
+        {
+            get
+            {
+                if (context == null)
+                {
+                    return worldView.Header;
+                }
+
+                switch (context.Session.Screen)
+                {
+                    case GameScreen.Battle:
+                        return combatView.Header;
+                    case GameScreen.Town:
+                        return townView.Header;
+                    case GameScreen.Hero:
+                        return heroView.Header;
+                    default:
+                        return worldView.Header;
+                }
+            }
+        }
         public CanvasGroup ContentGroup => contentGroup;
         public CanvasViewContext Context => context;
 
@@ -100,7 +127,7 @@ namespace HeroesOfMetalAge.Presentation
         /// <exception cref="InvalidOperationException">A screen or control reference is missing on the root prefab.</exception>
         public void Initialize(GameSession session, IAudioControls audio, PresentationAssets media)
         {
-            if (theme == null || designFrame == null || eventSystem == null || header == null || footer == null || notifications == null
+            if (theme == null || designFrame == null || eventSystem == null || notifications == null
                 || contentGroup == null || dialogGroup == null || victoryView == null || rewardsView == null || defeatView == null || endDayView == null)
             {
                 throw new InvalidOperationException($"GameHud on '{name}' has unassigned references. Assign them in the GameUiRoot prefab.");
@@ -108,14 +135,21 @@ namespace HeroesOfMetalAge.Presentation
 
             context = new CanvasViewContext(session, audio, media, theme);
             designFrameHome = designFrame.anchoredPosition;
-            header.Initialize(session.ShowHero, OpenSettings);
-            footer.Initialize();
             notifications.Initialize();
             endDayView.Initialize();
             settingsView.SetOwner(this);
-            foreach (CanvasScreenView view in new CanvasScreenView[] { worldView, combatView, townView, heroView, dialogView, victoryView, rewardsView, defeatView, settingsView })
+            foreach (CanvasScreenView view in Screens)
             {
                 view.Initialize(context);
+                if (view.Header != null)
+                {
+                    view.Header.Initialize(session.ShowHero, OpenSettings);
+                }
+
+                if (view.Footer != null)
+                {
+                    view.Footer.Initialize();
+                }
             }
 
             RefreshNow();
@@ -222,7 +256,7 @@ namespace HeroesOfMetalAge.Presentation
         private void HandleKeyboard()
         {
             GameSession session = context.Session;
-            if (Input.GetKeyDown(KeyCode.F3))
+            if (Input.GetKeyDown(KeyCode.F3) || Input.GetKeyDown(KeyCode.D))
             {
                 SetDebugVisible(!IsDebugVisible);
             }
@@ -375,11 +409,27 @@ namespace HeroesOfMetalAge.Presentation
         private void RefreshChrome(GameSession session)
         {
             CampaignState campaign = session.Campaign;
-            MissionDefinition mission = session.Catalog.Mission;
-            int week = (campaign.Day - 1) / mission.DaysPerWeek + 1;
-            header.Display(mission.Name + " / A SOUND-DRIVEN STRATEGY PROTOTYPE", "DAY " + campaign.Day + " / WEEK " + week, "GOLD " + campaign.Gold,
-                session.Screen != GameScreen.Battle && !session.IsBusy);
-            footer.Display(HelpText(session.Screen), AudioStateText());
+            string day = "DAY " + campaign.Day + " / WEEK " + session.Rules.Week(campaign);
+            string gold = "GOLD " + campaign.Gold;
+            bool canShowHero = session.Screen != GameScreen.Battle && !session.IsBusy;
+            foreach (CanvasScreenView view in Screens)
+            {
+                if (!view.gameObject.activeSelf)
+                {
+                    continue;
+                }
+
+                if (view.Header != null)
+                {
+                    view.Header.Display(day, gold, canShowHero);
+                }
+
+                if (view.Footer != null)
+                {
+                    view.Footer.Display(HelpText(session.Screen), AudioStateText());
+                }
+            }
+
             notifications.SetNotice(session.Notice);
             notifications.SetHit(HitText(session.LastHit));
         }
@@ -436,7 +486,7 @@ namespace HeroesOfMetalAge.Presentation
                 }
                 else
                 {
-                    eventSystem.SetSelectedGameObject(IsSelectable(selectionBeforeDialog) ? selectionBeforeDialog : header.HeroButton.gameObject);
+                    eventSystem.SetSelectedGameObject(IsSelectable(selectionBeforeDialog) ? selectionBeforeDialog : ActiveHeader.HeroButton.gameObject);
                 }
 
                 shownDialog = context.Session.Dialog;
@@ -457,7 +507,7 @@ namespace HeroesOfMetalAge.Presentation
             }
             else
             {
-                eventSystem.SetSelectedGameObject(IsSelectable(selectionBeforeSettings) ? selectionBeforeSettings : header.OptionsButton.gameObject);
+                eventSystem.SetSelectedGameObject(IsSelectable(selectionBeforeSettings) ? selectionBeforeSettings : ActiveHeader.OptionsButton.gameObject);
             }
 
             wasSettingsOpen = isSettingsOpen;

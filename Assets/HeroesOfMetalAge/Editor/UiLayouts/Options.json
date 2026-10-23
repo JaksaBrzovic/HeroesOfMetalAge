@@ -1,0 +1,227 @@
+{
+  "screen": "Options",
+  "backdrop": "OptionsFrame",
+  "fullscreen": false,
+  "frameSize": [
+    892.3,
+    677.2
+  ],
+  "elements": [
+    {
+      "name": "TitleText",
+      "type": "text",
+      "rect": [
+        67.3,
+        106.9,
+        826.3,
+        155.8
+      ],
+      "style": "Title",
+      "size": 37.0,
+      "align": "left",
+      "text": "AUDIO / CAMPAIGN"
+    },
+    {
+      "name": "MusicLabel",
+      "type": "text",
+      "rect": [
+        66.7,
+        196.0,
+        192.7,
+        233.0
+      ],
+      "style": "Label",
+      "size": 23.8,
+      "align": "left",
+      "text": "MUSIC"
+    },
+    {
+      "name": "MusicSlider",
+      "type": "slider",
+      "rect": [
+        231.7,
+        205.3,
+        796.0,
+        223.7
+      ],
+      "handleSize": [
+        35.6,
+        37.0
+      ],
+      "field": "musicSlider"
+    },
+    {
+      "name": "EffectsLabel",
+      "type": "text",
+      "rect": [
+        66.7,
+        258.7,
+        192.7,
+        295.7
+      ],
+      "style": "Label",
+      "size": 23.8,
+      "align": "left",
+      "text": "EFFECTS"
+    },
+    {
+      "name": "EffectsSlider",
+      "type": "slider",
+      "rect": [
+        231.7,
+        268.0,
+        796.0,
+        286.4
+      ],
+      "handleSize": [
+        35.6,
+        37.0
+      ],
+      "field": "effectsSlider"
+    },
+    {
+      "name": "VoicesLabel",
+      "type": "text",
+      "rect": [
+        66.7,
+        319.4,
+        192.7,
+        356.4
+      ],
+      "style": "Label",
+      "size": 23.8,
+      "align": "left",
+      "text": "VOICES"
+    },
+    {
+      "name": "VoicesSlider",
+      "type": "slider",
+      "rect": [
+        231.7,
+        328.7,
+        796.0,
+        347.2
+      ],
+      "handleSize": [
+        35.6,
+        37.0
+      ],
+      "field": "voiceSlider"
+    },
+    {
+      "name": "MuteToggle",
+      "type": "toggle",
+      "rect": [
+        68.6,
+        380.2,
+        106.9,
+        415.8
+      ],
+      "label": [
+        123.4,
+        381.5,
+        436.9,
+        415.8
+      ],
+      "text": "Mute all audio [M]",
+      "size": 21.1,
+      "field": "muteToggle"
+    },
+    {
+      "name": "SaveButton",
+      "type": "button",
+      "rect": [
+        59.4,
+        440.2,
+        308.9,
+        506.2
+      ],
+      "label": [
+        73.9,
+        451.4,
+        295.0,
+        496.3
+      ],
+      "text": "SAVE",
+      "size": 23.8,
+      "field": "saveButton"
+    },
+    {
+      "name": "LoadButton",
+      "type": "button",
+      "rect": [
+        323.4,
+        440.2,
+        567.6,
+        506.2
+      ],
+      "label": [
+        337.9,
+        451.4,
+        554.4,
+        496.3
+      ],
+      "text": "LOAD",
+      "size": 23.8,
+      "field": "loadButton"
+    },
+    {
+      "name": "NewMissionButton",
+      "type": "button",
+      "rect": [
+        582.1,
+        440.2,
+        831.6,
+        506.2
+      ],
+      "label": [
+        595.3,
+        451.4,
+        819.7,
+        496.3
+      ],
+      "text": "NEW MISSION",
+      "size": 23.8,
+      "field": "newMissionButton"
+    },
+    {
+      "name": "BackButton",
+      "type": "button",
+      "rect": [
+        59.4,
+        543.2,
+        582.1,
+        609.2
+      ],
+      "label": [
+        73.9,
+        554.4,
+        568.9,
+        599.3
+      ],
+      "text": "BACK TO THE OATH",
+      "size": 23.8,
+      "field": "backButton"
+    },
+    {
+      "name": "QuitButton",
+      "type": "button",
+      "rect": [
+        598.0,
+        543.2,
+        831.6,
+        609.2
+      ],
+      "label": [
+        611.8,
+        554.4,
+        819.7,
+        599.3
+      ],
+      "text": "QUIT",
+      "size": 23.8,
+      "field": "quitButton"
+    }
+  ],
+  "spriteFolder": "Assets/HeroesOfMetalAge/Content/UI/Sprites/Gameplay/Options"
+}

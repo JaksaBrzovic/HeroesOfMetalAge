@@ -259,6 +259,7 @@ GameObject:
   - component: {fileID: 8721196351926912787}
   - component: {fileID: 4585273793835475850}
   - component: {fileID: 8752206482629518478}
+  - component: {fileID: 1984382099829075645}
   m_Layer: 5
   m_Name: Line2Text
   m_TagString: Untagged
@@ -315,8 +316,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8df5f4aec7b66ef458b1f882bf6cb803, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: a656172fe6a6efa4d81a105cb6244efa, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -350,7 +351,7 @@ MonoBehaviour:
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
-  m_characterSpacing: 0
+  m_characterSpacing: 1
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
@@ -385,6 +386,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &1984382099829075645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 465715741366834178}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adc649689f4db9f40b91e711247ff587, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.TypographyText
+  settings: {fileID: 11400000, guid: b13b3743e4002df499aa1e75c31ed64d, type: 2}
+  style: 8
+  appliedScale: 1
 --- !u!1 &513746829360727732
 GameObject:
   m_ObjectHideFlags: 0
@@ -546,6 +562,7 @@ GameObject:
   - component: {fileID: 2582773427782446815}
   - component: {fileID: 7330872832260424022}
   - component: {fileID: 715759277366270001}
+  - component: {fileID: 7283549477999264460}
   m_Layer: 5
   m_Name: Line3Text
   m_TagString: Untagged
@@ -602,8 +619,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8df5f4aec7b66ef458b1f882bf6cb803, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: a656172fe6a6efa4d81a105cb6244efa, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -637,7 +654,7 @@ MonoBehaviour:
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
-  m_characterSpacing: 0
+  m_characterSpacing: 1
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
@@ -672,6 +689,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &7283549477999264460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1179356634959544302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adc649689f4db9f40b91e711247ff587, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.TypographyText
+  settings: {fileID: 11400000, guid: b13b3743e4002df499aa1e75c31ed64d, type: 2}
+  style: 8
+  appliedScale: 1
 --- !u!1 &1186641856961332832
 GameObject:
   m_ObjectHideFlags: 0
@@ -758,6 +790,7 @@ GameObject:
   - component: {fileID: 4845385021476036569}
   - component: {fileID: 2823923775494793544}
   - component: {fileID: 8541907791587317758}
+  - component: {fileID: 4551946317444007124}
   m_Layer: 5
   m_Name: TitleImage
   m_TagString: Untagged
@@ -804,7 +837,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: 8107930bf9f15624cbdac44ef7ab2e3d, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -822,6 +855,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4551946317444007124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1391366840895141719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aed8701974dff194f942a216d0c2c824, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.GildEffect
+  image: {fileID: 8541907791587317758}
+  pourSeconds: 0.9
+  drainSeconds: 0.6
 --- !u!1 &1525727477266936840
 GameObject:
   m_ObjectHideFlags: 0
@@ -1245,6 +1293,7 @@ GameObject:
   - component: {fileID: 3661635202719128269}
   - component: {fileID: 7003361626956075314}
   - component: {fileID: 8023323111860640520}
+  - component: {fileID: 6342882072866690713}
   m_Layer: 5
   m_Name: Line1Text
   m_TagString: Untagged
@@ -1301,8 +1350,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8df5f4aec7b66ef458b1f882bf6cb803, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: a656172fe6a6efa4d81a105cb6244efa, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1336,7 +1385,7 @@ MonoBehaviour:
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
-  m_characterSpacing: 0
+  m_characterSpacing: 1
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
@@ -1371,6 +1420,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6342882072866690713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2624139990429824506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adc649689f4db9f40b91e711247ff587, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.TypographyText
+  settings: {fileID: 11400000, guid: b13b3743e4002df499aa1e75c31ed64d, type: 2}
+  style: 8
+  appliedScale: 1
 --- !u!1 &2932454507857922493
 GameObject:
   m_ObjectHideFlags: 0
@@ -1532,6 +1596,7 @@ GameObject:
   - component: {fileID: 5551494482069185023}
   - component: {fileID: 4211764609023303286}
   - component: {fileID: 5549259640911968251}
+  - component: {fileID: 6258314417263250878}
   m_Layer: 5
   m_Name: TitleImage
   m_TagString: Untagged
@@ -1578,7 +1643,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: 8107930bf9f15624cbdac44ef7ab2e3d, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -1596,6 +1661,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6258314417263250878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3238879371169825330}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aed8701974dff194f942a216d0c2c824, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.GildEffect
+  image: {fileID: 5549259640911968251}
+  pourSeconds: 0.9
+  drainSeconds: 0.6
 --- !u!1 &3596850817446841108
 GameObject:
   m_ObjectHideFlags: 0
@@ -1725,6 +1805,7 @@ MonoBehaviour:
   highlight: {fileID: 5551494482069185023}
   hoverScale: 1.08
   hoverSeconds: 0.12
+  titleGild: {fileID: 6258314417263250878}
 --- !u!1 &3851388427625003807
 GameObject:
   m_ObjectHideFlags: 0
@@ -1912,8 +1993,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 8097664ae1d8da4469d0b86bf2992e3f, type: 3}
   - {fileID: 21300000, guid: c24dc1f9b0954594a88781be46dd117e, type: 3}
   framesPerSecond: 16
-  titleImage: {fileID: 6571731068500768555}
-  gildSeconds: 1.1
+  titleGild: {fileID: 4018030600906902532}
 --- !u!1 &4411448189163137260
 GameObject:
   m_ObjectHideFlags: 0
@@ -1925,6 +2005,7 @@ GameObject:
   - component: {fileID: 351443288902690254}
   - component: {fileID: 5771972794339161291}
   - component: {fileID: 6571731068500768555}
+  - component: {fileID: 4018030600906902532}
   m_Layer: 5
   m_Name: TitleImage
   m_TagString: Untagged
@@ -1989,6 +2070,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4018030600906902532
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4411448189163137260}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aed8701974dff194f942a216d0c2c824, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.GildEffect
+  image: {fileID: 6571731068500768555}
+  pourSeconds: 0.9
+  drainSeconds: 0.6
 --- !u!1 &4916265646175188323
 GameObject:
   m_ObjectHideFlags: 0
@@ -2000,6 +2096,7 @@ GameObject:
   - component: {fileID: 9005954465064768430}
   - component: {fileID: 5009615173594566347}
   - component: {fileID: 8306821369148401123}
+  - component: {fileID: 663978685875584121}
   m_Layer: 5
   m_Name: HintText
   m_TagString: Untagged
@@ -2056,8 +2153,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Click anywhere to return
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 9b46cf012b0fb5343b3ebf46aaa3b519, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 73903628feaba5f47b0913e17cb6cbd2, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2081,17 +2178,17 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 26
-  m_fontSizeBase: 26
+  m_fontSize: 24.699999
+  m_fontSizeBase: 24.699999
   m_fontWeight: 400
   m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontSizeMin: 17.1
+  m_fontSizeMax: 68.4
+  m_fontStyle: 16
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
-  m_characterSpacing: 0
+  m_characterSpacing: 1
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
@@ -2126,6 +2223,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &663978685875584121
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4916265646175188323}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adc649689f4db9f40b91e711247ff587, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.TypographyText
+  settings: {fileID: 11400000, guid: b13b3743e4002df499aa1e75c31ed64d, type: 2}
+  style: 4
+  appliedScale: 0.95
 --- !u!1 &5047669624032834403
 GameObject:
   m_ObjectHideFlags: 0
@@ -2138,6 +2250,7 @@ GameObject:
   - component: {fileID: 5309337037227013402}
   - component: {fileID: 8717874577724636980}
   - component: {fileID: 311606350535425190}
+  - component: {fileID: 8374389744682389049}
   m_Layer: 5
   m_Name: TitleImage
   m_TagString: Untagged
@@ -2184,7 +2297,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 2100000, guid: 8107930bf9f15624cbdac44ef7ab2e3d, type: 2}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
@@ -2219,6 +2332,21 @@ MonoBehaviour:
   sinkPoint: {x: 0, y: -8}
   spread: 0.55
   spin: 220
+--- !u!114 &8374389744682389049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5047669624032834403}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aed8701974dff194f942a216d0c2c824, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.GildEffect
+  image: {fileID: 8717874577724636980}
+  pourSeconds: 0.9
+  drainSeconds: 0.6
 --- !u!1 &5102967932891197617
 GameObject:
   m_ObjectHideFlags: 0
@@ -2230,6 +2358,7 @@ GameObject:
   - component: {fileID: 2466359308245948959}
   - component: {fileID: 8499590327158366121}
   - component: {fileID: 6553117679210809900}
+  - component: {fileID: 6374066476657145669}
   m_Layer: 5
   m_Name: TitleText
   m_TagString: Untagged
@@ -2286,8 +2415,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: d1631ec6ead0e014da3f673efd0f717d, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 3aee8875dbe67ae43a22b5e90a40b9fb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2295,13 +2424,13 @@ MonoBehaviour:
     serializedVersion: 2
     rgba: 4294967295
   m_fontColor: {r: 0.95, g: 0.91, b: 0.84, a: 1}
-  m_enableVertexGradient: 0
+  m_enableVertexGradient: 1
   m_colorMode: 3
   m_fontColorGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+    topLeft: {r: 1, g: 0.9, b: 0.58, a: 1}
+    topRight: {r: 1, g: 0.9, b: 0.58, a: 1}
+    bottomLeft: {r: 0.86, g: 0.5, b: 0.16, a: 1}
+    bottomRight: {r: 0.86, g: 0.5, b: 0.16, a: 1}
   m_fontColorGradientPreset: {fileID: 0}
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
@@ -2321,7 +2450,7 @@ MonoBehaviour:
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
-  m_characterSpacing: 6
+  m_characterSpacing: 2
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
@@ -2356,6 +2485,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6374066476657145669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5102967932891197617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adc649689f4db9f40b91e711247ff587, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.TypographyText
+  settings: {fileID: 11400000, guid: b13b3743e4002df499aa1e75c31ed64d, type: 2}
+  style: 0
+  appliedScale: 1
 --- !u!1 &5128271757317188275
 GameObject:
   m_ObjectHideFlags: 0
@@ -2581,6 +2725,7 @@ MonoBehaviour:
   highlight: {fileID: 5530007992950669032}
   hoverScale: 1.08
   hoverSeconds: 0.12
+  titleGild: {fileID: 8374389744682389049}
 --- !u!1 &5955912262690546935
 GameObject:
   m_ObjectHideFlags: 0
@@ -2892,6 +3037,7 @@ GameObject:
   - component: {fileID: 8343049296196211334}
   - component: {fileID: 399414378329895171}
   - component: {fileID: 8847433672268617457}
+  - component: {fileID: 3451779956388945476}
   m_Layer: 5
   m_Name: CreditsText
   m_TagString: Untagged
@@ -2948,8 +3094,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: c137c0832c344b44083d27e2d77b9402, type: 2}
+  m_sharedMaterial: {fileID: -5199398221120746572, guid: c137c0832c344b44083d27e2d77b9402, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2973,12 +3119,12 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 40
-  m_fontSizeBase: 40
+  m_fontSize: 42
+  m_fontSizeBase: 42
   m_fontWeight: 400
   m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_fontSizeMin: 18.9
+  m_fontSizeMax: 75.6
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
@@ -2986,7 +3132,7 @@ MonoBehaviour:
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: -4
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -3018,6 +3164,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &3451779956388945476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6660351425318733277}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adc649689f4db9f40b91e711247ff587, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: HeroesOfMetalAge.Presentation::HeroesOfMetalAge.Presentation.TypographyText
+  settings: {fileID: 11400000, guid: b13b3743e4002df499aa1e75c31ed64d, type: 2}
+  style: 7
+  appliedScale: 1.05
 --- !u!1 &6672187670737372506
 GameObject:
   m_ObjectHideFlags: 0
@@ -3229,6 +3390,7 @@ MonoBehaviour:
   highlight: {fileID: 4845385021476036569}
   hoverScale: 1.08
   hoverSeconds: 0.12
+  titleGild: {fileID: 4551946317444007124}
 --- !u!1 &7129681997712895074
 GameObject:
   m_ObjectHideFlags: 0

@@ -24,6 +24,8 @@ namespace HeroesOfMetalAge.Domain
         public bool IsDefending { get; internal set; }
         /// <summary>Each stack retaliates at most once per round.</summary>
         public bool HasRetaliated { get; internal set; }
+        /// <summary>Each stack gets at most one extra action from good morale per round.</summary>
+        public bool HasMoraleBonus { get; internal set; }
         /// <summary>Living creatures; a partly damaged creature still counts.</summary>
         public int Count => TotalHealth <= 0 ? 0 : (TotalHealth - 1) / HealthPerUnit + 1;
         public bool IsAlive => TotalHealth > 0;

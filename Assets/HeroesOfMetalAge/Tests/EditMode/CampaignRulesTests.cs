@@ -156,7 +156,7 @@ namespace HeroesOfMetalAge.Tests
             Assert.IsTrue(rules.Equip(state, state.Inventory.ToList().IndexOf(weapon.Id)).IsSuccess);
             Assert.AreEqual(attack + weapon.AttackBonus, rules.Attack(state));
             Assert.AreEqual(defense + weapon.DefenseBonus, rules.Defense(state));
-            Assert.IsTrue(rules.Unequip(state, EquipmentSlot.Weapon).IsSuccess);
+            Assert.IsTrue(rules.Unequip(state, EquipmentPlace.RightArm).IsSuccess);
             Assert.AreEqual(attack, rules.Attack(state));
         }
 

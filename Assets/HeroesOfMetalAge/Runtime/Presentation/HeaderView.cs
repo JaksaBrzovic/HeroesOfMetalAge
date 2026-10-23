@@ -4,10 +4,12 @@ using UnityEngine;
 
 namespace HeroesOfMetalAge.Presentation
 {
-    /// <summary>Top bar: mission title, day/week, gold and the hero and options buttons.</summary>
+    /// <summary>
+    /// The top bar of a screen: day/week, gold and the hero and options buttons. Every full screen carries its own, placed
+    /// on its own artwork; the root shows the one of the screen on display.
+    /// </summary>
     public sealed class HeaderView : MonoBehaviour
     {
-        [SerializeField] private TMP_Text missionText;
         [SerializeField] private TMP_Text dayText;
         [SerializeField] private TMP_Text goldText;
         [SerializeField] private UiWidget heroButton;
@@ -16,24 +18,23 @@ namespace HeroesOfMetalAge.Presentation
         public UiWidget HeroButton => heroButton;
         public UiWidget OptionsButton => optionsButton;
 
-        /// <exception cref="InvalidOperationException">A control reference is missing on the Header prefab.</exception>
+        /// <exception cref="InvalidOperationException">A control reference is missing on the screen prefab.</exception>
         public void Initialize(Action showHero, Action openOptions)
         {
-            if (missionText == null || dayText == null || goldText == null || heroButton == null || optionsButton == null)
+            if (dayText == null || goldText == null || heroButton == null || optionsButton == null)
             {
-                throw new InvalidOperationException($"HeaderView on '{name}' has unassigned references. Assign them in the Header prefab.");
+                throw new InvalidOperationException($"HeaderView on '{name}' has unassigned references. Assign them in the screen prefab.");
             }
 
             heroButton.Bind(showHero);
             optionsButton.Bind(openOptions);
         }
 
-        public void Display(string mission, string day, string gold, bool canShowHero)
+        public void Display(string day, string gold, bool canShowHero)
         {
-            UiBinding.SetText(missionText, mission);
             UiBinding.SetText(dayText, day);
             UiBinding.SetText(goldText, gold);
-            UiBinding.SetButton(heroButton, "HERO [H]", canShowHero);
+            heroButton.SetInteractable(canShowHero);
         }
     }
 }

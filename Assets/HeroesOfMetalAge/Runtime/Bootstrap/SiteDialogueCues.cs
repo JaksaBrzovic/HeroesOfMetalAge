@@ -41,7 +41,7 @@ namespace HeroesOfMetalAge.Bootstrap
             {
                 if (!director.HasConversation(pair.Value))
                 {
-                    throw new InvalidOperationException("Encounter '" + pair.Key + "' names dialogue conversation '" + pair.Value
+                    throw new InvalidOperationException("Site '" + pair.Key + "' names dialogue conversation '" + pair.Value
                         + "', which the dialogue database does not have.");
                 }
 
@@ -53,6 +53,7 @@ namespace HeroesOfMetalAge.Bootstrap
             dialogue = director;
             screenPointOfCell = cellScreenPoint;
             session.SiteReached += HandleSiteReached;
+            session.ObjectReached += HandleObjectReached;
             dialogue.Completed += HandleConversationCompleted;
         }
 
@@ -81,6 +82,7 @@ namespace HeroesOfMetalAge.Bootstrap
             if (session != null)
             {
                 session.SiteReached -= HandleSiteReached;
+                session.ObjectReached -= HandleObjectReached;
                 dialogue.Completed -= HandleConversationCompleted;
             }
         }
@@ -102,11 +104,30 @@ namespace HeroesOfMetalAge.Bootstrap
                 return;
             }
 
-            heldDialog = session.Dialog;
-            hud.SetDialogHeld(true);
+            Speak(conversationId, site.Position);
+        }
+
+        // a map object speaks when the hero reaches it: the quest giver, the captive, the oracle, the closed gate; a chest,
+        // dwelling or portal dialog waits until the words are read
+        private void HandleObjectReached(MapObjectDefinition mapObject)
+        {
+            if (conversationsBySite.TryGetValue(mapObject.Id, out string conversationId))
+            {
+                Speak(conversationId, mapObject.Position);
+            }
+        }
+
+        private void Speak(string conversationId, WorldPosition position)
+        {
+            if (session.Dialog != DialogKind.None)
+            {
+                heldDialog = session.Dialog;
+                hud.SetDialogHeld(true);
+            }
+
             if (dialogue.StyleOf(conversationId) == DialogueStyle.SpeechBalloon)
             {
-                dialogue.PlayAtScreenPoint(conversationId, screenPointOfCell(site.Position));
+                dialogue.PlayAtScreenPoint(conversationId, screenPointOfCell(position));
             }
             else
             {

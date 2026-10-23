@@ -13,66 +13,284 @@ MonoBehaviour:
   m_Name: ArtefactDatabase
   m_EditorClassIdentifier: HeroesOfMetalAge.Infrastructure::HeroesOfMetalAge.Infrastructure.Content.ArtefactDatabaseScriptableObject
   artefacts:
-  - id: fang-of-thunder
-    displayName: Fang of Thunder
-    description: The wardens' weapon, tempered in thunder.
-    icon: {fileID: 0}
-    slot: 0
-    rarity: 1
-    attackBonus: 2
-    defenseBonus: 0
-    speedBonus: 0
-  - id: ashen-ward
-    displayName: Ashen Ward
-    description: A charm bearing the clan's protective oath.
-    icon: {fileID: 0}
-    slot: 1
-    rarity: 0
-    attackBonus: 0
-    defenseBonus: 2
-    speedBonus: 0
-  - id: warborn-sigil
-    displayName: Warborn Sigil
-    description: The Black Banner's mark of relentless advance.
-    icon: {fileID: 0}
-    slot: 1
-    rarity: 1
-    attackBonus: 0
-    defenseBonus: 0
-    speedBonus: 1
   - id: rusted-cleaver
     displayName: Rusted Cleaver
     description: A road-worn blade that still bites.
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: c55689946070001449a57c7973430ea7, type: 3}
     slot: 0
     rarity: 0
     attackBonus: 1
     defenseBonus: 0
     speedBonus: 0
-  - id: studded-wristband
-    displayName: Studded Wristband
+    moraleBonus: 0
+  - id: roadie-buckler
+    displayName: Roadie's Buckler
+    description: Riveted from a flight case lid.
+    icon: {fileID: 21300000, guid: 9210127ce1d6e3b42933676e1130154b, type: 3}
+    slot: 3
+    rarity: 0
+    attackBonus: 0
+    defenseBonus: 1
+    speedBonus: 0
+    moraleBonus: 0
+  - id: iron-skullcap
+    displayName: Iron Skullcap
+    description: Dented, honest and heavy.
+    icon: {fileID: 21300000, guid: 4b31e686258b94743aade005bb4fe7c8, type: 3}
+    slot: 2
+    rarity: 0
+    attackBonus: 0
+    defenseBonus: 1
+    speedBonus: 0
+    moraleBonus: 0
+  - id: leather-jerkin
+    displayName: Studded Jerkin
     description: Leather and iron rivets; it turns a glancing blow.
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: f8a81f32f5ed6ef4a8563362155d2e01, type: 3}
+    slot: 5
+    rarity: 0
+    attackBonus: 0
+    defenseBonus: 1
+    speedBonus: 0
+    moraleBonus: 0
+  - id: stage-boots
+    displayName: Stage Boots
+    description: Made for stomping in time.
+    icon: {fileID: 21300000, guid: c090e8ef1760e1b4e932af03a360992a, type: 3}
+    slot: 9
+    rarity: 0
+    attackBonus: 0
+    defenseBonus: 0
+    speedBonus: 1
+    moraleBonus: 0
+  - id: ashen-ward
+    displayName: Ashen Ward
+    description: A charm bearing the clan's protective oath.
+    icon: {fileID: 21300000, guid: f2ce6f3398e72f54db8fdaf454732333, type: 3}
     slot: 1
     rarity: 0
     attackBonus: 0
     defenseBonus: 1
     speedBonus: 0
+    moraleBonus: 0
+  - id: copper-ring
+    displayName: Copper Knuckle Ring
+    description: Every punch rings like a bell.
+    icon: {fileID: 21300000, guid: 5c4589fe80f198f4eb07c44d7513c7a4, type: 3}
+    slot: 6
+    rarity: 0
+    attackBonus: 1
+    defenseBonus: 0
+    speedBonus: 0
+    moraleBonus: 0
+  - id: studded-belt
+    displayName: Bullet Belt
+    description: The warhost cheers whoever wears it.
+    icon: {fileID: 21300000, guid: 0b65ebd3d25022c40a81392d3e26dd55, type: 3}
+    slot: 8
+    rarity: 0
+    attackBonus: 0
+    defenseBonus: 0
+    speedBonus: 0
+    moraleBonus: 1
+  - id: fang-of-thunder
+    displayName: Fang of Thunder
+    description: The wardens' weapon, tempered in thunder.
+    icon: {fileID: 21300000, guid: 0a873e07f7a3f5b438f844a7c8f5a847, type: 3}
+    slot: 0
+    rarity: 1
+    attackBonus: 2
+    defenseBonus: 0
+    speedBonus: 0
+    moraleBonus: 0
+  - id: warden-kite-shield
+    displayName: Warden's Kite Shield
+    description: Blue steel that has held the pass for a century.
+    icon: {fileID: 21300000, guid: 855faa0e116ad8946b4309b85751af34, type: 3}
+    slot: 3
+    rarity: 1
+    attackBonus: 0
+    defenseBonus: 2
+    speedBonus: 0
+    moraleBonus: 0
+  - id: sapphire-helm
+    displayName: Sapphire Helm
+    description: Its visor glows when danger nears.
+    icon: {fileID: 21300000, guid: 8784d9a12d04f6142a6f097d89ba805e, type: 3}
+    slot: 2
+    rarity: 1
+    attackBonus: 1
+    defenseBonus: 1
+    speedBonus: 0
+    moraleBonus: 0
+  - id: blue-steel-cuirass
+    displayName: Blue Steel Cuirass
+    description: Cold to the touch, harder than the cold.
+    icon: {fileID: 21300000, guid: be7447fae88aba34a9762faf8f49d97a, type: 3}
+    slot: 5
+    rarity: 1
+    attackBonus: 0
+    defenseBonus: 2
+    speedBonus: 0
+    moraleBonus: 0
+  - id: ring-of-feedback
+    displayName: Ring of Feedback
+    description: It hums a note no one else hears.
+    icon: {fileID: 21300000, guid: fd48e99bebae48b4d886b2944a735e50, type: 3}
+    slot: 6
+    rarity: 1
+    attackBonus: 1
+    defenseBonus: 0
+    speedBonus: 1
+    moraleBonus: 0
+  - id: warborn-sigil
+    displayName: Warborn Sigil
+    description: The Black Banner's mark of relentless advance.
+    icon: {fileID: 21300000, guid: 969ae831baacafe4d822d46742704b7a, type: 3}
+    slot: 1
+    rarity: 1
+    attackBonus: 0
+    defenseBonus: 0
+    speedBonus: 1
+    moraleBonus: 0
+  - id: riders-greaves
+    displayName: Rider's Greaves
+    description: Spurred and silver-lined.
+    icon: {fileID: 21300000, guid: 5a77fe274dbcba64782f88cf3a75de57, type: 3}
+    slot: 9
+    rarity: 1
+    attackBonus: 0
+    defenseBonus: 1
+    speedBonus: 1
+    moraleBonus: 0
+  - id: winged-blade
+    displayName: Winged Blade
+    description: Amethyst in the hilt, wings on the guard, murder on the edge.
+    icon: {fileID: 21300000, guid: 9ad8d746d77ba7a45a3c7417d4f41847, type: 3}
+    slot: 0
+    rarity: 3
+    attackBonus: 3
+    defenseBonus: 0
+    speedBonus: 0
+    moraleBonus: 0
+  - id: violet-aegis
+    displayName: Violet Aegis
+    description: Gold inlay sings when struck.
+    icon: {fileID: 21300000, guid: e424b5a54cf06ce4790d973d9469432f, type: 3}
+    slot: 3
+    rarity: 3
+    attackBonus: 0
+    defenseBonus: 3
+    speedBonus: 0
+    moraleBonus: 0
+  - id: war-crown
+    displayName: Amethyst War Crown
+    description: Worn by the first chieftain who sang to battle.
+    icon: {fileID: 21300000, guid: 9ab9287f72e340f4599e4364d472a648, type: 3}
+    slot: 2
+    rarity: 3
+    attackBonus: 2
+    defenseBonus: 0
+    speedBonus: 0
+    moraleBonus: 1
+  - id: ring-of-the-horned-god
+    displayName: Ring of the Horned God
+    description: Raise your fist and the warhost roars.
+    icon: {fileID: 21300000, guid: 2480d18a9e05d03448b45cae148eabbf, type: 3}
+    slot: 6
+    rarity: 3
+    attackBonus: 1
+    defenseBonus: 0
+    speedBonus: 0
+    moraleBonus: 1
+  - id: sash-of-the-pit
+    displayName: Sash of the Pit
+    description: Tied by those who survived the circle.
+    icon: {fileID: 21300000, guid: 7c49f59be0ed6cc48a6e5c7292a9d8af, type: 3}
+    slot: 8
+    rarity: 3
+    attackBonus: 0
+    defenseBonus: 2
+    speedBonus: 0
+    moraleBonus: 0
+  - id: chain-of-the-iron-maiden
+    displayName: Chain of the Iron Maiden
+    description: The chain that bound her, turned into a vow.
+    icon: {fileID: 21300000, guid: cd7711b9fdbba6c4fb24846e39e04e7c, type: 3}
+    slot: 7
+    rarity: 3
+    attackBonus: 2
+    defenseBonus: 2
+    speedBonus: 0
+    moraleBonus: 1
   - id: axe-of-the-first-riff
     displayName: Axe of the First Riff
     description: Forged when the first chord split the sky. Its edge still hums.
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 1832f771e4f3fcf4b8d4662b63fe5a88, type: 3}
     slot: 0
     rarity: 2
     attackBonus: 4
     defenseBonus: 0
     speedBonus: 1
+    moraleBonus: 0
   - id: amulet-of-endless-feedback
     displayName: Amulet of Endless Feedback
     description: A shard of a burning amplifier that never stops ringing.
-    icon: {fileID: 0}
+    icon: {fileID: 21300000, guid: 5a20f54aa6cac8b48a23986f921549a7, type: 3}
     slot: 1
     rarity: 2
     attackBonus: 1
     defenseBonus: 3
     speedBonus: 1
+    moraleBonus: 0
+  - id: dragonscale-plate
+    displayName: Dragonscale Plate
+    description: Shed by something that still sleeps.
+    icon: {fileID: 21300000, guid: 6bd161d28d89e9a4bb210b423a783753, type: 3}
+    slot: 5
+    rarity: 2
+    attackBonus: 0
+    defenseBonus: 4
+    speedBonus: 0
+    moraleBonus: 0
+  - id: phoenix-helm
+    displayName: Phoenix Helm
+    description: Ember gems that never cool.
+    icon: {fileID: 21300000, guid: 0271db162a865f942aaab0b01ea50bf9, type: 3}
+    slot: 2
+    rarity: 2
+    attackBonus: 2
+    defenseBonus: 2
+    speedBonus: 0
+    moraleBonus: 0
+  - id: ember-ring
+    displayName: Ember Ring
+    description: Burns the hand that is not worthy.
+    icon: {fileID: 21300000, guid: b863554ef2b5a1c4a80c1527c0245f08, type: 3}
+    slot: 6
+    rarity: 2
+    attackBonus: 2
+    defenseBonus: 0
+    speedBonus: 0
+    moraleBonus: 1
+  - id: obsidian-greaves
+    displayName: Obsidian Greaves
+    description: Each step leaves a scorched print.
+    icon: {fileID: 21300000, guid: 2a7f7711f928eed4d847a6c438f254aa, type: 3}
+    slot: 9
+    rarity: 2
+    attackBonus: 0
+    defenseBonus: 2
+    speedBonus: 2
+    moraleBonus: 0
+  - id: gloves-of-metal
+    displayName: Gloves of Metal
+    description: The gauntlets of the first metal king. Whoever wears them never
+      drops the riff.
+    icon: {fileID: 21300000, guid: 903c4154ea9085b428186d3f09e2abf8, type: 3}
+    slot: 4
+    rarity: 2
+    attackBonus: 3
+    defenseBonus: 2
+    speedBonus: 0
+    moraleBonus: 1

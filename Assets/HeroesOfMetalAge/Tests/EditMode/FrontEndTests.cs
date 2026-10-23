@@ -199,6 +199,25 @@ namespace HeroesOfMetalAge.Tests
         }
 
         [Test]
+        public void SkipIntro_JumpsFromTheVersesToTheBurnAndOnlyDuringTheIntro()
+        {
+            FrontEndFlow flow = new FrontEndFlow(Timing(black: 2f, burn: 3f), TwoStanzas(), true);
+            Assert.IsFalse(flow.SkipIntro(), "nothing to skip in the menu");
+            flow.StartNewGame();
+            Assert.IsFalse(flow.SkipIntro(), "the fade to black is not skipped: the mission is set up on black");
+            flow.Tick(1f);
+            Assert.AreEqual(FrontEndPhase.Black, flow.Phase);
+            flow.Tick(2.5f);
+            Assert.AreEqual(FrontEndPhase.Verses, flow.Phase);
+
+            Assert.IsTrue(flow.SkipIntro());
+            Assert.AreEqual(FrontEndPhase.Burning, flow.Phase, "the verses and title are skipped");
+            Assert.IsTrue(flow.SkipIntro());
+            Assert.AreEqual(FrontEndPhase.Playing, flow.Phase, "a second click ends the burn");
+            Assert.IsFalse(flow.SkipIntro());
+        }
+
+        [Test]
         public void NewGameButton_FlexesOnHoverAndRelaxesBackwards()
         {
             NewGameButtonView button = NewFrontEnd().MainMenu.NewGameButton;
@@ -256,24 +275,55 @@ namespace HeroesOfMetalAge.Tests
         }
 
         [Test]
-        public void NewGameButton_PoursGoldOverItsOwnCopyOfTheTitleMaterialWithTheHorns()
+        public void NewGameButton_PoursGoldOverItsOwnCopyOfTheTitleMaterialOnHoverAndKeepsItAfterTheClick()
         {
             NewGameButtonView button = NewFrontEnd().MainMenu.NewGameButton;
-            Image title = (Image)new SerializedObject(button).FindProperty("titleImage").objectReferenceValue;
+            Image title = ((GildEffect)new SerializedObject(button).FindProperty("titleGild").objectReferenceValue).Image;
             button.Initialize();
             Assert.AreNotSame(ContentAssets.MenuGildMaterial, title.material, "the shared material asset never changes");
             Assert.AreEqual(ContentAssets.MENU_GILD_SHADER, title.material.shader.name);
 
             button.SetHovered(true);
-            button.Tick(FRAME * 5f);
-            Assert.AreEqual(0f, button.GildProgress, "hovering only flexes");
-            button.Click();
             button.Tick(FRAME * 2f);
-            Assert.Greater(button.GildProgress, 0f, "the gold starts with the horns");
+            Assert.Greater(button.GildProgress, 0f, "hovering pours the gold");
             Assert.Less(button.GildProgress, 1f);
             Assert.AreEqual(button.GildProgress, title.material.GetFloat("_GildProgress"), 1e-4f);
+            button.SetHovered(false);
             button.Tick(2f);
-            Assert.AreEqual(1f, title.material.GetFloat("_GildProgress"));
+            Assert.AreEqual(0f, button.GildProgress, "leaving drains it");
+
+            button.SetHovered(true);
+            button.Click();
+            button.SetHovered(false);
+            button.Tick(2f);
+            Assert.AreEqual(1f, title.material.GetFloat("_GildProgress"), "after the click the gold stays");
+        }
+
+        [Test]
+        public void MenuEntries_PourGoldOverTheirTitlesOnHoverWithTheHoverSound()
+        {
+            FrontEndView frontEnd = NewFrontEnd();
+            FrontEndFlow flow = new FrontEndFlow(Timing(), TwoStanzas(), true);
+            FakeAudioControls audio = new FakeAudioControls();
+            frontEnd.Initialize(flow, audio, "credits");
+            MainMenuView menu = frontEnd.MainMenu;
+            foreach (MenuButtonView entry in new[] { menu.LoadGameButton, menu.CreditsButton, menu.QuitButton })
+            {
+                Image title = entry.TitleGild.Image;
+                Assert.AreNotSame(ContentAssets.MenuGildMaterial, title.material, entry.name + " has its own copy of the gold");
+                Assert.AreEqual(ContentAssets.MENU_GILD_SHADER, title.material.shader.name);
+
+                entry.SetHovered(true);
+                entry.Tick(0.3f);
+                Assert.Greater(entry.TitleGild.Progress, 0f, entry.name + " pours its gold on hover");
+                entry.Tick(2f);
+                Assert.AreEqual(1f, title.material.GetFloat("_GildProgress"), 1e-4f);
+                entry.SetHovered(false);
+                entry.Tick(2f);
+                Assert.AreEqual(0f, entry.TitleGild.Progress, entry.name + " drains it when the pointer leaves");
+            }
+
+            CollectionAssert.AreEqual(new[] { SoundCue.MainMenuHover, SoundCue.MainMenuHover, SoundCue.MainMenuHover }, audio.Played);
         }
 
         [Test]
@@ -406,9 +456,14 @@ namespace HeroesOfMetalAge.Tests
         {
             MainMenuView menu = ContentAssets.FrontEndPrefab.MainMenu;
             SerializedObject newGame = new SerializedObject(menu.NewGameButton);
-            Image title = (Image)newGame.FindProperty("titleImage").objectReferenceValue;
+            Image title = ((GildEffect)newGame.FindProperty("titleGild").objectReferenceValue).Image;
             Image arm = (Image)newGame.FindProperty("armImage").objectReferenceValue;
             Assert.AreSame(ContentAssets.MenuGildMaterial, title.material);
+            foreach (MenuButtonView entry in new[] { menu.LoadGameButton, menu.CreditsButton, menu.QuitButton })
+            {
+                Assert.AreSame(ContentAssets.MenuGildMaterial, entry.TitleGild.Image.material, entry.name + " pours gold over its title");
+            }
+
             Assert.Greater(arm.transform.GetSiblingIndex(), title.transform.GetSiblingIndex(), "the fist passes over the title");
             Assert.Greater(arm.rectTransform.offsetMin.x, 0f, "the arm moved right");
             Assert.Greater(arm.rectTransform.offsetMin.y, 0f, "and up, just under the title");

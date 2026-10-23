@@ -120,6 +120,7 @@ namespace HeroesOfMetalAge.Tests
 
             Assert.IsFalse(map.TryGetCell(new Vector3(-0.5f, -0.5f, 0f), out _), "outside the map");
             Assert.IsTrue(map.HeroMarker.HasVisibleIcon);
+            Assert.IsTrue(map.IsFogOfWarVisible, "the fog of war covers the unexplored map");
             Assert.IsTrue(session.Catalog.Mission.Encounters.Where(encounter => encounter.Kind != EncounterKind.Town).All(encounter => map.EncounterMarker(encounter.Id).HasVisibleIcon));
         }
 

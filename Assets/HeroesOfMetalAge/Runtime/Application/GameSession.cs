@@ -12,6 +12,8 @@ namespace HeroesOfMetalAge.Application
     {
         private const int MAX_BATTLE_LOG_LINES = 8;
         private const int DEBUG_GOLD_AMOUNT = 2000;
+        // speed mode: the hero rides a cell in a fiftieth of a second, so he is at his destination almost at once
+        private const float SPEED_MODE_STEP_SECONDS = 0.02f;
 
         private readonly ISaveStore save;
         private readonly IRandomSource random;
@@ -53,6 +55,7 @@ namespace HeroesOfMetalAge.Application
             this.battleResultSeconds = battleResultSeconds;
             this.endDaySeconds = endDaySeconds;
             Rules = new CampaignRules(catalog);
+            Objects = new MapObjectRules(catalog, Rules);
             World = new WorldMap(catalog.Mission);
             Campaign = Rules.NewCampaign();
             Route = route.AsReadOnly();
@@ -68,13 +71,20 @@ namespace HeroesOfMetalAge.Application
         /// town (after its screen opened). Not raised for development shortcuts.
         /// </summary>
         public event Action<EncounterDefinition> SiteReached;
+        /// <summary>The hero entered (or, for a closed gate, reached) a map object, after its effect or dialog.</summary>
+        public event Action<MapObjectDefinition> ObjectReached;
+        /// <summary>The player finished the mission at the exit portal.</summary>
+        public event Action MissionFinished;
 
         public DefinitionCatalog Catalog { get; }
         public CampaignRules Rules { get; }
+        public MapObjectRules Objects { get; }
         public WorldMap World { get; }
         public CampaignState Campaign { get; private set; }
         public BattleEngine Battle { get; private set; }
         public EncounterDefinition Encounter { get; private set; }
+        /// <summary>The map object whose dialog (chest, dwelling, exit) is open, or the last one visited.</summary>
+        public MapObjectDefinition MapObject { get; private set; }
         public VictorySummary Victory { get; private set; }
         public GameScreen Screen { get; private set; } = GameScreen.Adventure;
         public DialogKind Dialog { get; private set; } = DialogKind.Intro;
@@ -88,7 +98,9 @@ namespace HeroesOfMetalAge.Application
         public int DamageRevision { get; private set; }
         public DamageEvent LastHit { get; private set; }
         /// <summary>Seconds the hero takes for one map step while riding.</summary>
-        public float TravelStepSeconds => travelStepSeconds;
+        public float TravelStepSeconds => IsSpeedMode ? Math.Min(travelStepSeconds, SPEED_MODE_STEP_SECONDS) : travelStepSeconds;
+        /// <summary>Development aid (debug panel): the hero rides almost instantly. Gameplay rules are unchanged.</summary>
+        public bool IsSpeedMode { get; set; }
         public bool IsTraveling => isTraveling;
         /// <summary>True while the end-of-day sequence runs; the day changes when it ends.</summary>
         public bool IsEndingDay => isEndingDay;
@@ -196,7 +208,8 @@ namespace HeroesOfMetalAge.Application
                 return;
             }
 
-            if (Dialog == DialogKind.Friendly || Dialog == DialogKind.Hostile || Dialog == DialogKind.Claim)
+            if (Dialog == DialogKind.Friendly || Dialog == DialogKind.Hostile || Dialog == DialogKind.Claim || Dialog == DialogKind.Chest
+                || Dialog == DialogKind.Dwelling || Dialog == DialogKind.Exit)
             {
                 Dialog = DialogKind.None;
             }
@@ -253,10 +266,16 @@ namespace HeroesOfMetalAge.Application
             if (target == Campaign.Position)
             {
                 EncounterDefinition site = World.Site(Campaign, target);
+                MapObjectDefinition standingOn = World.ObjectAt(Campaign, target);
                 if (site != null && site.Kind == EncounterKind.Town)
                 {
                     OpenTown();
                     Publish(SiteReached, site);
+                }
+                else if (standingOn != null)
+                {
+                    // the object the hero stands on is visited again: buy at the dwelling, ask the mill, step into the portal
+                    VisitObject(standingOn);
                 }
 
                 return;
@@ -274,8 +293,67 @@ namespace HeroesOfMetalAge.Application
             Cue(SoundCue.Click);
             if (route.Count == 0)
             {
-                Notify("No route. Mountains, water and unresolved encounters block travel.");
+                NotifyNoRoute(target);
             }
+        }
+
+        /// <summary>Takes the open chest's gold (true) or its experience (false).</summary>
+        public void OpenChest(bool isTakingGold)
+        {
+            Revision++;
+            if (Dialog != DialogKind.Chest || MapObject == null)
+            {
+                return;
+            }
+
+            int oldLevel = Rules.Level(Campaign);
+            if (!Accept(Objects.OpenChest(Campaign, MapObject, isTakingGold, out VisitOutcome outcome)))
+            {
+                return;
+            }
+
+            Dialog = DialogKind.None;
+            Cue(SoundCue.Gold);
+            Notify(isTakingGold ? "+" + outcome.Gold + " gold from the chest." : "+" + outcome.Experience + " experience from the chest.");
+            CueLevelUp(oldLevel);
+            Save(false);
+        }
+
+        /// <summary>Buys creatures at the open dwelling.</summary>
+        public bool RecruitAtDwelling(int count)
+        {
+            Revision++;
+            if (Dialog != DialogKind.Dwelling || MapObject == null || !Accept(Objects.Recruit(Campaign, MapObject, count)))
+            {
+                return false;
+            }
+
+            UnitDefinition unit = Catalog.Unit(MapObject.UnitId);
+            Cue(SoundCue.Gold);
+            Voice(unit.Id);
+            Notify(count + " " + unit.Name + " join your warhost.");
+            Save(false);
+            return true;
+        }
+
+        /// <summary>Leaves the mission through the exit portal; only once every required goal is reached.</summary>
+        public void FinishMission()
+        {
+            Revision++;
+            if (Dialog != DialogKind.Exit)
+            {
+                return;
+            }
+
+            if (!Objects.CanFinish(Campaign))
+            {
+                Notify("The portal will not open before the required goals are reached.");
+                return;
+            }
+
+            Dialog = DialogKind.None;
+            Save(false);
+            Publish(MissionFinished);
         }
 
         public void Travel()
@@ -371,7 +449,7 @@ namespace HeroesOfMetalAge.Application
             Cue(SoundCue.Click);
             if (route.Count == 0)
             {
-                Notify("No route. Mountains, water and unresolved encounters block travel.");
+                NotifyNoRoute(target);
             }
         }
 
@@ -391,11 +469,33 @@ namespace HeroesOfMetalAge.Application
 
             WorldPosition step = route[0];
             EncounterDefinition encounter = World.Site(Campaign, step);
+            MapObjectDefinition mapObject = World.ObjectAt(Campaign, step);
+            // a lasting place on the way is ridden over; it is visited when it is where the hero rides to
+            if (mapObject != null && !mapObject.StopsPassage && route.Count > 1)
+            {
+                mapObject = null;
+            }
+
             if (Campaign.Movement < World.StepCost(Campaign.Position, step))
             {
                 Notify("Movement spent. End the day to continue.");
                 FinishTravel();
                 return;
+            }
+
+            // a closed gate stops the ride in front of it; with its key it opens and the hero rides in
+            if (mapObject != null && mapObject.Kind == MapObjectKind.BorderGate)
+            {
+                if (!Accept(Objects.Visit(Campaign, mapObject, out VisitOutcome opened)))
+                {
+                    FinishTravel();
+                    Publish(ObjectReached, mapObject);
+                    return;
+                }
+
+                Cue(SoundCue.GateOpened);
+                Notify(mapObject.Name + " opens for your key.");
+                mapObject = null;
             }
 
             // the ride stops in front of an unresolved site and opens its dialog
@@ -416,12 +516,117 @@ namespace HeroesOfMetalAge.Application
             }
 
             route.RemoveAt(0);
-            timer = travelStepSeconds;
+            timer = TravelStepSeconds;
             if (encounter != null)
             {
                 FinishTravel();
                 OpenTown();
                 Publish(SiteReached, encounter);
+            }
+            else if (mapObject != null)
+            {
+                FinishTravel();
+                VisitObject(mapObject);
+            }
+        }
+
+        /// <summary>The hero stands on a map object: its dialog opens or its effect applies.</summary>
+        private void VisitObject(MapObjectDefinition mapObject)
+        {
+            MapObject = mapObject;
+            switch (mapObject.Kind)
+            {
+                case MapObjectKind.TreasureChest:
+                    Dialog = DialogKind.Chest;
+                    Cue(SoundCue.FriendlyEncounter);
+                    break;
+                case MapObjectKind.Dwelling:
+                    Dialog = DialogKind.Dwelling;
+                    Cue(SoundCue.FriendlyEncounter);
+                    break;
+                case MapObjectKind.ExitPortal:
+                    Dialog = DialogKind.Exit;
+                    Cue(SoundCue.FriendlyEncounter);
+                    break;
+                default:
+                    ApplyVisit(mapObject);
+                    break;
+            }
+
+            Publish(ObjectReached, mapObject);
+        }
+
+        private void ApplyVisit(MapObjectDefinition mapObject)
+        {
+            int oldLevel = Rules.Level(Campaign);
+            if (!Accept(Objects.Visit(Campaign, mapObject, out VisitOutcome outcome)))
+            {
+                return;
+            }
+
+            Notify(VisitNotice(outcome));
+            if (outcome.IsRewarding)
+            {
+                Cue(VisitCue(outcome));
+            }
+
+            CueLevelUp(oldLevel);
+            Save(false);
+        }
+
+        private string VisitNotice(VisitOutcome outcome)
+        {
+            MapObjectDefinition mapObject = outcome.Object;
+            if (!outcome.IsRewarding)
+            {
+                return mapObject.Kind == MapObjectKind.Mill ? mapObject.Name + " has paid out this week. Come back next week."
+                    : mapObject.Kind == MapObjectKind.MoraleShrine ? "Your warhost is already blessed."
+                    : mapObject.Kind == MapObjectKind.AttackShrine || mapObject.Kind == MapObjectKind.DefenseShrine ? mapObject.Name + " has taught you all it can."
+                    : mapObject.Description;
+            }
+
+            switch (mapObject.Kind)
+            {
+                case MapObjectKind.GoldPile:
+                case MapObjectKind.Mill:
+                    return "+" + outcome.Gold + " gold. " + mapObject.Description;
+                case MapObjectKind.AttackShrine:
+                    return mapObject.Name + ": +" + outcome.AttackBonus + " attack for good.";
+                case MapObjectKind.DefenseShrine:
+                    return mapObject.Name + ": +" + outcome.DefenseBonus + " defense for good.";
+                case MapObjectKind.MoraleShrine:
+                    return mapObject.Name + ": +" + outcome.MoraleBonus + " morale until your next victory.";
+                case MapObjectKind.Artefact:
+                case MapObjectKind.Prison:
+                    return outcome.ArtefactId != null ? "You received " + Catalog.Artefact(outcome.ArtefactId).Name + "." : mapObject.Description;
+                default:
+                    return mapObject.Description;
+            }
+        }
+
+        private static SoundCue VisitCue(VisitOutcome outcome)
+        {
+            switch (outcome.Object.Kind)
+            {
+                case MapObjectKind.GoldPile:
+                case MapObjectKind.Mill:
+                    return SoundCue.Gold;
+                case MapObjectKind.Artefact:
+                case MapObjectKind.Prison:
+                    return SoundCue.LegendaryItem;
+                case MapObjectKind.QuestGiver:
+                    return SoundCue.Equip;
+                default:
+                    return SoundCue.Blessing;
+            }
+        }
+
+        private void CueLevelUp(int oldLevel)
+        {
+            if (Rules.Level(Campaign) > oldLevel)
+            {
+                Cue(SoundCue.LevelUp);
+                Notify("Level " + Rules.Level(Campaign) + "! Your hero grows stronger.");
             }
         }
 
@@ -489,10 +694,21 @@ namespace HeroesOfMetalAge.Application
             }
         }
 
-        public void Unequip(EquipmentSlot slot)
+        /// <summary>Wears an inventory artefact in a chosen place it fits.</summary>
+        public void EquipAt(int inventoryIndex, EquipmentPlace place)
         {
             Revision++;
-            if (CanRunCampaignCommand && Accept(Rules.Unequip(Campaign, slot)))
+            if (CanRunCampaignCommand && Accept(Rules.EquipAt(Campaign, inventoryIndex, place)))
+            {
+                Cue(SoundCue.Equip);
+                Save(false);
+            }
+        }
+
+        public void Unequip(EquipmentPlace place)
+        {
+            Revision++;
+            if (CanRunCampaignCommand && Accept(Rules.Unequip(Campaign, place)))
             {
                 Cue(SoundCue.Equip);
                 Save(false);
@@ -507,7 +723,7 @@ namespace HeroesOfMetalAge.Application
                 return;
             }
 
-            Encounter = Catalog.Mission.Encounter(EncounterKind.Town);
+            Encounter = Catalog.Mission.Town;
             Dialog = DialogKind.Claim;
         }
         #endregion
@@ -553,6 +769,12 @@ namespace HeroesOfMetalAge.Application
             // the player may act at once; an enemy that starts waits for its turn delay
             timer = Battle.Active.IsPlayer ? 0 : enemyTurnSeconds;
             RefreshPlayback();
+            if (Battle.PlayerMorale != 0)
+            {
+                AddLog("Your warhost fights with " + (Battle.PlayerMorale > 0 ? "good" : "bad") + " morale (" + MoraleText(Battle.PlayerMorale) + ").");
+            }
+
+            ReportMorale();
             CueActiveVoice();
         }
 
@@ -637,6 +859,7 @@ namespace HeroesOfMetalAge.Application
                 Publish(DamageResolved, hit);
             }
 
+            ReportMorale();
             if (Battle.Outcome == BattleOutcome.Victory)
             {
                 ApplyVictory();
@@ -691,6 +914,22 @@ namespace HeroesOfMetalAge.Application
             Cue(SoundCue.Victory);
             RefreshPlayback();
             Save(false);
+        }
+
+        /// <summary>"+2" or "-1".</summary>
+        public static string MoraleText(int morale)
+        {
+            return morale > 0 ? "+" + morale : morale.ToString();
+        }
+
+        private void ReportMorale()
+        {
+            foreach (MoraleEvent moraleEvent in Battle.TakeMoraleEvents())
+            {
+                string unit = Catalog.Unit(moraleEvent.UnitId).Name;
+                AddLog(moraleEvent.IsGood ? "High morale! " + unit + " acts again." : "Low morale! " + unit + " freezes.");
+                Cue(moraleEvent.IsGood ? SoundCue.GoodMorale : SoundCue.BadMorale);
+            }
         }
 
         private void CueActiveVoice()
@@ -813,11 +1052,24 @@ namespace HeroesOfMetalAge.Application
                 Rules.DebugArtefacts(Campaign);
             }
         }
+
+        public void DebugRevealMap()
+        {
+            Revision++;
+            Rules.DebugRevealMap(Campaign);
+        }
         #endregion
 
         private GameScreen HomeScreen()
         {
             return Campaign.IsHeroHome ? GameScreen.Town : GameScreen.Adventure;
+        }
+
+        private void NotifyNoRoute(WorldPosition target)
+        {
+            Notify(Campaign.Explored.IsExplored(target)
+                ? "No route. Mountains, water, unexplored land and unresolved encounters block travel."
+                : "That land is unexplored. Ride closer to see what lies there.");
         }
 
         private void OpenTown()
@@ -838,6 +1090,7 @@ namespace HeroesOfMetalAge.Application
             Battle = null;
             Victory = null;
             Encounter = null;
+            MapObject = null;
         }
 
         private bool Accept(CommandResult result)
@@ -877,6 +1130,26 @@ namespace HeroesOfMetalAge.Application
 
             Playback = state;
             Publish(PlaybackChanged, state);
+        }
+
+        private void Publish(Action signal)
+        {
+            if (signal == null)
+            {
+                return;
+            }
+
+            foreach (Delegate subscriber in signal.GetInvocationList())
+            {
+                try
+                {
+                    ((Action)subscriber)();
+                }
+                catch (Exception error)
+                {
+                    reportError(error);
+                }
+            }
         }
 
         // a failing listener must not stop the others or undo an already committed command

@@ -1,0 +1,101 @@
+{
+  "screen": "Victory",
+  "backdrop": "VictoryFrame",
+  "fullscreen": false,
+  "frameSize": [
+    722.3,
+    738.7
+  ],
+  "elements": [
+    {
+      "name": "TitleText",
+      "type": "text",
+      "rect": [
+        69.4,
+        407.2,
+        654.4,
+        469.6
+      ],
+      "style": "Display",
+      "size": 51.5,
+      "align": "center",
+      "field": "titleText"
+    },
+    {
+      "name": "SubtitleText",
+      "type": "text",
+      "rect": [
+        69.4,
+        478.9,
+        654.4,
+        511.7
+      ],
+      "style": "Heading",
+      "size": 20.3,
+      "align": "center",
+      "field": "subtitleText"
+    },
+    {
+      "name": "ExperienceText",
+      "type": "text",
+      "rect": [
+        283.9,
+        516.4,
+        599.8,
+        541.3
+      ],
+      "style": "Label",
+      "size": 17.2,
+      "align": "left",
+      "field": "experienceText"
+    },
+    {
+      "name": "LossesText",
+      "type": "text",
+      "rect": [
+        283.9,
+        552.2,
+        599.8,
+        580.3
+      ],
+      "style": "Label",
+      "size": 17.2,
+      "align": "left",
+      "field": "lossesText"
+    },
+    {
+      "name": "BodyText",
+      "type": "text",
+      "rect": [
+        69.4,
+        588.1,
+        654.4,
+        634.9
+      ],
+      "style": "Body",
+      "size": 17.2,
+      "align": "center",
+      "field": "bodyText"
+    },
+    {
+      "name": "ContinueButton",
+      "type": "button",
+      "rect": [
+        223.9,
+        634.9,
+        500.0,
+        681.7
+      ],
+      "label": [
+        241.0,
+        642.7,
+        482.8,
+        675.5
+      ],
+      "text": "CLAIM THE SPOILS",
+      "size": 18.7,
+      "field": "continueButton"
+    }
+  ],
+  "spriteFolder": "Assets/HeroesOfMetalAge/Content/UI/Sprites/Gameplay/Victory"
+}

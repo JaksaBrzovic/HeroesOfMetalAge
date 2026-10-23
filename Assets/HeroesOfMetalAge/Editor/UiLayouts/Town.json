@@ -1,0 +1,530 @@
+{
+  "screen": "Town",
+  "backdrop": "TownScreen",
+  "elements": [
+    {
+      "name": "DayText",
+      "type": "text",
+      "rect": [
+        1010.5,
+        20.7,
+        1240.2,
+        71.2
+      ],
+      "style": "Number",
+      "size": 25.2,
+      "align": "center",
+      "field": "header.dayText"
+    },
+    {
+      "name": "GoldText",
+      "type": "text",
+      "rect": [
+        1355.0,
+        23.0,
+        1521.5,
+        68.9
+      ],
+      "style": "Number",
+      "size": 29.8,
+      "align": "left",
+      "field": "header.goldText"
+    },
+    {
+      "name": "HeroButton",
+      "type": "button",
+      "rect": [
+        1538.8,
+        13.8,
+        1711.0,
+        75.7
+      ],
+      "label": [
+        1590.4,
+        25.2,
+        1705.3,
+        66.6
+      ],
+      "text": "HERO [H]",
+      "size": 20.7,
+      "field": "header.heroButton"
+    },
+    {
+      "name": "OptionsButton",
+      "type": "button",
+      "rect": [
+        1722.5,
+        13.8,
+        1892.4,
+        75.7
+      ],
+      "label": [
+        1774.2,
+        25.2,
+        1883.3,
+        66.6
+      ],
+      "text": "OPTIONS",
+      "size": 20.7,
+      "field": "header.optionsButton"
+    },
+    {
+      "name": "TitleText",
+      "type": "text",
+      "rect": [
+        105.6,
+        91.8,
+        625.8,
+        146.9
+      ],
+      "style": "Title",
+      "size": 41.3,
+      "align": "left",
+      "field": "titleText"
+    },
+    {
+      "name": "SubtitleText",
+      "type": "text",
+      "rect": [
+        105.6,
+        146.9,
+        625.8,
+        174.5
+      ],
+      "style": "Label",
+      "size": 17.2,
+      "align": "left",
+      "field": "subtitleText"
+    },
+    {
+      "name": "TownImage",
+      "type": "image",
+      "rect": [
+        45.9,
+        189.4,
+        625.8,
+        614.0
+      ],
+      "field": "townImage"
+    },
+    {
+      "name": "ForgeTitle",
+      "type": "text",
+      "rect": [
+        74.6,
+        671.4,
+        625.8,
+        717.3
+      ],
+      "style": "Heading",
+      "size": 25.2,
+      "align": "left",
+      "field": "statusTitleText"
+    },
+    {
+      "name": "DescriptionText",
+      "type": "text",
+      "rect": [
+        74.6,
+        718.5,
+        614.4,
+        791.9
+      ],
+      "style": "Body",
+      "size": 18.4,
+      "align": "topleft",
+      "field": "descriptionText"
+    },
+    {
+      "name": "ClaimButton",
+      "type": "button",
+      "rect": [
+        63.2,
+        810.3,
+        631.6,
+        888.3
+      ],
+      "label": [
+        170.0,
+        824.1,
+        614.4,
+        874.6
+      ],
+      "text": "CLAIM THE HOLD / FIGHT GARRISON",
+      "size": 20.7,
+      "field": "claimButton"
+    },
+    {
+      "name": "ReturnButton",
+      "type": "button",
+      "rect": [
+        63.2,
+        902.1,
+        631.6,
+        977.9
+      ],
+      "label": [
+        170.0,
+        915.9,
+        614.4,
+        966.4
+      ],
+      "text": "RETURN TO THE PASS",
+      "size": 20.7,
+      "field": "backButton"
+    },
+    {
+      "name": "QuantityLabel",
+      "type": "text",
+      "rect": [
+        712.0,
+        692.1,
+        970.3,
+        736.8
+      ],
+      "style": "Label",
+      "size": 20.7,
+      "align": "left",
+      "text": "RECRUIT QUANTITY"
+    },
+    {
+      "name": "LessButton",
+      "type": "button",
+      "rect": [
+        1016.3,
+        688.6,
+        1096.7,
+        746.0
+      ],
+      "text": "",
+      "field": "lessButton"
+    },
+    {
+      "name": "QuantityText",
+      "type": "text",
+      "rect": [
+        1100.1,
+        692.1,
+        1237.9,
+        743.7
+      ],
+      "style": "Number",
+      "size": 27.5,
+      "align": "center",
+      "field": "quantityText"
+    },
+    {
+      "name": "MoreButton",
+      "type": "button",
+      "rect": [
+        1234.4,
+        688.6,
+        1320.6,
+        746.0
+      ],
+      "text": "",
+      "field": "moreButton"
+    },
+    {
+      "name": "MaxButton",
+      "type": "button",
+      "rect": [
+        1337.8,
+        688.6,
+        1492.8,
+        746.0
+      ],
+      "label": [
+        1343.5,
+        694.4,
+        1487.1,
+        740.3
+      ],
+      "text": "MAX",
+      "size": 20.7,
+      "field": "maxButton"
+    },
+    {
+      "name": "HomeText",
+      "type": "text",
+      "rect": [
+        712.0,
+        769.0,
+        970.3,
+        803.4
+      ],
+      "style": "Label",
+      "size": 17.2,
+      "align": "left",
+      "field": "homeText"
+    },
+    {
+      "name": "GarrisonHeroButton",
+      "type": "button",
+      "rect": [
+        717.7,
+        809.1,
+        955.4,
+        870.0
+      ],
+      "label": [
+        725.7,
+        817.2,
+        947.4,
+        863.1
+      ],
+      "text": "Lord Varg",
+      "size": 20.7,
+      "style": "Body",
+      "field": "garrisonHeroButton"
+    },
+    {
+      "name": "GarrisonSlots",
+      "type": "slots",
+      "rects": [
+        976.1,
+        774.7,
+        1090.9,
+        872.3,
+        1100.1,
+        774.7,
+        1214.9,
+        872.3,
+        1226.4,
+        774.7,
+        1341.2,
+        872.3,
+        1352.7,
+        774.7,
+        1467.6,
+        872.3,
+        1475.6,
+        774.7,
+        1590.4,
+        872.3,
+        1598.5,
+        774.7,
+        1713.3,
+        872.3,
+        1722.5,
+        774.7,
+        1837.3,
+        872.3
+      ],
+      "field": "garrisonSlots",
+      "named": true
+    },
+    {
+      "name": "VisitingText",
+      "type": "text",
+      "rect": [
+        712.0,
+        892.9,
+        970.3,
+        927.4
+      ],
+      "style": "Label",
+      "size": 17.2,
+      "align": "left",
+      "field": "visitingText"
+    },
+    {
+      "name": "StationButton",
+      "type": "button",
+      "rect": [
+        717.7,
+        931.9,
+        955.4,
+        991.6
+      ],
+      "label": [
+        725.7,
+        938.8,
+        947.4,
+        984.7
+      ],
+      "text": "HERO -> HOME",
+      "size": 20.7,
+      "field": "stationButton"
+    },
+    {
+      "name": "VisitingSlots",
+      "type": "slots",
+      "rects": [
+        976.1,
+        898.7,
+        1090.9,
+        996.2,
+        1100.1,
+        898.7,
+        1214.9,
+        996.2,
+        1226.4,
+        898.7,
+        1341.2,
+        996.2,
+        1352.7,
+        898.7,
+        1467.6,
+        996.2,
+        1475.6,
+        898.7,
+        1590.4,
+        996.2,
+        1598.5,
+        898.7,
+        1713.3,
+        996.2,
+        1722.5,
+        898.7,
+        1837.3,
+        996.2
+      ],
+      "field": "visitingSlots",
+      "named": true
+    },
+    {
+      "name": "RecruitRow",
+      "type": "recruit",
+      "rect": [
+        692.4,
+        121.7,
+        1866.0,
+        300.7
+      ],
+      "field": "recruitRows",
+      "portrait": [
+        714.3,
+        134.3,
+        943.9,
+        283.5
+      ],
+      "nameRect": [
+        971.5,
+        132.0,
+        1406.7,
+        172.2
+      ],
+      "description": [
+        971.5,
+        177.9,
+        1446.9,
+        235.3
+      ],
+      "stats": [
+        971.5,
+        241.0,
+        1446.9,
+        275.5
+      ],
+      "button": [
+        1595.0,
+        160.7,
+        1856.8,
+        251.3
+      ],
+      "label": [
+        1642.1,
+        177.9,
+        1808.6,
+        243.3
+      ]
+    },
+    {
+      "name": "RecruitRow",
+      "type": "recruit",
+      "rect": [
+        692.4,
+        311.0,
+        1866.0,
+        490.1
+      ],
+      "field": "recruitRows",
+      "portrait": [
+        714.3,
+        323.7,
+        943.9,
+        472.9
+      ],
+      "nameRect": [
+        971.5,
+        321.4,
+        1406.7,
+        361.5
+      ],
+      "description": [
+        971.5,
+        367.3,
+        1446.9,
+        424.7
+      ],
+      "stats": [
+        971.5,
+        430.4,
+        1446.9,
+        464.8
+      ],
+      "button": [
+        1595.0,
+        350.1,
+        1856.8,
+        440.7
+      ],
+      "label": [
+        1642.1,
+        367.3,
+        1808.6,
+        432.7
+      ]
+    },
+    {
+      "name": "RecruitRow",
+      "type": "recruit",
+      "rect": [
+        692.4,
+        500.4,
+        1866.0,
+        679.4
+      ],
+      "field": "recruitRows",
+      "portrait": [
+        714.3,
+        513.0,
+        943.9,
+        662.2
+      ],
+      "nameRect": [
+        971.5,
+        510.7,
+        1406.7,
+        550.9
+      ],
+      "description": [
+        971.5,
+        556.6,
+        1446.9,
+        614.0
+      ],
+      "stats": [
+        971.5,
+        619.8,
+        1446.9,
+        654.2
+      ],
+      "button": [
+        1595.0,
+        539.4,
+        1856.8,
+        630.1
+      ],
+      "label": [
+        1642.1,
+        556.6,
+        1808.6,
+        622.1
+      ]
+    }
+  ],
+  "fullscreen": true,
+  "spriteFolder": "Assets/HeroesOfMetalAge/Content/UI/Sprites/Gameplay/Town"
+}

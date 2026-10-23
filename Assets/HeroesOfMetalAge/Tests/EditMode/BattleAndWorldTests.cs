@@ -108,6 +108,7 @@ namespace HeroesOfMetalAge.Tests
         {
             WorldMap world = new WorldMap(catalog.Mission);
             CampaignState fresh = rules.NewCampaign();
+            rules.DebugRevealMap(fresh);
             WorldPosition sentinel = catalog.Mission.Encounter(EncounterKind.Sentinel).Position;
 
             CollectionAssert.AreEqual(world.FindRoute(fresh, sentinel), world.FindRoute(fresh, sentinel));

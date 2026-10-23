@@ -85,13 +85,16 @@ namespace HeroesOfMetalAge.Presentation
             frameHome = designFrame.anchoredPosition;
             parallax.Initialize();
             newGameButton.Initialize();
-            newGameButton.Hovered += HandleNewGameHovered;
+            newGameButton.Hovered += HandleEntryHovered;
             newGameButton.Clicked += HandleNewGameClicked;
             loadGame.Initialize();
+            loadGame.Hovered += HandleEntryHovered;
             loadGame.Clicked += HandleLoadGameClicked;
             credits.Initialize();
+            credits.Hovered += HandleEntryHovered;
             credits.Clicked += HandleCreditsClicked;
             quit.Initialize();
+            quit.Hovered += HandleEntryHovered;
             quit.Clicked += HandleQuitClicked;
             creditsScroll.Initialize();
             quitChopper.Initialize();
@@ -139,22 +142,25 @@ namespace HeroesOfMetalAge.Presentation
         {
             if (newGameButton != null)
             {
-                newGameButton.Hovered -= HandleNewGameHovered;
+                newGameButton.Hovered -= HandleEntryHovered;
                 newGameButton.Clicked -= HandleNewGameClicked;
             }
 
             if (loadGame != null)
             {
+                loadGame.Hovered -= HandleEntryHovered;
                 loadGame.Clicked -= HandleLoadGameClicked;
             }
 
             if (credits != null)
             {
+                credits.Hovered -= HandleEntryHovered;
                 credits.Clicked -= HandleCreditsClicked;
             }
 
             if (quit != null)
             {
+                quit.Hovered -= HandleEntryHovered;
                 quit.Clicked -= HandleQuitClicked;
             }
 
@@ -200,7 +206,8 @@ namespace HeroesOfMetalAge.Presentation
             designFrame.anchoredPosition = frameHome + hole * (1f - centring) - turned;
         }
 
-        private void HandleNewGameHovered()
+        // every entry pours its gold with the same sound
+        private void HandleEntryHovered()
         {
             audioControls.Play(SoundCue.MainMenuHover);
         }
@@ -237,11 +244,12 @@ namespace HeroesOfMetalAge.Presentation
             }
         }
 
-        // back from the credits, the entries take clicks again
+        // back from the credits or a finished mission, the entries take clicks again
         private void HandlePhaseChanged(FrontEndPhase phase)
         {
             if (phase == FrontEndPhase.MainMenu)
             {
+                newGameButton.ResetAnimation();
                 loadGame.ResetClick();
                 credits.ResetClick();
                 quit.ResetClick();

@@ -266,7 +266,8 @@ namespace HeroesOfMetalAge.EditorTools
         {
             SerializedObject button = new SerializedObject(newGame);
             SerializedProperty title = button.FindProperty("titleImage");
-            if (title.objectReferenceValue != null)
+            // the gold on the titles is set up by VisualStyleSeeder since the button drives a GildEffect
+            if (title == null || title.objectReferenceValue != null)
             {
                 return false;
             }

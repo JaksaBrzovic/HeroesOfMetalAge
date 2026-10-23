@@ -16,6 +16,7 @@ namespace HeroesOfMetalAge.EditorTools
         public const string WORLD_FOLDER = "Assets/HeroesOfMetalAge/Prefabs/World";
         public const string MAPS_FOLDER = "Assets/HeroesOfMetalAge/Content/Maps";
         public const string THEME_PATH = "Assets/HeroesOfMetalAge/Content/UI/UiTheme.asset";
+        public const string TYPOGRAPHY_PATH = "Assets/HeroesOfMetalAge/Content/UI/Typography.asset";
         public const string SCENE_PATH = "Assets/Scenes/AshenPass.unity";
         public const string DIALOGUE_DATABASE_PATH = DATABASE_FOLDER + "/DialogueDatabase.asset";
         public const string DIALOGUE_BOX_PATH = UI_FOLDER + "/Widgets/DialogueBox.prefab";
@@ -41,6 +42,7 @@ namespace HeroesOfMetalAge.EditorTools
         public static DialogueDatabaseScriptableObject Dialogue => Load<DialogueDatabaseScriptableObject>(DIALOGUE_DATABASE_PATH);
         public static AudioSystemSettings AudioSettings => Load<AudioSystemSettings>(AUDIO_FOLDER + "/GameAudioSettings.asset");
         public static UiTheme Theme => Load<UiTheme>(THEME_PATH);
+        public static TypographySettings Typography => Load<TypographySettings>(TYPOGRAPHY_PATH);
         public static GameHud RootPrefab => Load<GameHud>(UI_FOLDER + "/GameUiRoot.prefab");
         public static DebugPanelView DebugPanelPrefab => Load<DebugPanelView>(UI_FOLDER + "/Screens/DebugPanel.prefab");
         public static DialogueBoxView DialogueBoxPrefab => Load<DialogueBoxView>(DIALOGUE_BOX_PATH);

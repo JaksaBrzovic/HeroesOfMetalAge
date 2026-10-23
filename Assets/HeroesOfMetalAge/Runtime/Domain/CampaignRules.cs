@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HeroesOfMetalAge.Domain
 {
@@ -10,6 +11,7 @@ namespace HeroesOfMetalAge.Domain
     public sealed class CampaignRules
     {
         public const int MAXIMUM_STACK_COUNT = 100000;
+        public const int MAXIMUM_MORALE = 3;
 
         private readonly DefinitionCatalog catalog;
 
@@ -31,13 +33,20 @@ namespace HeroesOfMetalAge.Domain
                 Movement = hero.DailyMovement,
                 HeroId = hero.Id,
                 MissionId = Mission.Id,
-                TownOwnerId = Mission.ClanId
+                TownOwnerId = Mission.ClanId,
+                Explored = new ExploredMap(Mission.Width, Mission.Height)
             };
 
+            Scout(state);
             state.ArmyData.AddRange(hero.StartingArmy);
             foreach (string id in Mission.RecruitmentIds)
             {
                 state.StockData.Add(id, catalog.Unit(id).WeeklyGrowth);
+            }
+
+            foreach (MapObjectDefinition dwelling in Dwellings())
+            {
+                state.DwellingStockData.Add(dwelling.Id, dwelling.WeeklyGrowth);
             }
 
             return state;
@@ -52,15 +61,30 @@ namespace HeroesOfMetalAge.Domain
         public int Attack(CampaignState campaign)
         {
             HeroDefinition hero = catalog.Hero(campaign.HeroId);
-            long attack = (long)hero.BaseAttack + (long)(Level(campaign) - 1) * hero.AttackPerLevel + EquippedBonus(campaign, EquippedStat.Attack);
+            long attack = (long)hero.BaseAttack + (long)(Level(campaign) - 1) * hero.AttackPerLevel + EquippedBonus(campaign, EquippedStat.Attack)
+                + ShrineBonus(campaign, MapObjectKind.AttackShrine);
             return (int)Math.Min(int.MaxValue, attack);
         }
 
         public int Defense(CampaignState campaign)
         {
             HeroDefinition hero = catalog.Hero(campaign.HeroId);
-            long defense = (long)hero.BaseDefense + (Level(campaign) - 1) / hero.DefenseLevelInterval + EquippedBonus(campaign, EquippedStat.Defense);
+            long defense = (long)hero.BaseDefense + (Level(campaign) - 1) / hero.DefenseLevelInterval + EquippedBonus(campaign, EquippedStat.Defense)
+                + ShrineBonus(campaign, MapObjectKind.DefenseShrine);
             return (int)Math.Min(int.MaxValue, defense);
+        }
+
+        /// <summary>The army's morale from worn artefacts and map objects, between -3 and +3.</summary>
+        public int Morale(CampaignState campaign)
+        {
+            long morale = (long)EquippedBonus(campaign, EquippedStat.Morale) + campaign.MoraleBonus;
+            return (int)Math.Max(-MAXIMUM_MORALE, Math.Min(MAXIMUM_MORALE, morale));
+        }
+
+        /// <summary>The week of a campaign day, from 1.</summary>
+        public int Week(CampaignState campaign)
+        {
+            return (campaign.Day - 1) / Mission.DaysPerWeek + 1;
         }
 
         public int SpeedBonus(CampaignState campaign)
@@ -158,7 +182,7 @@ namespace HeroesOfMetalAge.Domain
             }
 
             bool isWeekEnd = campaign.Day % Mission.DaysPerWeek == 0;
-            if (isWeekEnd && WouldStockOverflow(campaign))
+            if (isWeekEnd && (WouldStockOverflow(campaign) || WouldDwellingOverflow(campaign)))
             {
                 return CommandResult.Reject("Recruitment stock limit reached.");
             }
@@ -170,6 +194,11 @@ namespace HeroesOfMetalAge.Domain
                 foreach (string id in Mission.RecruitmentIds)
                 {
                     campaign.StockData[id] += catalog.Unit(id).WeeklyGrowth;
+                }
+
+                foreach (MapObjectDefinition dwelling in Dwellings())
+                {
+                    campaign.DwellingStockData[dwelling.Id] = campaign.DwellingStock(dwelling.Id) + dwelling.WeeklyGrowth;
                 }
             }
 
@@ -220,7 +249,10 @@ namespace HeroesOfMetalAge.Domain
             return CommandResult.Ok();
         }
 
-        /// <summary>Equips an inventory artefact; whatever occupied its slot goes back to the inventory.</summary>
+        /// <summary>
+        /// Equips an inventory artefact in the first free place that fits it (a ring takes the left hand, then the right);
+        /// when every fitting place is taken it replaces the first, and that artefact goes back to the inventory.
+        /// </summary>
         public CommandResult Equip(CampaignState campaign, int index)
         {
             if (index < 0 || index >= campaign.Inventory.Count)
@@ -228,34 +260,60 @@ namespace HeroesOfMetalAge.Domain
                 return CommandResult.Reject("Artefact is not in the inventory.");
             }
 
+            EquipmentPlace[] places = Equipment.Places(catalog.Artefact(campaign.Inventory[index]).Slot);
+            EquipmentPlace place = places[0];
+            foreach (EquipmentPlace candidate in places)
+            {
+                if (campaign.Equipped(candidate) == null)
+                {
+                    place = candidate;
+                    break;
+                }
+            }
+
+            return EquipAt(campaign, index, place);
+        }
+
+        /// <summary>Equips an inventory artefact in a place it fits; whatever was worn there goes back to the inventory.</summary>
+        public CommandResult EquipAt(CampaignState campaign, int index, EquipmentPlace place)
+        {
+            if (index < 0 || index >= campaign.Inventory.Count || !Enum.IsDefined(typeof(EquipmentPlace), place))
+            {
+                return CommandResult.Reject("Artefact is not in the inventory.");
+            }
+
             string id = campaign.Inventory[index];
-            ArtefactDefinition definition = catalog.Artefact(id);
-            string previous = definition.Slot == EquipmentSlot.Weapon ? campaign.WeaponId : campaign.CharmId;
+            if (!Equipment.Fits(catalog.Artefact(id).Slot, place))
+            {
+                return CommandResult.Reject("That artefact is not worn there.");
+            }
+
+            string previous = campaign.Equipped(place);
             campaign.InventoryData.RemoveAt(index);
-            if (!string.IsNullOrEmpty(previous))
+            if (previous != null)
             {
                 campaign.InventoryData.Add(previous);
             }
 
-            SetEquipped(campaign, definition.Slot, id);
+            campaign.EquippedData[(int)place] = id;
             return CommandResult.Ok();
         }
 
-        public CommandResult Unequip(CampaignState campaign, EquipmentSlot slot)
+        public CommandResult Unequip(CampaignState campaign, EquipmentPlace place)
         {
-            if (!Enum.IsDefined(typeof(EquipmentSlot), slot))
+            if (!Enum.IsDefined(typeof(EquipmentPlace), place))
             {
-                return CommandResult.Reject("Unknown equipment slot.");
+                return CommandResult.Reject("Unknown equipment place.");
             }
 
-            string id = slot == EquipmentSlot.Weapon ? campaign.WeaponId : campaign.CharmId;
-            if (string.IsNullOrEmpty(id))
+            string id = campaign.Equipped(place);
+            if (id == null)
             {
-                return CommandResult.Reject("Slot is empty.");
+                return CommandResult.Reject("Nothing is worn there.");
             }
 
             campaign.InventoryData.Add(id);
-            SetEquipped(campaign, slot, null);
+            campaign.EquippedData[(int)place] = null;
             return CommandResult.Ok();
         }
 
@@ -274,6 +332,7 @@ namespace HeroesOfMetalAge.Domain
 
             campaign.Position = next;
             campaign.Movement -= cost;
+            Scout(campaign);
             return CommandResult.Ok();
         }
 
@@ -290,6 +349,13 @@ namespace HeroesOfMetalAge.Domain
             double factor = 1 + (random.NextValue() * 2 - 1) * policy.GoldVariation;
             int gold = (int)Math.Max(1, Math.Min(int.MaxValue, Math.Round(encounter.RewardGold * factor, MidpointRounding.ToEven)));
 
+            // a guarded treasure is the victory's artefact, whatever the dice say
+            if (encounter.RewardArtefactId != null)
+            {
+                bool isGuardedLegendary = catalog.Artefact(encounter.RewardArtefactId).Rarity == ArtefactRarity.Legendary;
+                return new VictoryRewards(gold, new[] { encounter.RewardArtefactId }, isGuardedLegendary);
+            }
+
             ArtefactRarity? rarity = null;
             bool isLegendaryDue = policy.LegendaryGuaranteeVictories > 0 && victoriesWithoutLegendary >= policy.LegendaryGuaranteeVictories - 1;
             if (isLegendaryDue && HasArtefactOf(ArtefactRarity.Legendary))
@@ -300,7 +366,8 @@ namespace HeroesOfMetalAge.Domain
             {
                 double roll = random.NextValue();
                 rarity = roll < policy.LegendaryChance ? ArtefactRarity.Legendary
-                    : roll < policy.LegendaryChance + policy.RareChance ? ArtefactRarity.Rare
+                    : roll < policy.LegendaryChance + policy.EpicChance ? ArtefactRarity.Epic
+                    : roll < policy.LegendaryChance + policy.EpicChance + policy.RareChance ? ArtefactRarity.Rare
                     : ArtefactRarity.Common;
             }
 
@@ -341,6 +408,8 @@ namespace HeroesOfMetalAge.Domain
             campaign.Gold += rewards.Gold;
             campaign.Experience += encounter.RewardExperience;
             campaign.InventoryData.AddRange(rewards.ArtefactIds);
+            // the blessings of map objects last until the next won battle
+            campaign.MoraleBonus = 0;
 
             campaign.CompletedData.Add(encounter.Id);
             if (encounter.Kind == EncounterKind.Town)
@@ -355,8 +424,14 @@ namespace HeroesOfMetalAge.Domain
         #region DEVELOPMENT
         public void DebugPrepareTown(CampaignState campaign)
         {
-            campaign.Position = Mission.Encounter(EncounterKind.Town).Position;
-            campaign.CompletedData.Add(Mission.Encounter(EncounterKind.Sentinel).Id);
+            campaign.Position = Mission.Town.Position;
+            Scout(campaign);
+        }
+
+        /// <summary>Lifts the fog of war from the whole map for good.</summary>
+        public void DebugRevealMap(CampaignState campaign)
+        {
+            campaign.Explored.RevealAll();
         }
 
         public void DebugGold(CampaignState campaign, int amount)
@@ -396,17 +471,34 @@ namespace HeroesOfMetalAge.Domain
                 TownOwnerId = snapshot.townOwnerId,
                 IsHeroHome = snapshot.heroHome,
                 HasRecruited = snapshot.recruited,
-                WeaponId = snapshot.weaponId,
-                CharmId = snapshot.charmId
+                MoraleBonus = snapshot.morale,
+                Explored = string.IsNullOrEmpty(snapshot.explored)
+                    ? new ExploredMap(Mission.Width, Mission.Height)
+                    : ExploredMap.Decode(snapshot.explored, Mission.Width, Mission.Height)
             };
+
+            Scout(result);
 
             RestoreStacks(snapshot.army, result.ArmyData);
             RestoreStacks(snapshot.garrison, result.GarrisonData);
             RestoreInventory(snapshot, result);
             RestoreCompleted(snapshot, result);
             RestoreStock(snapshot, result);
+            RestoreMapObjects(snapshot, result);
             ValidateArmies(snapshot, result);
             return result;
+        }
+
+        /// <summary>Explores what the hero sees from where he stands; a mission without fog of war shows the whole map.</summary>
+        private void Scout(CampaignState campaign)
+        {
+            if (Mission.ScoutingRadius == 0)
+            {
+                campaign.Explored.RevealAll();
+                return;
+            }
+
+            campaign.Explored.Reveal(campaign.Position, Mission.ScoutingRadius);
         }
 
         private void ValidateHeader(CampaignSnapshot snapshot)
@@ -423,6 +515,13 @@ namespace HeroesOfMetalAge.Domain
                 && snapshot.inventory != null
                 && snapshot.completed != null
                 && snapshot.stock != null
+                && snapshot.equipped != null
+                && snapshot.equipped.Count == Equipment.PLACE_COUNT
+                && snapshot.visited != null
+                && snapshot.keys != null
+                && snapshot.dwellings != null
+                && snapshot.mills != null
+                && Math.Abs(snapshot.morale) <= MAXIMUM_MORALE
                 && (snapshot.townOwnerId == CampaignState.PLAYER_OWNER_ID || snapshot.townOwnerId == Mission.ClanId);
             if (!isValid)
             {
@@ -461,8 +560,21 @@ namespace HeroesOfMetalAge.Domain
                 result.InventoryData.Add(id);
             }
 
-            ValidateEquipped(snapshot.weaponId, EquipmentSlot.Weapon);
-            ValidateEquipped(snapshot.charmId, EquipmentSlot.Charm);
+            for (int place = 0; place < Equipment.PLACE_COUNT; place++)
+            {
+                string id = snapshot.equipped[place];
+                if (string.IsNullOrEmpty(id))
+                {
+                    continue;
+                }
+
+                if (!catalog.HasArtefact(id) || !Equipment.Fits(catalog.Artefact(id).Slot, (EquipmentPlace)place))
+                {
+                    throw new ArgumentException("Invalid equipped artefact.");
+                }
+
+                result.EquippedData[place] = id;
+            }
         }
 
         private void RestoreCompleted(CampaignSnapshot snapshot, CampaignState result)
@@ -503,6 +615,63 @@ namespace HeroesOfMetalAge.Domain
             }
         }
 
+        private void RestoreMapObjects(CampaignSnapshot snapshot, CampaignState result)
+        {
+            foreach (string id in snapshot.visited)
+            {
+                if (!Mission.HasObject(id) || !result.VisitedData.Add(id))
+                {
+                    throw new ArgumentException("Invalid visited map object.");
+                }
+            }
+
+            foreach (string id in snapshot.keys)
+            {
+                if (!IsKnownKey(id) || !result.KeyData.Add(id))
+                {
+                    throw new ArgumentException("Invalid key.");
+                }
+            }
+
+            RestoreCounts(snapshot.dwellings, result.DwellingStockData, MapObjectKind.Dwelling, MAXIMUM_STACK_COUNT);
+            RestoreCounts(snapshot.mills, result.MillWeekData, MapObjectKind.Mill, int.MaxValue);
+            foreach (MapObjectDefinition dwelling in Dwellings())
+            {
+                if (!result.DwellingStockData.ContainsKey(dwelling.Id))
+                {
+                    result.DwellingStockData.Add(dwelling.Id, dwelling.WeeklyGrowth);
+                }
+            }
+        }
+
+        private void RestoreCounts(List<CountSnapshot> counts, Dictionary<string, int> target, MapObjectKind kind, int maximum)
+        {
+            foreach (CountSnapshot count in counts)
+            {
+                MapObjectDefinition mapObject = count != null ? Mission.FindObject(count.id) : null;
+                bool isValid = mapObject != null && mapObject.Kind == kind && count.count >= 0 && count.count <= maximum && !target.ContainsKey(count.id);
+                if (!isValid)
+                {
+                    throw new ArgumentException("Invalid " + kind + " record.");
+                }
+
+                target.Add(count.id, count.count);
+            }
+        }
+
+        private bool IsKnownKey(string keyId)
+        {
+            foreach (MapObjectDefinition mapObject in Mission.Objects)
+            {
+                if (mapObject.Kind == MapObjectKind.QuestGiver && mapObject.KeyId == keyId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void ValidateArmies(CampaignSnapshot snapshot, CampaignState result)
         {
             if (snapshot.heroHome && (!result.IsTownOwned || result.Army.Count != 0 || !IsAtTown(result)))
@@ -521,13 +690,6 @@ namespace HeroesOfMetalAge.Domain
             }
         }
 
-        private void ValidateEquipped(string id, EquipmentSlot slot)
-        {
-            if (!string.IsNullOrEmpty(id) && (!catalog.HasArtefact(id) || catalog.Artefact(id).Slot != slot))
-            {
-                throw new ArgumentException("Invalid equipped artefact.");
-            }
-        }
         #endregion
 
         private static int IndexOf(IReadOnlyList<Troop> army, string unitId)
@@ -555,21 +717,48 @@ namespace HeroesOfMetalAge.Domain
             army[index] = new Troop(troop.UnitId, checked(army[index].Count + troop.Count));
         }
 
-        private static void SetEquipped(CampaignState campaign, EquipmentSlot slot, string artefactId)
+        private bool IsAtTown(CampaignState campaign)
         {
-            if (slot == EquipmentSlot.Weapon)
+            return campaign.Position == Mission.Town.Position;
+        }
+
+        private IEnumerable<MapObjectDefinition> Dwellings()
+        {
+            foreach (MapObjectDefinition mapObject in Mission.Objects)
             {
-                campaign.WeaponId = artefactId;
-            }
-            else
-            {
-                campaign.CharmId = artefactId;
+                if (mapObject.Kind == MapObjectKind.Dwelling)
+                {
+                    yield return mapObject;
+                }
             }
         }
 
-        private bool IsAtTown(CampaignState campaign)
+        private bool WouldDwellingOverflow(CampaignState campaign)
         {
-            return campaign.Position == Mission.Encounter(EncounterKind.Town).Position;
+            foreach (MapObjectDefinition dwelling in Dwellings())
+            {
+                if ((long)campaign.DwellingStock(dwelling.Id) + dwelling.WeeklyGrowth > MAXIMUM_STACK_COUNT)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>What the visited shrines of a kind added to the hero for good.</summary>
+        private int ShrineBonus(CampaignState campaign, MapObjectKind kind)
+        {
+            int bonus = 0;
+            foreach (MapObjectDefinition shrine in Mission.Objects)
+            {
+                if (shrine.Kind == kind && campaign.IsVisited(shrine.Id))
+                {
+                    bonus = checked(bonus + (kind == MapObjectKind.AttackShrine ? shrine.AttackBonus : shrine.DefenseBonus));
+                }
+            }
+
+            return bonus;
         }
 
         private bool WouldStockOverflow(CampaignState campaign)
@@ -605,14 +794,13 @@ namespace HeroesOfMetalAge.Domain
         private int EquippedBonus(CampaignState campaign, EquippedStat stat)
         {
             int bonus = 0;
-            if (!string.IsNullOrEmpty(campaign.WeaponId))
+            for (int place = 0; place < Equipment.PLACE_COUNT; place++)
             {
-                bonus = checked(bonus + StatBonus(catalog.Artefact(campaign.WeaponId), stat));
-            }
-
-            if (!string.IsNullOrEmpty(campaign.CharmId))
-            {
-                bonus = checked(bonus + StatBonus(catalog.Artefact(campaign.CharmId), stat));
+                string id = campaign.Equipped((EquipmentPlace)place);
+                if (id != null)
+                {
+                    bonus = checked(bonus + StatBonus(catalog.Artefact(id), stat));
+                }
             }
 
             return bonus;
@@ -631,24 +819,21 @@ namespace HeroesOfMetalAge.Domain
             return false;
         }
 
-        /// <summary>A random artefact of the rarity, preferring unowned ones; falls back to any rarity when none is authored.</summary>
+        /// <summary>
+        /// A random artefact of the rarity, preferring unowned ones; falls back to any rarity when none is authored. Artefacts
+        /// placed in the mission (guarded treasures, captives' gifts, pickups) are found only there, never rolled.
+        /// </summary>
         private string PickArtefact(CampaignState campaign, ArtefactRarity rarity, IRandomSource random)
         {
-            List<ArtefactDefinition> candidates = new List<ArtefactDefinition>();
-            foreach (ArtefactDefinition artefact in catalog.Artefacts)
-            {
-                if (artefact.Rarity == rarity)
-                {
-                    candidates.Add(artefact);
-                }
-            }
-
+            HashSet<string> placed = PlacedArtefacts();
+            List<ArtefactDefinition> rollable = catalog.Artefacts.Where(artefact => !placed.Contains(artefact.Id)).ToList();
+            List<ArtefactDefinition> candidates = rollable.FindAll(artefact => artefact.Rarity == rarity);
             if (candidates.Count == 0)
             {
-                candidates.AddRange(catalog.Artefacts);
+                candidates.AddRange(rollable);
             }
 
-            List<ArtefactDefinition> unowned = candidates.FindAll(artefact => !Owns(campaign, artefact.Id));
+            List<ArtefactDefinition> unowned = candidates.FindAll(artefact => !campaign.Owns(artefact.Id));
             List<ArtefactDefinition> pool = unowned.Count > 0 ? unowned : candidates;
             if (pool.Count == 0)
             {
@@ -659,9 +844,26 @@ namespace HeroesOfMetalAge.Domain
             return pool[index].Id;
         }
 
-        private static bool Owns(CampaignState campaign, string artefactId)
+        private HashSet<string> PlacedArtefacts()
         {
-            return campaign.WeaponId == artefactId || campaign.CharmId == artefactId || campaign.InventoryData.Contains(artefactId);
+            HashSet<string> placed = new HashSet<string>(StringComparer.Ordinal);
+            foreach (EncounterDefinition encounter in Mission.Encounters)
+            {
+                if (encounter.RewardArtefactId != null)
+                {
+                    placed.Add(encounter.RewardArtefactId);
+                }
+            }
+
+            foreach (MapObjectDefinition mapObject in Mission.Objects)
+            {
+                if (mapObject.ArtefactId != null)
+                {
+                    placed.Add(mapObject.ArtefactId);
+                }
+            }
+
+            return placed;
         }
 
         private static int StatBonus(ArtefactDefinition artefact, EquippedStat stat)
@@ -672,6 +874,8 @@ namespace HeroesOfMetalAge.Domain
                     return artefact.AttackBonus;
                 case EquippedStat.Defense:
                     return artefact.DefenseBonus;
+                case EquippedStat.Morale:
+                    return artefact.MoraleBonus;
                 default:
                     return artefact.SpeedBonus;
             }
@@ -681,7 +885,8 @@ namespace HeroesOfMetalAge.Domain
         {
             Attack,
             Defense,
-            Speed
+            Speed,
+            Morale
         }
     }
 }
