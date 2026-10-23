@@ -35,6 +35,7 @@ namespace HeroesOfMetalAge.Presentation
             {
                 UiWidget slot = slots[i];
                 slot.Unbind();
+                slot.BindInfo(null);
                 if (i >= army.Count)
                 {
                     slot.Display(string.Empty, string.Empty, string.Empty, null, Color.white, false);
@@ -49,6 +50,12 @@ namespace HeroesOfMetalAge.Presentation
                 {
                     int index = i;
                     slot.Bind(() => onSlotClicked(index));
+                }
+
+                // a right press shows the stack's info card
+                if (context.Info != null)
+                {
+                    slot.BindInfo(() => context.Info.ShowTroop(troop, isPlayer));
                 }
             }
         }

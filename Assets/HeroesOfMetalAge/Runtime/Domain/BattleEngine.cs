@@ -175,6 +175,32 @@ namespace HeroesOfMetalAge.Domain
             return survivors.AsReadOnly();
         }
 
+        /// <summary>The creatures a side has lost so far, one entry per unit type in the order the stacks were placed.</summary>
+        public IReadOnlyList<Troop> Casualties(bool isPlayer)
+        {
+            List<Troop> lost = new List<Troop>();
+            foreach (Combatant combatant in combatants)
+            {
+                int count = combatant.StartCount - combatant.Count;
+                if (combatant.IsPlayer != isPlayer || count <= 0)
+                {
+                    continue;
+                }
+
+                int index = lost.FindIndex(troop => troop.UnitId == combatant.UnitId);
+                if (index < 0)
+                {
+                    lost.Add(new Troop(combatant.UnitId, count));
+                }
+                else
+                {
+                    lost[index] = new Troop(combatant.UnitId, lost[index].Count + count);
+                }
+            }
+
+            return lost.AsReadOnly();
+        }
+
         /// <summary>Ranged stacks attack from anywhere; melee stacks need to be adjacent or able to walk next to the target.</summary>
         public bool CanAttack(Combatant target)
         {

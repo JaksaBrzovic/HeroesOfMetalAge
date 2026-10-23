@@ -328,11 +328,67 @@ namespace HeroesOfMetalAge.Presentation
             map.ShowHover(cell);
         }
 
+        /// <summary>
+        /// A right press shows the info card of what is under the pointer: a stack on the battlefield or an army on the map. The
+        /// card stays while the button is held (see <see cref="GameHud"/>).
+        /// </summary>
+        /// <returns>True when a card opened.</returns>
+        public bool HandleInfoPress(Vector2 screenPoint)
+        {
+            if (!hud.IsGameplayInputEnabled || !worldCamera.ContainsScreenPoint(screenPoint) || IsOverUi(screenPoint))
+            {
+                return false;
+            }
+
+            // the card opens centred on the figure, as far as the screen allows
+            Vector3 point = worldCamera.ScreenToWorld(screenPoint);
+            if (Session.Screen == GameScreen.Battle && Session.Battle != null)
+            {
+                Combatant stack = battlefield.CombatantAt(point);
+                if (stack != null)
+                {
+                    hud.InfoPopup.ShowCombatant(Session.Battle, stack, worldCamera.WorldToScreen(battlefield.FigureCenter(stack)));
+                    return true;
+                }
+            }
+
+            if (Session.Screen == GameScreen.Adventure)
+            {
+                EncounterDefinition site = SiteAt(point);
+                if (site != null)
+                {
+                    WorldMarker marker = map.EncounterMarker(site.Id);
+                    hud.InfoPopup.ShowEncounter(site, worldCamera.WorldToScreen(marker.FigureBounds.center));
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // the army drawn under the point (its figure reaches above its cell), else the one on the cell; never in the fog
+        private EncounterDefinition SiteAt(Vector3 point)
+        {
+            string encounterId = map.EncounterIdAt(point);
+            EncounterDefinition site = encounterId != null ? Session.World.Site(Session.Campaign, Session.Catalog.Mission.FindEncounter(encounterId).Position) : null;
+            if (site == null && map.TryGetCell(point, out WorldPosition cell))
+            {
+                site = Session.World.Site(Session.Campaign, cell);
+            }
+
+            return site != null && site.Kind != EncounterKind.Town && Session.Campaign.Explored.IsExplored(site.Position) ? site : null;
+        }
+
         // left button: click, or drag beyond a few pixels to pan the map; right and middle buttons always drag
         private void HandlePointer()
         {
             Vector2 pointer = Input.mousePosition;
             bool isMap = Session.Screen == GameScreen.Adventure;
+            if (Input.GetMouseButtonDown(1))
+            {
+                HandleInfoPress(pointer);
+            }
+
             if (Input.GetMouseButtonDown(0) && worldCamera.ContainsScreenPoint(pointer) && !IsOverUi(pointer))
             {
                 isPressed = true;

@@ -17,6 +17,7 @@ MonoBehaviour:
     displayName: ROADIE
     description: Stage-hardened brawler; swings his flight case like a battering
       ram
+    lore: Every tour ends, every road crew stays. They have carried the gods of metal from stage to stage, and they carry their grudges just as far.
     portrait: {fileID: 21300000, guid: 22f5927ff444ef04380073d11f43108d, type: 3}
     cardPortrait: {fileID: 21300000, guid: f0ae6000f6087304f90e907529a6257a, type: 3}
     walkFrames:
@@ -43,6 +44,7 @@ MonoBehaviour:
   - id: ash-archer
     displayName: AIR GUITARIST
     description: Ranged / riffs strike from afar, half damage in melee
+    lore: No string, no fret, no mercy. The chord exists only in his mind, yet the enemy hears it in their bones.
     portrait: {fileID: 21300000, guid: 53c52e4783e7b124b94153082243e9b2, type: 3}
     cardPortrait: {fileID: 21300000, guid: 710f93fbff815044b8abf3e31be5ba0e, type: 3}
     walkFrames:
@@ -69,6 +71,7 @@ MonoBehaviour:
   - id: doom-rider
     displayName: BERSERKER
     description: Frenzied melee powerhouse, fearsome in close combat.
+    lore: He was the first through the gate at the last show of the old world. He has not stopped charging since.
     portrait: {fileID: 21300000, guid: 464a4963346f04d44a4cfa918384ca14, type: 3}
     cardPortrait: {fileID: 21300000, guid: 9a94a51724633144a89365c5a9ad2116, type: 3}
     walkFrames: []
@@ -87,6 +90,7 @@ MonoBehaviour:
   - id: minotaur
     displayName: MINOTAUR
     description: Horned brutes of the ash wastes; they guard what they do not understand.
+    lore: The ash wastes made them, the silence of the dead cities fed them. They hate every song they cannot understand.
     portrait: {fileID: 21300000, guid: 6e5379996d82f5148a5bcdfdc0d49e93, type: 3}
     cardPortrait: {fileID: 21300000, guid: 6e5379996d82f5148a5bcdfdc0d49e93, type: 3}
     walkFrames: []

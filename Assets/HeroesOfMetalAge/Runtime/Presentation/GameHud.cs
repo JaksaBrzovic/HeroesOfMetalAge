@@ -28,6 +28,8 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private CanvasGroup dialogGroup;
         [Tooltip("Hourglass shown in the middle of the screen while the day ends.")]
         [SerializeField] private EndDayView endDayView;
+        [Tooltip("The info card shown while the right mouse button is held over a unit, spell, skill or artefact.")]
+        [SerializeField] private InfoPopupView infoPopup;
 
         [Header("Screens")]
         [SerializeField] private WorldCanvasView worldView;
@@ -94,6 +96,7 @@ namespace HeroesOfMetalAge.Presentation
         public LevelUpCanvasView LevelUpView => levelUpView;
         public SpellBookCanvasView SpellBookView => spellBookView;
         public SpellShopCanvasView SpellShopView => spellShopView;
+        public InfoPopupView InfoPopup => infoPopup;
         public EventSystem Events => eventSystem;
 
         private CanvasScreenView[] Screens => new CanvasScreenView[]
@@ -136,12 +139,14 @@ namespace HeroesOfMetalAge.Presentation
         {
             if (theme == null || designFrame == null || eventSystem == null || notifications == null
                 || contentGroup == null || dialogGroup == null || victoryView == null || rewardsView == null || defeatView == null || endDayView == null
-                || levelUpView == null || spellBookView == null || spellShopView == null)
+                || levelUpView == null || spellBookView == null || spellShopView == null || infoPopup == null)
             {
                 throw new InvalidOperationException($"GameHud on '{name}' has unassigned references. Assign them in the GameUiRoot prefab.");
             }
 
             context = new CanvasViewContext(session, audio, media, theme);
+            infoPopup.Initialize(context);
+            context.Info = infoPopup;
             designFrameHome = designFrame.anchoredPosition;
             notifications.Initialize();
             endDayView.Initialize();
@@ -246,6 +251,12 @@ namespace HeroesOfMetalAge.Presentation
             if (IsDrivingSession && !isSuspended)
             {
                 HandleKeyboard();
+            }
+
+            // the info card stays only while the right button is held
+            if (infoPopup.IsShowing && !Input.GetMouseButton(1) && IsDrivingSession)
+            {
+                infoPopup.Hide();
             }
 
             UpdateNotifications();

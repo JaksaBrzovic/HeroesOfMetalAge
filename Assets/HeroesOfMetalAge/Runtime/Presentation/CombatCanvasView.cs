@@ -25,6 +25,8 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private UiWidget passButton;
         [SerializeField] private UiWidget spellBookButton;
         [SerializeField] private UiWidget surrenderButton;
+        [Tooltip("Hands the player's side to the computer and back.")]
+        [SerializeField] private UiWidget autoButton;
 
         [Header("Board")]
         [Tooltip("Screen area where the world camera draws the battlefield.")]
@@ -33,6 +35,7 @@ namespace HeroesOfMetalAge.Presentation
         public RectTransform BattleViewport => battleViewport;
         public UiWidget SpellBookButton => spellBookButton;
         public UiWidget SurrenderButton => surrenderButton;
+        public UiWidget AutoButton => autoButton;
 
         public override void Refresh()
         {
@@ -64,6 +67,8 @@ namespace HeroesOfMetalAge.Presentation
                 : Session.TargetingSpellId != null ? "AIM " + Catalog.Spell(Session.TargetingSpellId).Name.ToUpperInvariant()
                 : battle.Player.HasCastThisRound ? "SPELL CAST" : "SPELL BOOK [C]";
             UiBinding.SetButton(spellBookButton, spellCaption, canCast);
+            bool isDeciding = battle.Outcome == BattleOutcome.InProgress && (active.IsPlayer || Session.IsAutoCombat);
+            UiBinding.SetButton(autoButton, Session.IsAutoCombat ? "STOP AUTO" : "AUTO", isDeciding);
             bool hasCommander = Session.Encounter.Commander != null;
             UiBinding.SetButton(surrenderButton, hasCommander ? "SURRENDER " + Rules.SurrenderPrice(Campaign, battle.Survivors()) + " GOLD" : "NO SURRENDER",
                 canAct && hasCommander);
@@ -81,6 +86,7 @@ namespace HeroesOfMetalAge.Presentation
             Require(passButton, nameof(passButton));
             Require(spellBookButton, nameof(spellBookButton));
             Require(surrenderButton, nameof(surrenderButton));
+            Require(autoButton, nameof(autoButton));
             Require(battleViewport, nameof(battleViewport));
         }
 
@@ -90,6 +96,7 @@ namespace HeroesOfMetalAge.Presentation
             passButton.Bind(() => Session.BattleAction(new BattleAction(BattleActionKind.Pass)));
             spellBookButton.Bind(Session.OpenSpellBook);
             surrenderButton.Bind(Session.Surrender);
+            autoButton.Bind(Session.ToggleAutoCombat);
         }
 
         // during the Tactics phase the defend button starts the battle

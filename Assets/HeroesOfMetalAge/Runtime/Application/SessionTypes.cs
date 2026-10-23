@@ -98,4 +98,19 @@ namespace HeroesOfMetalAge.Application
         public int Losses { get; }
         public bool HasLeveledUp { get; }
     }
+
+    /// <summary>The creatures each side lost in a battle, one entry per unit type.</summary>
+    public sealed class BattleCasualties
+    {
+        public static readonly BattleCasualties None = new BattleCasualties(new Troop[0], new Troop[0]);
+
+        public BattleCasualties(IEnumerable<Troop> player, IEnumerable<Troop> enemy)
+        {
+            Player = new List<Troop>(player).AsReadOnly();
+            Enemy = new List<Troop>(enemy).AsReadOnly();
+        }
+
+        public IReadOnlyList<Troop> Player { get; }
+        public IReadOnlyList<Troop> Enemy { get; }
+    }
 }

@@ -14,6 +14,8 @@ namespace HeroesOfMetalAge.Application
         private const int DEBUG_GOLD_AMOUNT = 2000;
         // speed mode: the hero rides a cell in a fiftieth of a second, so he is at his destination almost at once
         private const float SPEED_MODE_STEP_SECONDS = 0.02f;
+        // quick combat plays a whole battle at once; a battle that has not ended after this many actions counts as lost
+        private const int QUICK_COMBAT_ACTION_LIMIT = 5000;
 
         private readonly ISaveStore save;
         private readonly IRandomSource random;
@@ -102,6 +104,12 @@ namespace HeroesOfMetalAge.Application
         public long Revision { get; private set; }
         public int DamageRevision { get; private set; }
         public DamageEvent LastHit { get; private set; }
+        /// <summary>True while the computer fights the player's side of the battle (auto combat).</summary>
+        public bool IsAutoCombat { get; private set; }
+        /// <summary>Option: battles are resolved at once without the battlefield, straight to the victory or defeat screen.</summary>
+        public bool IsQuickCombat { get; set; }
+        /// <summary>The creatures each side lost in the last battle, for the victory and defeat screens.</summary>
+        public BattleCasualties Casualties { get; private set; } = BattleCasualties.None;
         /// <summary>The spell the player picked in battle and is aiming at a hex, or null.</summary>
         public string TargetingSpellId { get; private set; }
         /// <summary>Seconds the hero takes for one map step while riding.</summary>
@@ -122,9 +130,12 @@ namespace HeroesOfMetalAge.Application
         /// True while the hero travels, the day is ending, the enemy is taking its turn, the pause after a battle action runs
         /// or a decided battle waits for its result screen; player commands wait.
         /// </summary>
-        public bool IsBusy => isTraveling || isEndingDay || IsEnemyTurn || IsBattlePaused || IsBattleResultPending;
+        public bool IsBusy => isTraveling || isEndingDay || IsEnemyTurn || IsAutoTurn || IsBattlePaused || IsBattleResultPending;
 
         private bool IsEnemyTurn => Screen == GameScreen.Battle && Dialog == DialogKind.None && Battle != null && Battle.Active != null && !Battle.Active.IsPlayer;
+        // the player's own stacks act by themselves while auto combat runs
+        private bool IsAutoTurn => IsAutoCombat && Screen == GameScreen.Battle && Dialog == DialogKind.None && Battle != null
+            && Battle.Outcome == BattleOutcome.InProgress;
         private bool IsBattlePaused => Screen == GameScreen.Battle && Dialog == DialogKind.None && timer > 0;
         // the battle is decided (and a victory already applied) but the battlefield stays on screen for the result delay
         private bool IsBattleResultPending => Screen == GameScreen.Battle && Dialog == DialogKind.None && Battle != null && Battle.Outcome != BattleOutcome.InProgress;
@@ -177,9 +188,14 @@ namespace HeroesOfMetalAge.Application
             {
                 ShowBattleResult();
             }
-            else if (Screen == GameScreen.Battle && Battle != null && Battle.Outcome == BattleOutcome.InProgress && !Battle.Active.IsPlayer)
+            else if (Screen == GameScreen.Battle && Battle != null && Battle.Outcome == BattleOutcome.InProgress && (!Battle.Active.IsPlayer || IsAutoCombat))
             {
-                ResolveBattleAction(ai.Choose(Battle), false);
+                bool isPlayer = Battle.Active.IsPlayer;
+                // a proposal the rules reject must not stall the battle: the stack passes instead
+                if (!ResolveBattleAction(ai.Choose(Battle), isPlayer))
+                {
+                    ResolveBattleAction(new BattleAction(BattleActionKind.Pass), isPlayer);
+                }
             }
         }
 
@@ -957,6 +973,7 @@ namespace HeroesOfMetalAge.Application
 
             Battle = null;
             TargetingSpellId = null;
+            IsAutoCombat = false;
             Screen = Encounter.Kind == EncounterKind.Town ? GameScreen.Town : GameScreen.Adventure;
             RefreshPlayback();
             Cue(SoundCue.Gold);
@@ -982,7 +999,15 @@ namespace HeroesOfMetalAge.Application
             Battle = new BattleEngine(Catalog, random, Campaign, Encounter);
             Victory = null;
             TargetingSpellId = null;
+            IsAutoCombat = false;
+            Casualties = BattleCasualties.None;
             battleLog.Clear();
+            if (IsQuickCombat)
+            {
+                ResolveQuickly();
+                return;
+            }
+
             Screen = GameScreen.Battle;
             Dialog = DialogKind.None;
             // the player may act at once; an enemy that starts waits for its turn delay
@@ -1015,6 +1040,21 @@ namespace HeroesOfMetalAge.Application
                 TargetingSpellId = null;
                 ResolveBattleAction(action, true);
             }
+        }
+
+        /// <summary>Hands the player's side of the battle to the computer, or takes it back.</summary>
+        public void ToggleAutoCombat()
+        {
+            Revision++;
+            if (Screen != GameScreen.Battle || Dialog != DialogKind.None || Battle == null || Battle.Outcome != BattleOutcome.InProgress)
+            {
+                return;
+            }
+
+            IsAutoCombat = !IsAutoCombat;
+            TargetingSpellId = null;
+            Cue(SoundCue.Click);
+            AddLog(IsAutoCombat ? "Auto combat: your warhost fights on its own." : "Auto combat ends; you command again.");
         }
 
         /// <summary>Moves from the victory screen to the rewards screen.</summary>
@@ -1063,12 +1103,13 @@ namespace HeroesOfMetalAge.Application
             RefreshPlayback();
         }
 
-        private void ResolveBattleAction(BattleAction action, bool isPlayer)
+        /// <returns>False when the rules rejected the action.</returns>
+        private bool ResolveBattleAction(BattleAction action, bool isPlayer)
         {
             BattleResolution resolution = Battle.Execute(action, isPlayer);
             if (!Accept(resolution.Result))
             {
-                return;
+                return false;
             }
 
             if (!string.IsNullOrEmpty(resolution.Message))
@@ -1109,10 +1150,49 @@ namespace HeroesOfMetalAge.Application
                 : battleResultSeconds;
             if (Battle.Outcome != BattleOutcome.InProgress)
             {
-                return;
+                return true;
             }
 
             CueActiveVoice();
+            return true;
+        }
+
+        /// <summary>
+        /// Quick combat: both sides are played by the computer at once, without the battlefield, the strikes' sounds or the
+        /// pauses; the victory (already applied) or defeat screen opens over the map or the town.
+        /// </summary>
+        private void ResolveQuickly()
+        {
+            Dialog = DialogKind.None;
+            // a retry from the defeat screen of a battle fought on the battlefield leaves it
+            Screen = Encounter.Kind == EncounterKind.Town ? GameScreen.Town : GameScreen.Adventure;
+            for (int actions = 0; Battle.Outcome == BattleOutcome.InProgress && actions < QUICK_COMBAT_ACTION_LIMIT; actions++)
+            {
+                bool isPlayer = Battle.Active.IsPlayer;
+                if (!Battle.Execute(ai.Choose(Battle), isPlayer).Result.IsSuccess)
+                {
+                    Battle.Execute(new BattleAction(BattleActionKind.Pass), isPlayer);
+                }
+            }
+
+            Battle.TakeMoraleEvents();
+            Casualties = new BattleCasualties(Battle.Casualties(true), Battle.Casualties(false));
+            if (Battle.Outcome == BattleOutcome.Victory)
+            {
+                ApplyVictory();
+            }
+
+            if (Victory == null)
+            {
+                Dialog = DialogKind.Defeat;
+                RefreshPlayback();
+                return;
+            }
+
+            Dialog = DialogKind.Victory;
+            Cue(SoundCue.Victory);
+            RefreshPlayback();
+            Save(false);
         }
 
         private void ApplyVictory()
@@ -1132,6 +1212,8 @@ namespace HeroesOfMetalAge.Application
         private void ShowBattleResult()
         {
             Revision++;
+            IsAutoCombat = false;
+            Casualties = new BattleCasualties(Battle.Casualties(true), Battle.Casualties(false));
             if (Battle.Outcome == BattleOutcome.Defeat)
             {
                 Dialog = DialogKind.Defeat;
@@ -1379,6 +1461,8 @@ namespace HeroesOfMetalAge.Application
             Encounter = null;
             MapObject = null;
             TargetingSpellId = null;
+            IsAutoCombat = false;
+            Casualties = BattleCasualties.None;
         }
 
         private bool Accept(CommandResult result)

@@ -143,6 +143,44 @@ namespace HeroesOfMetalAge.Presentation
             return best <= radius * radius;
         }
 
+        /// <summary>
+        /// The living stack drawn under a world point: its figure, else the stack on the hex there. Of overlapping figures the
+        /// front one (lower on the board) wins.
+        /// </summary>
+        public Combatant CombatantAt(Vector3 worldPoint)
+        {
+            BattleEngine battle = Session.Battle;
+            if (battle == null)
+            {
+                return null;
+            }
+
+            Combatant best = null;
+            float bestY = float.MaxValue;
+            foreach (Combatant combatant in battle.Combatants)
+            {
+                if (!combatant.IsAlive || !unitMarkers.TryGetValue(combatant.Id, out WorldMarker marker) || !marker.Covers(worldPoint))
+                {
+                    continue;
+                }
+
+                float y = marker.transform.position.y;
+                if (y < bestY)
+                {
+                    best = combatant;
+                    bestY = y;
+                }
+            }
+
+            return best != null || !TryGetHex(worldPoint, out HexPosition hex) ? best : battle.At(hex);
+        }
+
+        /// <summary>The middle of a stack's figure in world space, where its info card is centred.</summary>
+        public Vector3 FigureCenter(Combatant combatant)
+        {
+            return unitMarkers.TryGetValue(combatant.Id, out WorldMarker marker) ? marker.FigureBounds.center : HexCenterWorld(combatant.Position);
+        }
+
         /// <summary>Camera shake requested by heavy hits since the last call.</summary>
         public float TakeShake()
         {

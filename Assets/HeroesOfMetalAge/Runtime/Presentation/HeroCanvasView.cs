@@ -154,6 +154,7 @@ namespace HeroesOfMetalAge.Presentation
             {
                 string id = Campaign.Equipped((EquipmentPlace)i);
                 ShowArtefact(equipmentSlots[i], id, PlaceNames[i]);
+                BindArtefactInfo(equipmentSlots[i], id);
             }
         }
 
@@ -161,7 +162,9 @@ namespace HeroesOfMetalAge.Presentation
         {
             for (int i = 0; i < inventorySlots.Count; i++)
             {
-                ShowArtefact(inventorySlots[i], i < Campaign.Inventory.Count ? Campaign.Inventory[i] : null, null);
+                string id = i < Campaign.Inventory.Count ? Campaign.Inventory[i] : null;
+                ShowArtefact(inventorySlots[i], id, null);
+                BindArtefactInfo(inventorySlots[i], id);
             }
         }
 
@@ -182,14 +185,21 @@ namespace HeroesOfMetalAge.Presentation
                 if (i >= Campaign.Skills.Count)
                 {
                     row.Display("FREE SLOT", string.Empty, string.Empty, null, Color.white, false);
+                    row.BindInfo(null);
                     continue;
                 }
 
                 HeroSkill skill = Campaign.Skills[i];
+                row.BindInfo(() => Context.Info.ShowSkill(skill.Skill, skill.Level));
                 // a known skill stays lit (enabled, without an action); only the free slots are dimmed
                 row.Display(MagicLabels.SkillTitle(policy, skill), MagicLabels.SkillEffect(policy, skill), string.Empty, Context.SkillIcon(skill.Skill),
                     Context.SkillTint(skill.Skill), true);
             }
+        }
+
+        private void BindArtefactInfo(UiWidget slot, string artefactId)
+        {
+            slot.BindInfo(artefactId == null ? (System.Action)null : () => Context.Info.ShowArtefact(artefactId));
         }
 
         /// <summary>A worn or carried artefact shows its icon on a plate that hides the empty slot's emblem.</summary>

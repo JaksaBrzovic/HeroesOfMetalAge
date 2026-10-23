@@ -47,6 +47,7 @@ namespace HeroesOfMetalAge.Presentation
 
                 HeroSkill option = offer.Options[i];
                 SkillDefinition skill = policy.Skill(option.Skill);
+                card.BindInfo(() => Context.Info.ShowSkill(option.Skill, Campaign.SkillLevelOf(option.Skill)));
                 card.Display(MagicLabels.SkillTitle(policy, option), MagicLabels.SkillEffect(policy, option) + "\n" + skill.Description,
                     option.Level == SkillLevel.Basic ? "NEW SKILL" : "IMPROVED", Context.SkillIcon(option.Skill), Context.SkillTint(option.Skill), true);
             }

@@ -121,8 +121,9 @@ namespace HeroesOfMetalAge.Domain
     public sealed class UnitDefinition
     {
         public UnitDefinition(string id, string name, string description, int health, int minimumDamage, int maximumDamage, int attack, int defense,
-            int speed, int cost, int weeklyGrowth, bool isRanged, string iconKey)
+            int speed, int cost, int weeklyGrowth, bool isRanged, string iconKey, string lore = null)
         {
+            Lore = lore ?? string.Empty;
             Id = id;
             Name = name;
             Description = description;
@@ -141,6 +142,8 @@ namespace HeroesOfMetalAge.Domain
         public string Id { get; }
         public string Name { get; }
         public string Description { get; }
+        /// <summary>A line of flavour for the unit's info card.</summary>
+        public string Lore { get; }
         /// <summary>Placeholder art key used when no portrait is authored.</summary>
         public string IconKey { get; }
         public int Health { get; }

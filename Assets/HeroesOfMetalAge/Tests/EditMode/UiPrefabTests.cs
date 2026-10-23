@@ -72,6 +72,13 @@ namespace HeroesOfMetalAge.Tests
                 session.OpenSpellBook();
                 Assert.DoesNotThrow(hud.RefreshNow, "spell book");
                 Assert.IsTrue(hud.SpellBookView.gameObject.activeSelf);
+                hud.InfoPopup.ShowSpell(catalog.Spells[0].Id);
+                Assert.IsTrue(hud.InfoPopup.IsShowing, "the spell's info card");
+                hud.InfoPopup.ShowTroop(session.Campaign.Army[0], true);
+                Assert.AreEqual(catalog.Unit(session.Campaign.Army[0].UnitId).Name, hud.InfoPopup.Title, "the unit's info card");
+                hud.InfoPopup.ShowSkill(session.Campaign.Skills[0].Skill, session.Campaign.Skills[0].Level);
+                hud.InfoPopup.Hide();
+                Assert.IsFalse(hud.InfoPopup.IsShowing);
                 session.Back();
                 hud.OpenSettings();
                 Assert.DoesNotThrow(hud.RefreshNow, "options overlay");

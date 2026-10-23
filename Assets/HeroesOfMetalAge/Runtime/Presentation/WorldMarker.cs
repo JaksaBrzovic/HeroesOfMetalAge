@@ -63,6 +63,16 @@ namespace HeroesOfMetalAge.Presentation
         /// <summary>True when the icon is actually drawn: active, with a sprite and not faded out.</summary>
         public bool HasVisibleIcon => gameObject.activeInHierarchy && iconRenderer.enabled && iconRenderer.sprite != null && iconRenderer.color.a > 0.01f;
 
+        /// <summary>The figure's drawn area in world space (its picture, else its base).</summary>
+        public Bounds FigureBounds => iconRenderer.enabled && iconRenderer.sprite != null ? iconRenderer.bounds : baseRenderer.bounds;
+
+        /// <summary>True when the world point lies on the drawn figure (in the map's plane).</summary>
+        public bool Covers(Vector3 worldPoint)
+        {
+            Bounds bounds = FigureBounds;
+            return HasVisibleIcon && worldPoint.x >= bounds.min.x && worldPoint.x <= bounds.max.x && worldPoint.y >= bounds.min.y && worldPoint.y <= bounds.max.y;
+        }
+
         /// <summary>Shows <paramref name="icon"/> while standing; a walk cycle set with <see cref="SetFrames"/> plays while moving.</summary>
         public void Display(Sprite icon, Color tint, Color baseColor, string count)
         {

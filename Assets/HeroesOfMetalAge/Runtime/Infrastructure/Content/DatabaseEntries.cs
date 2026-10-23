@@ -17,6 +17,9 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [SerializeField] private string displayName;
         [TextArea]
         [SerializeField] private string description;
+        [Tooltip("Flavour text on the unit's info card (right click).")]
+        [TextArea]
+        [SerializeField] private string lore;
         [Tooltip("The figure standing on the map and the battlefield (usually the walk cycle's first frame).")]
         [SerializeField] private Sprite portrait;
         [Tooltip("The picture in slots, recruitment rows and the battle panel; empty uses the figure.")]
@@ -86,7 +89,7 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public UnitDefinition ToDefinition()
         {
             return new UnitDefinition(id, displayName, description, health, minimumDamage, maximumDamage, attack, defense, speed, recruitmentCost,
-                weeklyGrowth, ranged, placeholderIcon);
+                weeklyGrowth, ranged, placeholderIcon, lore);
         }
     }
 

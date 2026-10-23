@@ -14,6 +14,8 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private TMP_Text lossesText;
         [SerializeField] private TMP_Text bodyText;
         [SerializeField] private UiWidget continueButton;
+        [Tooltip("What each side lost, beside the victory frame.")]
+        [SerializeField] private CasualtiesView casualties;
 
         /// <summary>The button that receives keyboard focus when the screen opens.</summary>
         public UiWidget PrimaryButton => continueButton;
@@ -28,6 +30,7 @@ namespace HeroesOfMetalAge.Presentation
             UiBinding.SetText(lossesText, "LOSSES<pos=45%>" + result.Losses + " CREATURES");
             UiBinding.SetText(bodyText, Closing(result, encounter.Kind));
             UiBinding.SetButton(continueButton, "CLAIM THE SPOILS", true);
+            casualties.Display(Session.Casualties);
         }
 
         protected override void ValidateReferences()
@@ -38,11 +41,13 @@ namespace HeroesOfMetalAge.Presentation
             Require(lossesText, nameof(lossesText));
             Require(bodyText, nameof(bodyText));
             Require(continueButton, nameof(continueButton));
+            Require(casualties, nameof(casualties));
         }
 
         protected override void BindControls()
         {
             continueButton.Bind(Session.ContinueVictory);
+            casualties.Initialize(Context);
         }
 
         private string Closing(VictorySummary result, EncounterKind kind)

@@ -52,11 +52,14 @@ namespace HeroesOfMetalAge.Presentation
                 if (index >= known.Count)
                 {
                     slot.Display(string.Empty, string.Empty, string.Empty, null, Color.white, false);
+                    slot.BindInfo(null);
                     continue;
                 }
 
                 SpellDefinition spell = known[index];
                 shownSpells.Add(spell.Id);
+                string spellId = spell.Id;
+                slot.BindInfo(() => Context.Info.ShowSpell(spellId));
                 bool isAffordable = spell.ManaCost <= mana;
                 slot.Display(spell.Name, MagicLabels.SpellCost(spell), string.Empty, Context.SpellIcon(spell.Id),
                     isAffordable ? Context.SpellTint(spell.Id) : new Color(0.45f, 0.42f, 0.4f, 1f), true);

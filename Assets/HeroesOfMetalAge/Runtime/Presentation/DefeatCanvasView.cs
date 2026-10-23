@@ -11,6 +11,8 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private UiWidget retryButton;
         [SerializeField] private UiWidget returnButton;
         [SerializeField] private UiWidget newMissionButton;
+        [Tooltip("What each side lost, beside the defeat frame.")]
+        [SerializeField] private CasualtiesView casualties;
 
         /// <summary>The button that receives keyboard focus when the screen opens.</summary>
         public UiWidget PrimaryButton => retryButton;
@@ -23,6 +25,7 @@ namespace HeroesOfMetalAge.Presentation
             UiBinding.SetButton(retryButton, "RETRY BATTLE", true);
             UiBinding.SetButton(returnButton, "RETURN / PREPARE", true);
             UiBinding.SetButton(newMissionButton, "NEW MISSION", true);
+            casualties.Display(Session.Casualties);
         }
 
         protected override void ValidateReferences()
@@ -32,6 +35,7 @@ namespace HeroesOfMetalAge.Presentation
             Require(retryButton, nameof(retryButton));
             Require(returnButton, nameof(returnButton));
             Require(newMissionButton, nameof(newMissionButton));
+            Require(casualties, nameof(casualties));
         }
 
         protected override void BindControls()
@@ -39,6 +43,7 @@ namespace HeroesOfMetalAge.Presentation
             retryButton.Bind(Session.FightEncounter);
             returnButton.Bind(Session.PrepareAfterDefeat);
             newMissionButton.Bind(Session.Restart);
+            casualties.Initialize(Context);
         }
     }
 }

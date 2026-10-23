@@ -15,7 +15,7 @@ namespace HeroesOfMetalAge.EditorTools
     /// Windows player. The scene is the only generated asset; databases, maps and prefabs are authored and never rebuilt
     /// (missing dialogue, end-of-day, main menu, visual style, gameplay UI and hero growth and magic assets are seeded once, see
     /// <see cref="DialogueAssetSeeder"/>, <see cref="EndDayAssetSeeder"/>, <see cref="MainMenuAssetSeeder"/>,
-    /// <see cref="VisualStyleSeeder"/>, <see cref="GameplayUiSeeder"/> and <see cref="HeroMagicSeeder"/>).
+    /// <see cref="VisualStyleSeeder"/>, <see cref="GameplayUiSeeder"/>, <see cref="HeroMagicSeeder"/> and <see cref="BattleInfoSeeder"/>).
     /// The cameras come with the World prefab.
     /// </summary>
     public static class PrototypePipeline
@@ -33,6 +33,7 @@ namespace HeroesOfMetalAge.EditorTools
         {
             MissionContentSeeder.CreateMissingAssets();
             HeroMagicSeeder.CreateMissingAssets();
+            BattleInfoSeeder.CreateMissingAssets();
             ContentAssets.LoadCatalog();
             DialogueAssetSeeder.CreateMissingAssets();
             EndDayAssetSeeder.CreateMissingAssets();

@@ -127,6 +127,24 @@ namespace HeroesOfMetalAge.Presentation
             return encounterMarkers[encounterId];
         }
 
+        /// <summary>The encounter whose figure is drawn under a world point, or null; the front figure (lower on the map) wins.</summary>
+        public string EncounterIdAt(Vector3 worldPoint)
+        {
+            string best = null;
+            float bestY = float.MaxValue;
+            foreach (KeyValuePair<string, WorldMarker> pair in encounterMarkers)
+            {
+                WorldMarker marker = pair.Value;
+                if (marker.Covers(worldPoint) && marker.transform.position.y < bestY)
+                {
+                    best = pair.Key;
+                    bestY = marker.transform.position.y;
+                }
+            }
+
+            return best;
+        }
+
         public Vector3 CellCenter(WorldPosition position)
         {
             return transform.InverseTransformPoint(grid.GetCellCenterWorld(GridCell(position)));

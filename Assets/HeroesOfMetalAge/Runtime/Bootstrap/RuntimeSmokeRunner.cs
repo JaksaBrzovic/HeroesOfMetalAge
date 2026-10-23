@@ -45,6 +45,8 @@ namespace HeroesOfMetalAge.Bootstrap
             hud = gameHud;
             world = gameWorld;
             briefing = missionBriefing;
+            // the player's own options never change the scenario
+            session.IsQuickCombat = false;
             reportFolder = Path.GetFullPath(Path.Combine(UnityEngine.Application.dataPath, "..", "..", "..", "Reports"));
             Directory.CreateDirectory(reportFolder);
             StartCoroutine(Drive());
@@ -139,6 +141,15 @@ namespace HeroesOfMetalAge.Bootstrap
             List<RaycastResult> hits = new List<RaycastResult>();
             hud.Events.RaycastAll(pointer, hits);
             return hits.Count == 0 ? null : ExecuteEvents.GetEventHandler<IPointerClickHandler>(hits[0].gameObject);
+        }
+
+        /// <summary>A right press on the widget, as the pointer would make it; the info card opens.</summary>
+        private void RightPress(UiWidget widget)
+        {
+            GameObject target = PointerTarget(widget);
+            Check(target == widget.gameObject, "Pointer raycast reaches intended prefab control");
+            PointerEventData press = new PointerEventData(hud.Events) { button = PointerEventData.InputButton.Right };
+            ExecuteEvents.Execute(target, press, ExecuteEvents.pointerDownHandler);
         }
 
         private void Click(UiWidget widget)
@@ -463,6 +474,13 @@ namespace HeroesOfMetalAge.Bootstrap
             Rect bounds = world.Map.Bounds;
             Check(visible.xMin >= bounds.xMin - EDGE_TOLERANCE && visible.yMax <= bounds.yMax + EDGE_TOLERANCE, "Panning stops at the map edge");
 
+            yield return ShowCell(sentinel.Position);
+            Vector2 sentinelPoint = world.ScreenPoint(sentinel.Position);
+            Check(world.HandleInfoPress(sentinelPoint) && hud.InfoPopup.IsShowing && RectTransformUtility.RectangleContainsScreenPoint(hud.InfoPopup.Card, sentinelPoint),
+                "A right press on an army on the map opens its card over it");
+            yield return Screenshot("26-map-army-info.png");
+            hud.InfoPopup.Hide();
+
             yield return ShowCell(friendly.Position);
             Check(world.HandleClick(world.ScreenPoint(friendly.Position)) && session.Route.Count > 0, "World map click plans route");
             yield return Screenshot("01-world.png");
@@ -494,6 +512,12 @@ namespace HeroesOfMetalAge.Bootstrap
             Check(session.Battle.Combatants.All(combatant => world.Battlefield.UnitMarker(combatant.Id).IsSelected == (combatant == session.Battle.Active)),
                 "Only the acting stack is highlighted");
             yield return Screenshot("02-battle.png");
+            Combatant shown = session.Battle.Combatants.First(combatant => !combatant.IsPlayer);
+            Vector2 shownPoint = world.ScreenPoint(shown.Position);
+            Check(world.HandleInfoPress(shownPoint) && hud.InfoPopup.IsShowing && hud.InfoPopup.Title == session.Catalog.Unit(shown.UnitId).Name
+                && RectTransformUtility.RectangleContainsScreenPoint(hud.InfoPopup.Card, shownPoint), "A right press on a stack shows its info card over it");
+            yield return Screenshot("22-unit-info.png");
+            hud.InfoPopup.Hide();
 
             int ticks = 0;
             while ((session.IsBusy || !session.Battle.Active.IsPlayer) && ticks++ < MAX_MOVEMENT_TICKS)
@@ -620,6 +644,10 @@ namespace HeroesOfMetalAge.Bootstrap
             Canvas.ForceUpdateCanvases();
             Check(session.Dialog == DialogKind.SpellBook && hud.SpellBookView.SpellSlots.Count(slot => slot.HasVisibleIcon) > 0, "The spell book shows the known spells");
             yield return Screenshot("18-spell-book.png");
+            RightPress(hud.SpellBookView.SpellSlots[0]);
+            Check(hud.InfoPopup.IsShowing, "A right press on a spell shows its info card");
+            yield return Screenshot("23-spell-info.png");
+            hud.InfoPopup.Hide();
             session.Back();
             Check(session.Dialog == DialogKind.None, "The spell book closes");
         }
@@ -703,8 +731,19 @@ namespace HeroesOfMetalAge.Bootstrap
             Check(session.Campaign.Stock("ironbound") == stock + session.Catalog.Unit("ironbound").WeeklyGrowth, "Weekly refresh in runtime");
             session.ClaimTown();
             session.FightEncounter();
+            int waits = 0;
+            while (session.IsBusy && waits++ < MAX_MOVEMENT_TICKS)
+            {
+                session.Tick(1);
+            }
+
+            session.ToggleAutoCombat();
+            Check(session.IsAutoCombat && session.IsBusy, "Auto combat takes over the player's side");
+            yield return Screenshot("24-auto-combat.png");
             FinishBattle();
-            Check(session.Dialog == DialogKind.Victory && session.Campaign.IsTownOwned, "Town conquest");
+            Check(session.Dialog == DialogKind.Victory && session.Campaign.IsTownOwned && !session.IsAutoCombat, "Town conquest by auto combat");
+            hud.RefreshNow();
+            Check(hud.VictoryView.gameObject.activeInHierarchy, "The victory screen shows the casualties");
             session.ContinueVictory();
             session.ContinueRewards();
             ResolveLevelUps();
@@ -782,6 +821,15 @@ namespace HeroesOfMetalAge.Bootstrap
 
             session.FightEncounter();
             Check(session.Screen == GameScreen.Battle && session.Dialog == DialogKind.None, "Defeat retry restores pre-battle army");
+            FinishBattle();
+            Check(session.Dialog == DialogKind.Defeat, "The retry is lost again");
+            session.IsQuickCombat = true;
+            session.FightEncounter();
+            hud.RefreshNow();
+            Check(session.Dialog == DialogKind.Defeat && session.Screen != GameScreen.Battle && session.Casualties.Player.Count > 0
+                && hud.DefeatView.gameObject.activeInHierarchy, "Quick combat goes straight to the defeat screen with the casualties");
+            yield return Screenshot("25-quick-combat.png");
+            session.IsQuickCombat = false;
         }
     }
 }

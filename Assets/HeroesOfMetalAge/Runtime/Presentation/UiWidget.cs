@@ -1,15 +1,17 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace HeroesOfMetalAge.Presentation
 {
     /// <summary>
     /// Binding surface of the authored widget prefabs (buttons, slots, cards, tiles, markers). Every reference is optional
-    /// because each widget prefab uses a different subset; the hierarchy is never built at runtime.
+    /// because each widget prefab uses a different subset; the hierarchy is never built at runtime. A right press on the
+    /// widget runs its info action (the info card, shown while the button is held).
     /// </summary>
-    public sealed class UiWidget : MonoBehaviour
+    public sealed class UiWidget : MonoBehaviour, IPointerDownHandler
     {
         [SerializeField] private Button button;
         [SerializeField] private TMP_Text titleText;
@@ -19,6 +21,7 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private Image backgroundImage;
 
         private Action clickAction;
+        private Action infoAction;
 
         public Button Button => button;
         public RectTransform Rect => (RectTransform)transform;
@@ -41,6 +44,20 @@ namespace HeroesOfMetalAge.Presentation
         public void Unbind()
         {
             clickAction = null;
+        }
+
+        /// <summary>Replaces the right-press action; null for none.</summary>
+        public void BindInfo(Action action)
+        {
+            infoAction = action;
+        }
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (eventData.button == PointerEventData.InputButton.Right)
+            {
+                infoAction?.Invoke();
+            }
         }
 
         public void Display(string title, string description, string amount, Sprite icon, Color iconColor, bool isInteractable)

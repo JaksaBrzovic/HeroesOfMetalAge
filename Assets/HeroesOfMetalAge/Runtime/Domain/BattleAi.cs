@@ -4,7 +4,8 @@ using System.Linq;
 namespace HeroesOfMetalAge.Domain
 {
     /// <summary>
-    /// Enemy turn: a commander first casts the first spell of its list that it can cast and that would do something, then the
+    /// A side's turn, for the enemy and for the player's auto combat. During Tactics the stacks stay where they stand. A
+    /// commander first casts the first spell of its list that it can cast and that would do something, then the
     /// stack attacks the closest player stack (weakest, then lowest ID on ties) if possible, otherwise moves as close to it as
     /// the reach allows. Proposals go through the same validation as player actions.
     /// </summary>
@@ -19,6 +20,11 @@ namespace HeroesOfMetalAge.Domain
 
         public BattleAction Choose(BattleEngine battle)
         {
+            if (battle.IsTacticsPhase)
+            {
+                return new BattleAction(BattleActionKind.EndTactics);
+            }
+
             Combatant active = battle.Active;
             BattleAction? spell = ChooseSpell(battle, active.IsPlayer);
             if (spell.HasValue)

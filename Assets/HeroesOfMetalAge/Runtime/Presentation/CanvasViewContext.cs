@@ -22,6 +22,8 @@ namespace HeroesOfMetalAge.Presentation
         public IAudioControls Audio { get; }
         public PresentationAssets Media { get; }
         public UiTheme Theme { get; }
+        /// <summary>The info card shown while the right mouse button is held; set by <see cref="GameHud"/>.</summary>
+        public InfoPopupView Info { get; internal set; }
 
         /// <summary>The hero's figure on the adventure map.</summary>
         public Sprite HeroIcon

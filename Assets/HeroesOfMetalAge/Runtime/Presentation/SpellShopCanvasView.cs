@@ -55,6 +55,7 @@ namespace HeroesOfMetalAge.Presentation
                     MagicLabels.SpellDescription(spell, Rules.SpellPower(Campaign)) + ".", price, Context.SpellIcon(spell.Id), Context.SpellTint(spell.Id), canBuy);
                 string spellId = spell.Id;
                 row.Bind(() => Session.BuySpell(spellId));
+                row.BindInfo(() => Context.Info.ShowSpell(spellId));
             }
 
             UiBinding.SetButton(closeButton, "LEAVE", true);
