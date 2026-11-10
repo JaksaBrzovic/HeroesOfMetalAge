@@ -1,21 +1,5 @@
 AI-Native project developed by Jaksa Brzovic
 
-<!-- usage:start -->
-Claude Code time: 15 h 45 min of work over 20 sessions
-
-| Claude Code usage | Input | Output | Cache write 5m | Cache write 1h | Cache read | Web searches | Web fetches |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| claude-haiku-5-5 | 10 | 12,886 | 51,699 | 0 | 67,278 | 0 | 0 |
-| claude-opus-5-5 | 5,182 | 3,069,480 | 0 | 13,444,257 | 974,473,997 | 0 | 0 |
-<!-- usage-data: {"models": {"claude-haiku-5-5": {"cache_read": 67278, "cache_write_1h": 0, "cache_write_5m": 51699, "input": 10, "output": 12886, "web_fetches": 0, "web_searches": 0}, "claude-opus-5-5": {"cache_read": 974473997, "cache_write_1h": 13444257, "cache_write_5m": 0, "input": 5182, "output": 3069480, "web_fetches": 0, "web_searches": 0}}, "seconds": 56711.839, "sessions": 20, "until": "2026-11-10T21:47:35+00:00"} -->
-<!-- usage:end -->
-
-Codex time (2026-10-09 – 2026-10-12, finished): 6 h 35 min of work over 5 sessions
-
-| Codex usage | Input (uncached) | Cached input | Output | of which reasoning |
-|---|---:|---:|---:|---:|
-| gpt-6.1-sol | 2,658,784 | 68,483,456 | 354,087 | 95,575 |
-
 # Heroes of Metal Age — prototype 0.9
 
 Unity **6000.3.26f1**, Windows x64, Mono, Universal Render Pipeline (2D Renderer). An original sound-driven turn-based strategy prototype inspired by classic adventure-map and tactical-combat games. Target resolution: Full HD (1920x1080, 16:9); the UI is designed at 1920x1080 and scales to other sizes.
