@@ -36,6 +36,19 @@ namespace HeroesOfMetalAge.Tests
         }
 
         [Test]
+        public void InstantEndDay_BeginsTheNewDayWithoutTheSequence()
+        {
+            GameSession session = NewSession();
+            session.IsInstantEndDay = true;
+            int day = session.Campaign.Day;
+
+            session.EndDay();
+
+            Assert.IsFalse(session.IsEndingDay || session.IsBusy);
+            Assert.AreEqual(day + 1, session.Campaign.Day);
+        }
+
+        [Test]
         public void SpeedMode_RidesAlmostAtOnceWithoutChangingTheRules()
         {
             GameSession session = NewSession();

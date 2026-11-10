@@ -17,7 +17,6 @@ namespace HeroesOfMetalAge.Presentation
         private const float ROW_SPACING = 0.8660254f;
         // distance from a hex centre to its corners, relative to its width
         private const float HEX_RADIUS = 0.5773503f;
-        private const float UNIT_HEXES_PER_SECOND = 6f;
         private const float LUNGE_FRACTION = 0.3f;
         private const float MARKER_BASE_BLEND = 0.45f;
         private const float HEX_ALPHA = 0.6f;
@@ -212,9 +211,18 @@ namespace HeroesOfMetalAge.Presentation
                 }
             }
 
+            // while a stack that moved has not arrived, the board still shows the moment before its blows
+            Combatant striker = Session.PendingStriker;
             foreach (Combatant combatant in battle.Combatants)
             {
-                RefreshUnit(combatant);
+                if (striker == null)
+                {
+                    RefreshUnit(combatant);
+                }
+                else if (combatant == striker)
+                {
+                    MoveUnit(combatant);
+                }
             }
         }
 
@@ -282,6 +290,7 @@ namespace HeroesOfMetalAge.Presentation
                 marker.transform.SetParent(parent, false);
                 marker.Show();
                 marker.Place(HexCenter(combatant.Position));
+                marker.ResetFacing(!combatant.IsPlayer);
             }
 
             displayedBattle = battle;
@@ -303,9 +312,15 @@ namespace HeroesOfMetalAge.Presentation
                 combatant.Count.ToString());
             FigureAnimation animation = context.Media.UnitAnimation(combatant.UnitId);
             marker.SetFrames(animation.Frames, animation.FramesPerSecond);
-            marker.SetFacing(!combatant.IsPlayer, false);
+            // a stack keeps facing where it last went or struck, so stacks that passed each other still face each other
+            marker.SetFacing(!combatant.IsPlayer, true);
             marker.SetSelected(combatant == Session.Battle.Active, side);
-            marker.MoveTo(HexCenter(combatant.Position), UNIT_HEXES_PER_SECOND * hexWidth);
+            MoveUnit(combatant);
+        }
+
+        private void MoveUnit(Combatant combatant)
+        {
+            unitMarkers[combatant.Id].MoveTo(HexCenter(combatant.Position), Session.BattleMoveHexesPerSecond * hexWidth);
         }
 
         private Color HexColor(BattleEngine battle, Combatant active, HexPosition position, bool canAct)
@@ -350,6 +365,7 @@ namespace HeroesOfMetalAge.Presentation
                 return;
             }
 
+            attacker.FaceTowards(target.Target.x - attacker.Target.x);
             attacker.Lunge((target.Target - attacker.Target) * LUNGE_FRACTION);
             Vector3 textPosition = target.Target + Vector3.up * (hexWidth * 0.35f);
             if (hit.IsMiss)

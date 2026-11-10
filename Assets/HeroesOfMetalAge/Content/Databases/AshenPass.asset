@@ -715,4 +715,6 @@ MonoBehaviour:
   enemyTurnSeconds: 0.7
   battleActionSeconds: 1.5
   battleResultSeconds: 2
+  battleMoveHexesPerSecond: 2
+  quickBattleMoveHexesPerSecond: 6
   endDaySeconds: 3

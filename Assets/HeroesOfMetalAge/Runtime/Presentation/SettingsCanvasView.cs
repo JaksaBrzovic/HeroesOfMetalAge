@@ -4,10 +4,11 @@ using UnityEngine.UI;
 
 namespace HeroesOfMetalAge.Presentation
 {
-    /// <summary>The options overlay: audio volumes and mute, quick combat, save, load, new mission and quit.</summary>
+    /// <summary>The options overlay: audio volumes and mute, quick combat and quick battle animation, save, load, new mission and quit.</summary>
     public sealed class SettingsCanvasView : CanvasScreenView
     {
         private const string QUICK_COMBAT_PREFERENCE = "options.quickCombat";
+        private const string QUICK_ANIMATION_PREFERENCE = "options.quickBattleAnimation";
 
         [Header("Audio")]
         [SerializeField] private Slider musicSlider;
@@ -18,6 +19,8 @@ namespace HeroesOfMetalAge.Presentation
         [Header("Gameplay")]
         [Tooltip("Battles are resolved at once, straight to the victory or defeat screen. Remembered between runs.")]
         [SerializeField] private Toggle quickCombatToggle;
+        [Tooltip("Stacks cross the battlefield at the quick pace set on the mission. Remembered between runs.")]
+        [SerializeField] private Toggle quickAnimationToggle;
 
         [Header("Campaign")]
         [SerializeField] private UiWidget saveButton;
@@ -43,6 +46,7 @@ namespace HeroesOfMetalAge.Presentation
             voiceSlider.SetValueWithoutNotify(Context.Audio.VoiceVolume);
             muteToggle.SetIsOnWithoutNotify(Context.Audio.IsMuted);
             quickCombatToggle.SetIsOnWithoutNotify(Session.IsQuickCombat);
+            quickAnimationToggle.SetIsOnWithoutNotify(Session.IsQuickBattleAnimation);
 
             // saving or loading in the middle of a battle or a ride would capture an unstable state
             bool canUseCampaign = Session.Screen != GameScreen.Battle && !Session.IsBusy;
@@ -58,6 +62,7 @@ namespace HeroesOfMetalAge.Presentation
             Require(voiceSlider, nameof(voiceSlider));
             Require(muteToggle, nameof(muteToggle));
             Require(quickCombatToggle, nameof(quickCombatToggle));
+            Require(quickAnimationToggle, nameof(quickAnimationToggle));
             Require(saveButton, nameof(saveButton));
             Require(loadButton, nameof(loadButton));
             Require(newMissionButton, nameof(newMissionButton));
@@ -74,6 +79,7 @@ namespace HeroesOfMetalAge.Presentation
             backButton.Bind(hud.CloseSettings);
             quitButton.Bind(UnityEngine.Application.Quit);
             Session.IsQuickCombat = PlayerPrefs.GetInt(QUICK_COMBAT_PREFERENCE, 0) == 1;
+            Session.IsQuickBattleAnimation = PlayerPrefs.GetInt(QUICK_ANIMATION_PREFERENCE, 0) == 1;
         }
 
         private void OnEnable()
@@ -83,6 +89,7 @@ namespace HeroesOfMetalAge.Presentation
             voiceSlider.onValueChanged.AddListener(HandleVoiceChanged);
             muteToggle.onValueChanged.AddListener(HandleMuteChanged);
             quickCombatToggle.onValueChanged.AddListener(HandleQuickCombatChanged);
+            quickAnimationToggle.onValueChanged.AddListener(HandleQuickAnimationChanged);
         }
 
         private void OnDisable()
@@ -92,6 +99,7 @@ namespace HeroesOfMetalAge.Presentation
             voiceSlider.onValueChanged.RemoveListener(HandleVoiceChanged);
             muteToggle.onValueChanged.RemoveListener(HandleMuteChanged);
             quickCombatToggle.onValueChanged.RemoveListener(HandleQuickCombatChanged);
+            quickAnimationToggle.onValueChanged.RemoveListener(HandleQuickAnimationChanged);
         }
 
         private void HandleLoad()
@@ -140,6 +148,18 @@ namespace HeroesOfMetalAge.Presentation
 
             Session.IsQuickCombat = isOn;
             PlayerPrefs.SetInt(QUICK_COMBAT_PREFERENCE, isOn ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+
+        private void HandleQuickAnimationChanged(bool isOn)
+        {
+            if (Context == null)
+            {
+                return;
+            }
+
+            Session.IsQuickBattleAnimation = isOn;
+            PlayerPrefs.SetInt(QUICK_ANIMATION_PREFERENCE, isOn ? 1 : 0);
             PlayerPrefs.Save();
         }
 

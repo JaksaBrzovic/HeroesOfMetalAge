@@ -481,6 +481,14 @@ namespace HeroesOfMetalAge.Bootstrap
             yield return Screenshot("26-map-army-info.png");
             hud.InfoPopup.Hide();
 
+            Click(hud.WorldView.MissionButton);
+            hud.RefreshNow();
+            yield return null;
+            Check(hud.WorldView.IsMissionOpen, "The mission card opens the mission panel");
+            yield return Screenshot("27-mission.png");
+            Click(hud.WorldView.MissionButton);
+            Check(!hud.WorldView.IsMissionOpen, "A second click on the mission card closes the mission panel");
+
             yield return ShowCell(friendly.Position);
             Check(world.HandleClick(world.ScreenPoint(friendly.Position)) && session.Route.Count > 0, "World map click plans route");
             yield return Screenshot("01-world.png");
@@ -534,6 +542,23 @@ namespace HeroesOfMetalAge.Bootstrap
             Check(session.IsBusy && session.Battle.Active == next, "A battle action pauses the battle before the next one");
             yield return new WaitForSecondsRealtime(0.3f);
             yield return Screenshot("02b-battle-action.png");
+
+            Check(session.IsSpeedMode, "Development play starts in speed mode");
+            float normalPace = session.BattleMoveHexesPerSecond;
+            session.IsQuickBattleAnimation = true;
+            Check(normalPace > 0f && session.BattleMoveHexesPerSecond > normalPace, "Quick battle animation speeds the stacks up");
+            session.IsQuickBattleAnimation = false;
+            hud.RefreshNow();
+            UiWidget restart = hud.CombatView.RestartButton;
+            BattleEngine beforeRestart = session.Battle;
+            Check(restart.gameObject.activeInHierarchy, "The battle shows RESTART BATTLE while its debug option is on (the default)");
+            restart.Button.onClick.Invoke();
+            Check(session.Battle != beforeRestart && session.Screen == GameScreen.Battle
+                && session.Battle.Combatants.All(combatant => combatant.Count == combatant.StartCount), "RESTART BATTLE begins the battle again");
+            session.IsBattleRestartShown = false;
+            hud.RefreshNow();
+            Check(!restart.gameObject.activeInHierarchy, "RESTART BATTLE hides when its debug option is off");
+            session.IsBattleRestartShown = true;
 
             FinishBattle();
             VictorySummary rewards = session.Victory;
@@ -673,7 +698,8 @@ namespace HeroesOfMetalAge.Bootstrap
             SpellDefinition spell = session.Catalog.Spells.First(candidate => candidate.Target == SpellTarget.Enemy && candidate.Effect == SpellEffect.Damage
                 && session.Campaign.KnowsSpell(candidate.Id));
             session.SelectSpell(spell.Id);
-            Check(session.Dialog == DialogKind.None && session.TargetingSpellId == spell.Id, "A spell on a stack waits for its target");
+            Check(session.Dialog == DialogKind.None && session.TargetingSpellId == spell.Id, "A spell on a stack waits for its target"
+                + (session.Dialog == DialogKind.None ? string.Empty : " (" + session.Notice + ")"));
             Combatant enemy = session.Battle.Combatants.First(combatant => combatant.IsAlive && !combatant.IsPlayer);
             hud.RefreshNow();
             yield return null;
@@ -787,6 +813,8 @@ namespace HeroesOfMetalAge.Bootstrap
         private IEnumerator BossAndDefeat(EncounterDefinition boss)
         {
             session.LeaveTown();
+            // the cast below needs mana, whatever the earlier (random) auto battles spent of it
+            session.DebugSpells();
             TravelTo(boss.Position);
             Check(session.Dialog == DialogKind.Hostile, "Final enemy reached");
             session.FightEncounter();

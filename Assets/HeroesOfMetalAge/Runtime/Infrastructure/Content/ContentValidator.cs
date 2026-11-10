@@ -380,7 +380,9 @@ namespace HeroesOfMetalAge.Infrastructure.Content
                 && mission.TravelStepSeconds > 0
                 && mission.EnemyTurnSeconds > 0
                 && mission.BattleActionSeconds >= 0
-                && mission.BattleResultSeconds >= 0;
+                && mission.BattleResultSeconds >= 0
+                && mission.BattleMoveHexesPerSecond > 0
+                && mission.QuickBattleMoveHexesPerSecond > 0;
             Require(isValid, "Invalid combat/pacing settings.");
         }
 

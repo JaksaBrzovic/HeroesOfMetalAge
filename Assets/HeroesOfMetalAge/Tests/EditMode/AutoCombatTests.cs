@@ -123,6 +123,92 @@ namespace HeroesOfMetalAge.Tests
             Assert.IsTrue(session.Battle.Active.IsPlayer, "the player commands again");
         }
 
+        [Test]
+        public void RestartBattle_BeginsTheBattleAgainWithTheFullArmy()
+        {
+            GameSession session = AtSentinel(50);
+            session.FightEncounter();
+            Tick(session, () => session.IsBusy);
+            session.ToggleAutoCombat();
+            for (int i = 0; i < 6 && session.Battle.Outcome == BattleOutcome.InProgress; i++)
+            {
+                session.Tick(1);
+            }
+
+            Assume.That(session.Battle.Outcome == BattleOutcome.InProgress, "the battle is still undecided");
+            BattleEngine first = session.Battle;
+            session.IsQuickCombat = true;
+
+            session.RestartBattle();
+
+            Assert.AreNotSame(first, session.Battle);
+            Assert.AreEqual(GameScreen.Battle, session.Screen, "a restart stays on the battlefield even with quick combat on");
+            Assert.IsFalse(session.IsAutoCombat);
+            Assert.IsTrue(session.Battle.Combatants.All(combatant => combatant.Count == combatant.StartCount), "every stack is whole again");
+            Assert.AreEqual(session.Campaign.Army.Sum(troop => troop.Count), session.Battle.Combatants.Where(combatant => combatant.IsPlayer).Sum(combatant => combatant.Count));
+        }
+
+        [Test]
+        public void AStackThatMoves_StrikesWhenItArrives()
+        {
+            GameSession session = AtSentinel(50);
+            int published = 0;
+            session.DamageResolved += hit => published++;
+            session.FightEncounter();
+            session.ToggleAutoCombat();
+            bool wasPending = false;
+            int publishedBefore = 0;
+            float pendingSeconds = 0f;
+            for (int i = 0; i < 20000 && session.Screen == GameScreen.Battle && session.Dialog == DialogKind.None; i++)
+            {
+                session.Tick(0.05f);
+                if (session.PendingStriker != null)
+                {
+                    if (!wasPending)
+                    {
+                        publishedBefore = published;
+                        pendingSeconds = 0f;
+                    }
+
+                    Assert.AreEqual(publishedBefore, published, "no blow is shown before the stack arrives");
+                    Assert.IsTrue(session.IsBusy, "the next stack waits for the blow");
+                    wasPending = true;
+                    pendingSeconds += 0.05f;
+                }
+                else if (wasPending)
+                {
+                    Assert.Greater(published, publishedBefore, "the blows land on arrival");
+                    Assert.GreaterOrEqual(pendingSeconds, 1f / session.BattleMoveHexesPerSecond - 0.06f, "the glide takes at least one hex");
+                    return;
+                }
+            }
+
+            Assert.Fail("no stack moved before it struck");
+        }
+
+        [Test]
+        public void QuickBattleAnimation_UsesTheQuickPace()
+        {
+            GameSession session = AtSentinel(50);
+            float normal = session.BattleMoveHexesPerSecond;
+
+            session.IsQuickBattleAnimation = true;
+
+            Assert.AreEqual(2f, normal, "the test session's normal pace");
+            Assert.AreEqual(6f, session.BattleMoveHexesPerSecond);
+        }
+
+        [Test]
+        public void RestartBattle_DoesNothingOutsideAnUndecidedBattle()
+        {
+            GameSession session = AtSentinel(50);
+
+            session.RestartBattle();
+
+            Assert.AreEqual(DialogKind.Hostile, session.Dialog);
+            Assert.IsNull(session.Battle);
+        }
+
         // a session whose hero stands next to the sentinel with the given number of each of his stacks, in the sentinel dialog
         private GameSession AtSentinel(int count)
         {

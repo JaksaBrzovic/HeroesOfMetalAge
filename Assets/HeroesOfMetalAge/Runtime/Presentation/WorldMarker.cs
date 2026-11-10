@@ -131,6 +131,27 @@ namespace HeroesOfMetalAge.Presentation
             hasFacing = true;
         }
 
+        /// <summary>Faces <paramref name="faceLeft"/> at once, forgetting the facing of earlier motion (e.g. a new battle).</summary>
+        public void ResetFacing(bool faceLeft)
+        {
+            defaultFacingLeft = faceLeft;
+            isFacingLeft = faceLeft;
+            iconRenderer.flipX = faceLeft;
+            hasFacing = true;
+        }
+
+        /// <summary>Turns towards a point <paramref name="deltaX"/> away on the x axis (e.g. the stack it strikes); a figure that keeps its motion facing keeps this one too.</summary>
+        public void FaceTowards(float deltaX)
+        {
+            if (Mathf.Abs(deltaX) <= FACING_THRESHOLD)
+            {
+                return;
+            }
+
+            isFacingLeft = deltaX < 0f;
+            iconRenderer.flipX = isFacingLeft;
+        }
+
         /// <summary>Shows a pulsing ring in <paramref name="color"/> while this figure is the one acting.</summary>
         public void SetSelected(bool isSelected, Color color)
         {

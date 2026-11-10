@@ -27,6 +27,8 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private UiWidget surrenderButton;
         [Tooltip("Hands the player's side to the computer and back.")]
         [SerializeField] private UiWidget autoButton;
+        [Tooltip("Development aid: starts the battle again; shown only while its debug panel option is on.")]
+        [SerializeField] private UiWidget restartButton;
 
         [Header("Board")]
         [Tooltip("Screen area where the world camera draws the battlefield.")]
@@ -36,6 +38,7 @@ namespace HeroesOfMetalAge.Presentation
         public UiWidget SpellBookButton => spellBookButton;
         public UiWidget SurrenderButton => surrenderButton;
         public UiWidget AutoButton => autoButton;
+        public UiWidget RestartButton => restartButton;
 
         public override void Refresh()
         {
@@ -58,7 +61,8 @@ namespace HeroesOfMetalAge.Presentation
                 + "\nDAMAGE " + unit.MinimumDamage + "-" + unit.MaximumDamage + " PER CREATURE / " + (unit.IsRanged ? "RANGED" : "MELEE")
                 + "\n" + (effects.Length > 0 ? effects : "NO SPELLS ON THE STACK")
                 + "\nHERO MANA " + battle.Player.Mana + " / LUCK " + GameSession.MoraleText(battle.Player.Luck));
-            UiBinding.SetSprite(portraitImage, Context.UnitCard(active.UnitId), Context.UnitTint(active.UnitId, active.IsPlayer));
+            // the whole figure on the frame's painted backdrop; the wide unit card would leave the slot half empty
+            UiBinding.SetSprite(portraitImage, Context.UnitIcon(active.UnitId),Context.UnitTint(active.UnitId, active.IsPlayer));
             UiBinding.SetText(logText, string.Join("\n", Session.BattleLog));
             UiBinding.SetButton(defendButton, battle.IsTacticsPhase ? "START BATTLE" : "DEFEND", canAct);
             UiBinding.SetButton(passButton, battle.IsTacticsPhase ? "NEXT STACK" : "PASS TURN", canAct);
@@ -72,6 +76,8 @@ namespace HeroesOfMetalAge.Presentation
             bool hasCommander = Session.Encounter.Commander != null;
             UiBinding.SetButton(surrenderButton, hasCommander ? "SURRENDER " + Rules.SurrenderPrice(Campaign, battle.Survivors()) + " GOLD" : "NO SURRENDER",
                 canAct && hasCommander);
+            UiBinding.SetVisible(restartButton.gameObject, Session.IsBattleRestartShown);
+            UiBinding.SetButton(restartButton, "RESTART BATTLE", battle.Outcome == BattleOutcome.InProgress);
         }
 
         protected override void ValidateReferences()
@@ -87,6 +93,7 @@ namespace HeroesOfMetalAge.Presentation
             Require(spellBookButton, nameof(spellBookButton));
             Require(surrenderButton, nameof(surrenderButton));
             Require(autoButton, nameof(autoButton));
+            Require(restartButton, nameof(restartButton));
             Require(battleViewport, nameof(battleViewport));
         }
 
@@ -97,6 +104,7 @@ namespace HeroesOfMetalAge.Presentation
             spellBookButton.Bind(Session.OpenSpellBook);
             surrenderButton.Bind(Session.Surrender);
             autoButton.Bind(Session.ToggleAutoCombat);
+            restartButton.Bind(Session.RestartBattle);
         }
 
         // during the Tactics phase the defend button starts the battle

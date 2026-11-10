@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using HeroesOfMetalAge.Domain;
 using TMPro;
 using UnityEngine;
@@ -7,8 +6,9 @@ using UnityEngine.UI;
 namespace HeroesOfMetalAge.Presentation
 {
     /// <summary>
-    /// The adventure screen's UI: the hero panel, objectives, army and the travel buttons. The map itself is drawn in the
-    /// world (<see cref="AdventureMapView"/>) inside <see cref="MapViewport"/>, which must stay free of raycast targets.
+    /// The adventure screen's UI: the hero panel, the mission card (it opens <see cref="MissionPanelView"/>) and the end day
+    /// button. The army is shown on the hero screen. The map itself is drawn in the world (<see cref="AdventureMapView"/>)
+    /// inside <see cref="MapViewport"/>, which must stay free of raycast targets.
     /// </summary>
     public sealed class WorldCanvasView : CanvasScreenView
     {
@@ -18,17 +18,22 @@ namespace HeroesOfMetalAge.Presentation
         [SerializeField] private Image portraitImage;
         [SerializeField] private TMP_Text movementText;
         [SerializeField] private Image movementBarImage;
-        [Tooltip("One row per mission goal, top to bottom: the goal's text, a check mark when reached and the box behind it.")]
-        [SerializeField] private List<UiWidget> objectiveRows = new List<UiWidget>();
-        [SerializeField] private UiWidget rideButton;
         [SerializeField] private UiWidget endDayButton;
-        [SerializeField] private ArmySlotsView armySlots;
+
+        [Header("Mission")]
+        [Tooltip("The mission card; a click opens or closes the mission panel.")]
+        [SerializeField] private UiWidget missionButton;
+        [SerializeField] private TMP_Text missionNameText;
+        [SerializeField] private TMP_Text missionProgressText;
+        [SerializeField] private MissionPanelView missionPanel;
 
         [Header("Map")]
         [Tooltip("Screen area where the world camera draws the adventure map.")]
         [SerializeField] private RectTransform mapViewport;
 
         public RectTransform MapViewport => mapViewport;
+        public UiWidget MissionButton => missionButton;
+        public bool IsMissionOpen => missionPanel.IsOpen;
 
         public override void Refresh()
         {
@@ -37,12 +42,29 @@ namespace HeroesOfMetalAge.Presentation
             UiBinding.SetText(heroText, hero.Name);
             UiBinding.SetText(levelText, Catalog.ClassOf(hero.Id).Name.ToUpperInvariant() + "  •  LEVEL " + Rules.Level(Campaign));
             UiBinding.SetSprite(portraitImage, Context.HeroPanelPortrait, Context.HeroTint);
-            UiBinding.SetText(movementText, "MOVEMENT " + Campaign.Movement + " / " + dailyMovement);
+            UiBinding.SetText(movementText, Campaign.Movement + " / " + dailyMovement);
             UiBinding.SetProgress(movementBarImage, Campaign.Movement / (float)dailyMovement);
-            ShowObjectives();
-            UiBinding.SetButton(rideButton, "RIDE [SPACE]", Session.Route.Count > 0 && !Session.IsBusy);
             UiBinding.SetButton(endDayButton, "END DAY", !Session.IsBusy);
-            armySlots.Display(Campaign.Army, true);
+            UiBinding.SetButton(missionButton, string.Empty, true);
+            UiBinding.SetText(missionNameText, Catalog.Mission.Name);
+            UiBinding.SetText(missionProgressText, "GOALS REACHED " + Session.Objects.ReachedCount(Campaign) + " / " + Catalog.Mission.Objectives.Count);
+            if (missionPanel.IsOpen)
+            {
+                missionPanel.Display();
+            }
+        }
+
+        /// <summary>Closes the mission panel.</summary>
+        /// <returns>True if it was open.</returns>
+        public bool CloseMission()
+        {
+            if (!missionPanel.IsOpen)
+            {
+                return false;
+            }
+
+            missionPanel.SetOpen(false);
+            return true;
         }
 
         protected override void ValidateReferences()
@@ -52,44 +74,31 @@ namespace HeroesOfMetalAge.Presentation
             Require(portraitImage, nameof(portraitImage));
             Require(movementText, nameof(movementText));
             Require(movementBarImage, nameof(movementBarImage));
-            foreach (UiWidget row in objectiveRows)
-            {
-                Require(row, nameof(objectiveRows));
-            }
-
-            Require(rideButton, nameof(rideButton));
             Require(endDayButton, nameof(endDayButton));
-            Require(armySlots, nameof(armySlots));
+            Require(missionButton, nameof(missionButton));
+            Require(missionNameText, nameof(missionNameText));
+            Require(missionProgressText, nameof(missionProgressText));
+            Require(missionPanel, nameof(missionPanel));
             Require(mapViewport, nameof(mapViewport));
         }
 
         protected override void BindControls()
         {
-            rideButton.Bind(Session.Travel);
             endDayButton.Bind(Session.EndDay);
-            armySlots.Initialize(Context);
+            missionButton.Bind(ToggleMission);
+            missionPanel.Initialize(Context, () => CloseMission());
+            missionPanel.SetOpen(false);
         }
 
-        /// <summary>One row per goal; a required goal is marked, a reached one is checked. Rows beyond the goals stay empty.</summary>
-        private void ShowObjectives()
+        private void ToggleMission()
         {
-            IReadOnlyList<ObjectiveDefinition> goals = Catalog.Mission.Objectives;
-            for (int i = 0; i < objectiveRows.Count; i++)
+            if (CloseMission())
             {
-                UiWidget row = objectiveRows[i];
-                bool hasGoal = i < goals.Count;
-                UiBinding.SetVisible(row.gameObject, hasGoal);
-                if (!hasGoal)
-                {
-                    continue;
-                }
-
-                ObjectiveDefinition goal = goals[i];
-                bool isReached = Session.Objects.IsReached(Campaign, goal);
-                string text = goal.IsRequired ? goal.Text + " *" : goal.Text;
-                row.Display(isReached ? "<s>" + text + "</s>" : text, string.Empty, string.Empty, isReached ? Context.Theme.CheckMark : null,
-                    Color.white, false);
+                return;
             }
+
+            missionPanel.SetOpen(true);
+            missionPanel.Display();
         }
     }
 }

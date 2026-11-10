@@ -114,6 +114,12 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         [Tooltip("Seconds the battlefield stays on screen after the last blow before the victory or defeat screen opens.")]
         [Min(0f)]
         [SerializeField] private float battleResultSeconds = 2f;
+        [Tooltip("Hexes a stack crosses per second on the battlefield; a stack that moves strikes when it arrives.")]
+        [Min(0.1f)]
+        [SerializeField] private float battleMoveHexesPerSecond = 2f;
+        [Tooltip("Hexes per second while the Quick battle animation option is on.")]
+        [Min(0.1f)]
+        [SerializeField] private float quickBattleMoveHexesPerSecond = 6f;
         [Tooltip("Length of the end-of-day sequence (hourglass and sound); the new day begins when it ends.")]
         [Min(0f)]
         [SerializeField] private float endDaySeconds = 3f;
@@ -186,6 +192,8 @@ namespace HeroesOfMetalAge.Infrastructure.Content
         public float EnemyTurnSeconds => enemyTurnSeconds;
         public float BattleActionSeconds => battleActionSeconds;
         public float BattleResultSeconds => battleResultSeconds;
+        public float BattleMoveHexesPerSecond => battleMoveHexesPerSecond;
+        public float QuickBattleMoveHexesPerSecond => quickBattleMoveHexesPerSecond;
         public float EndDaySeconds => endDaySeconds;
     }
 }

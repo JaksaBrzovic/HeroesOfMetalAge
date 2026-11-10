@@ -7,13 +7,14 @@ using UnityEngine.UI;
 namespace HeroesOfMetalAge.Presentation
 {
     /// <summary>
-    /// The spoils of the battle just won: the gold and the artefact in its frame (at most one per victory). The rewards were
-    /// applied when the battle was won; this screen only shows them.
+    /// The second step after a won battle: the experience, the gold and the artefact in its frame (at most one per victory).
+    /// The rewards were applied when the battle was won; this screen only shows them.
     /// </summary>
     public sealed class RewardsCanvasView : CanvasScreenView
     {
         [SerializeField] private TMP_Text titleText;
         [SerializeField] private TMP_Text goldText;
+        [SerializeField] private TMP_Text experienceText;
         [SerializeField] private Image artefactImage;
         [SerializeField] private TMP_Text artefactNameText;
         [SerializeField] private TMP_Text noteText;
@@ -28,7 +29,8 @@ namespace HeroesOfMetalAge.Presentation
             VictorySummary result = Session.Victory;
             UiBinding.SetText(titleText, result.HasLegendary ? "LEGENDARY SPOILS" : "SPOILS OF WAR");
             UiBinding.SetText(goldText, "+" + result.Gold + " GOLD");
-            UiBinding.SetButton(continueButton, "CONTINUE THE OATH", true);
+            UiBinding.SetText(experienceText, "+" + result.Experience + " EXPERIENCE" + (result.HasLeveledUp ? " / LEVEL UP!" : string.Empty));
+            UiBinding.SetButton(continueButton, "OK", true);
             if (result.ArtefactIds.Count == 0)
             {
                 UiBinding.SetSprite(artefactImage, null, Color.white);
@@ -48,6 +50,7 @@ namespace HeroesOfMetalAge.Presentation
         {
             Require(titleText, nameof(titleText));
             Require(goldText, nameof(goldText));
+            Require(experienceText, nameof(experienceText));
             Require(artefactImage, nameof(artefactImage));
             Require(artefactNameText, nameof(artefactNameText));
             Require(noteText, nameof(noteText));

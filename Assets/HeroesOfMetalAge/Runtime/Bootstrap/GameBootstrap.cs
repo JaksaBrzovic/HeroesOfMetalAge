@@ -26,6 +26,8 @@ namespace HeroesOfMetalAge.Bootstrap
         private const string SMOKE_TEST_CAMPAIGN_FILE = "refactor-smoke-campaign.json";
         private const int SMOKE_TEST_SEED = 42;
         private const string SKIP_INTRO_PREFERENCE = "dev.clickToSkipIntro";
+        private const string INSTANT_END_DAY_PREFERENCE = "dev.instantEndDay";
+        private const string BATTLE_RESTART_PREFERENCE = "dev.battleRestart";
 
         [SerializeField] private UnitDatabaseScriptableObject units;
         [SerializeField] private ArtefactDatabaseScriptableObject artefacts;
@@ -147,7 +149,8 @@ namespace HeroesOfMetalAge.Bootstrap
             JsonCampaignStore store = new JsonCampaignStore(Path.Combine(UnityEngine.Application.persistentDataPath, saveFile));
             IRandomSource random = new SeededRandomSource(isSmokeTest ? SMOKE_TEST_SEED : Environment.TickCount);
             GameSession session = new GameSession(catalog, store, random, mission.TravelStepSeconds, mission.EnemyTurnSeconds,
-                mission.BattleActionSeconds, mission.BattleResultSeconds, mission.EndDaySeconds, Debug.LogException);
+                mission.BattleActionSeconds, mission.BattleResultSeconds, mission.BattleMoveHexesPerSecond, mission.QuickBattleMoveHexesPerSecond,
+                mission.EndDaySeconds, Debug.LogException);
             // the automated scenario drives the mission itself, so it starts without the main menu
             FrontEndFlow frontEnd = new FrontEndFlow(frontEndSettings.CreateTiming(), frontEndSettings.CreateIntroScript(), !isSmokeTest);
 
@@ -237,6 +240,22 @@ namespace HeroesOfMetalAge.Bootstrap
                 {
                     frontEndView.IsIntroSkippedOnClick = isOn;
                     PlayerPrefs.SetInt(SKIP_INTRO_PREFERENCE, isOn ? 1 : 0);
+                    PlayerPrefs.Save();
+                });
+                session.IsInstantEndDay = PlayerPrefs.GetInt(INSTANT_END_DAY_PREFERENCE, 0) == 1;
+                debugPanel.AddToggle("Instant end day", () => session.IsInstantEndDay, isOn =>
+                {
+                    session.IsInstantEndDay = isOn;
+                    PlayerPrefs.SetInt(INSTANT_END_DAY_PREFERENCE, isOn ? 1 : 0);
+                    PlayerPrefs.Save();
+                });
+                // development play starts fast and with the battle restart at hand; both can be switched off in the panel
+                session.IsSpeedMode = true;
+                session.IsBattleRestartShown = PlayerPrefs.GetInt(BATTLE_RESTART_PREFERENCE, 1) == 1;
+                debugPanel.AddToggle("Restart battle button", () => session.IsBattleRestartShown, isOn =>
+                {
+                    session.IsBattleRestartShown = isOn;
+                    PlayerPrefs.SetInt(BATTLE_RESTART_PREFERENCE, isOn ? 1 : 0);
                     PlayerPrefs.Save();
                 });
             }

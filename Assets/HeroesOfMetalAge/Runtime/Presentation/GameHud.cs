@@ -338,6 +338,10 @@ namespace HeroesOfMetalAge.Presentation
             {
                 session.CancelSpell();
             }
+            else if (session.Screen == GameScreen.Adventure && worldView.CloseMission())
+            {
+                Invalidate();
+            }
             else
             {
                 OpenSettings();

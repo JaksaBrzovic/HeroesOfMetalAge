@@ -10,7 +10,7 @@ namespace HeroesOfMetalAge.Presentation
 {
     /// <summary>
     /// The casualties of a battle on the victory and defeat screens, as the classic hero games show them: the creatures each
-    /// side lost, one slot per unit type with its count.
+    /// side lost, one slot per unit type with its count. Only the filled slots show; each row's layout group centres them.
     /// </summary>
     public sealed class CasualtiesView : MonoBehaviour
     {
@@ -37,6 +37,16 @@ namespace HeroesOfMetalAge.Presentation
             UiBinding.SetText(enemyTitleText, "ENEMY LOSSES" + Total(casualties.Enemy));
             playerSlots.Display(casualties.Player, true);
             enemySlots.Display(casualties.Enemy, false);
+            ShowFilled(playerSlots, casualties.Player.Count);
+            ShowFilled(enemySlots, casualties.Enemy.Count);
+        }
+
+        private static void ShowFilled(ArmySlotsView slots, int count)
+        {
+            for (int i = 0; i < slots.Slots.Count; i++)
+            {
+                slots.Slots[i].gameObject.SetActive(i < count);
+            }
         }
 
         private static string Total(IReadOnlyList<Troop> lost)

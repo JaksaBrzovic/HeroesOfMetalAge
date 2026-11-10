@@ -25,15 +25,20 @@ namespace HeroesOfMetalAge.Application
         private readonly float enemyTurnSeconds;
         private readonly float battleActionSeconds;
         private readonly float battleResultSeconds;
+        private readonly float battleMoveHexesPerSecond;
+        private readonly float quickBattleMoveHexesPerSecond;
         private readonly float endDaySeconds;
         // the steps still ahead of the hero; a step leaves the list when he enters its cell
         private readonly List<WorldPosition> route = new List<WorldPosition>();
         private readonly List<string> battleLog = new List<string>();
+        // the blows of a stack that moved before it struck: published when it has arrived (see Tick)
+        private readonly List<DamageEvent> pendingHits = new List<DamageEvent>();
         // a session-wide streak (kept across new missions and loads, never saved) so the legendary guarantee is reachable
         // within the short first mission while it is being tested
         private int victoriesWithoutLegendary;
         private float timer;
         private float endDayTimer;
+        private float strikeTimer;
         private bool isTraveling;
         // the player picked a new destination during the ride: the hero stops when he has entered the cell he is riding into
         private bool isStopRequested;
@@ -42,10 +47,13 @@ namespace HeroesOfMetalAge.Application
 
         /// <param name="battleActionSeconds">Pause after every battle action before the next one (either army) can act.</param>
         /// <param name="battleResultSeconds">Pause on the battlefield after the last blow before the victory or defeat screen opens.</param>
+        /// <param name="battleMoveHexesPerSecond">How fast a stack crosses the battlefield; a stack that moves strikes when it arrives.</param>
+        /// <param name="quickBattleMoveHexesPerSecond">The same while the quick battle animation option is on.</param>
         /// <param name="endDaySeconds">Length of the end-of-day sequence; the new day begins when it ends.</param>
         /// <param name="reportError">Receives unexpected failures (listener exceptions, IO); gameplay continues.</param>
         public GameSession(DefinitionCatalog catalog, ISaveStore save, IRandomSource random, float travelStepSeconds, float enemyTurnSeconds,
-            float battleActionSeconds, float battleResultSeconds, float endDaySeconds, Action<Exception> reportError)
+            float battleActionSeconds, float battleResultSeconds, float battleMoveHexesPerSecond, float quickBattleMoveHexesPerSecond, float endDaySeconds,
+            Action<Exception> reportError)
         {
             Catalog = catalog;
             this.save = save;
@@ -55,6 +63,8 @@ namespace HeroesOfMetalAge.Application
             this.enemyTurnSeconds = enemyTurnSeconds;
             this.battleActionSeconds = battleActionSeconds;
             this.battleResultSeconds = battleResultSeconds;
+            this.battleMoveHexesPerSecond = battleMoveHexesPerSecond;
+            this.quickBattleMoveHexesPerSecond = quickBattleMoveHexesPerSecond;
             this.endDaySeconds = endDaySeconds;
             Rules = new CampaignRules(catalog);
             Objects = new MapObjectRules(catalog, Rules);
@@ -108,6 +118,12 @@ namespace HeroesOfMetalAge.Application
         public bool IsAutoCombat { get; private set; }
         /// <summary>Option: battles are resolved at once without the battlefield, straight to the victory or defeat screen.</summary>
         public bool IsQuickCombat { get; set; }
+        /// <summary>Option: stacks cross the battlefield at the quick pace.</summary>
+        public bool IsQuickBattleAnimation { get; set; }
+        /// <summary>How many hexes a moving stack crosses per second on the battlefield.</summary>
+        public float BattleMoveHexesPerSecond => IsQuickBattleAnimation ? quickBattleMoveHexesPerSecond : battleMoveHexesPerSecond;
+        /// <summary>The stack that moved and has not arrived yet: its blows (and the damage they did) are not shown yet, or null.</summary>
+        public Combatant PendingStriker { get; private set; }
         /// <summary>The creatures each side lost in the last battle, for the victory and defeat screens.</summary>
         public BattleCasualties Casualties { get; private set; } = BattleCasualties.None;
         /// <summary>The spell the player picked in battle and is aiming at a hex, or null.</summary>
@@ -116,6 +132,10 @@ namespace HeroesOfMetalAge.Application
         public float TravelStepSeconds => IsSpeedMode ? Math.Min(travelStepSeconds, SPEED_MODE_STEP_SECONDS) : travelStepSeconds;
         /// <summary>Development aid (debug panel): the hero rides almost instantly. Gameplay rules are unchanged.</summary>
         public bool IsSpeedMode { get; set; }
+        /// <summary>Development aid (debug panel): ending the day skips the hourglass sequence. Gameplay rules are unchanged.</summary>
+        public bool IsInstantEndDay { get; set; }
+        /// <summary>Development aid (debug panel): the battle screen shows RESTART BATTLE (<see cref="RestartBattle"/>).</summary>
+        public bool IsBattleRestartShown { get; set; }
         public bool IsTraveling => isTraveling;
         /// <summary>True while the end-of-day sequence runs; the day changes when it ends.</summary>
         public bool IsEndingDay => isEndingDay;
@@ -165,6 +185,15 @@ namespace HeroesOfMetalAge.Application
                 }
 
                 return;
+            }
+
+            if (PendingStriker != null)
+            {
+                strikeTimer -= Math.Max(0, deltaTime);
+                if (strikeTimer <= 0)
+                {
+                    PublishPendingHits();
+                }
             }
 
             float previous = timer;
@@ -565,7 +594,7 @@ namespace HeroesOfMetalAge.Application
             }
 
             isEndingDay = true;
-            endDayTimer = endDaySeconds;
+            endDayTimer = IsInstantEndDay ? 0 : endDaySeconds;
             Cue(SoundCue.EndDay);
             if (endDayTimer <= 0)
             {
@@ -996,40 +1025,23 @@ namespace HeroesOfMetalAge.Application
                 return;
             }
 
-            Battle = new BattleEngine(Catalog, random, Campaign, Encounter);
-            Victory = null;
-            TargetingSpellId = null;
-            IsAutoCombat = false;
-            Casualties = BattleCasualties.None;
-            battleLog.Clear();
-            if (IsQuickCombat)
+            BeginBattle(IsQuickCombat);
+        }
+
+        /// <summary>
+        /// Development aid (the battle's RESTART BATTLE button): the undecided battle on screen starts again from its first
+        /// round with the army it began with. Nothing of the battle was written to the campaign yet, so nothing is undone.
+        /// </summary>
+        public void RestartBattle()
+        {
+            Revision++;
+            if (Screen != GameScreen.Battle || Dialog != DialogKind.None || Battle == null || Battle.Outcome != BattleOutcome.InProgress)
             {
-                ResolveQuickly();
                 return;
             }
 
-            Screen = GameScreen.Battle;
-            Dialog = DialogKind.None;
-            // the player may act at once; an enemy that starts waits for its turn delay
-            timer = Battle.Active.IsPlayer ? 0 : enemyTurnSeconds;
-            RefreshPlayback();
-            if (Battle.PlayerMorale != 0)
-            {
-                AddLog("Your warhost fights with " + (Battle.PlayerMorale > 0 ? "good" : "bad") + " morale (" + MoraleText(Battle.PlayerMorale) + ").");
-            }
-
-            if (Battle.Enemy.HeroName != null)
-            {
-                AddLog(Battle.Enemy.HeroName + " leads the enemy.");
-            }
-
-            if (Battle.IsTacticsPhase)
-            {
-                AddLog("Tactics: place your stacks in the first " + Battle.TacticsColumns + " columns, then start the battle.");
-            }
-
-            ReportMorale();
-            CueActiveVoice();
+            BeginBattle(false);
+            AddLog("The battle begins again.");
         }
 
         public void BattleAction(BattleAction action)
@@ -1103,9 +1115,53 @@ namespace HeroesOfMetalAge.Application
             RefreshPlayback();
         }
 
+        // a new battle against the encounter with the campaign's army: resolved at once, or on the battlefield
+        private void BeginBattle(bool isQuick)
+        {
+            pendingHits.Clear();
+            PendingStriker = null;
+            strikeTimer = 0;
+            Battle = new BattleEngine(Catalog, random, Campaign, Encounter);
+            Victory = null;
+            TargetingSpellId = null;
+            IsAutoCombat = false;
+            Casualties = BattleCasualties.None;
+            battleLog.Clear();
+            if (isQuick)
+            {
+                ResolveQuickly();
+                return;
+            }
+
+            Screen = GameScreen.Battle;
+            Dialog = DialogKind.None;
+            // the player may act at once; an enemy that starts waits for its turn delay
+            timer = Battle.Active.IsPlayer ? 0 : enemyTurnSeconds;
+            RefreshPlayback();
+            if (Battle.PlayerMorale != 0)
+            {
+                AddLog("Your warhost fights with " + (Battle.PlayerMorale > 0 ? "good" : "bad") + " morale (" + MoraleText(Battle.PlayerMorale) + ").");
+            }
+
+            if (Battle.Enemy.HeroName != null)
+            {
+                AddLog(Battle.Enemy.HeroName + " leads the enemy.");
+            }
+
+            if (Battle.IsTacticsPhase)
+            {
+                AddLog("Tactics: place your stacks in the first " + Battle.TacticsColumns + " columns, then start the battle.");
+            }
+
+            ReportMorale();
+            CueActiveVoice();
+        }
+
         /// <returns>False when the rules rejected the action.</returns>
         private bool ResolveBattleAction(BattleAction action, bool isPlayer)
         {
+            Combatant actor = Battle.Active;
+            HexPosition start = actor.Position;
             BattleResolution resolution = Battle.Execute(action, isPlayer);
             if (!Accept(resolution.Result))
             {
@@ -1133,9 +1189,20 @@ namespace HeroesOfMetalAge.Application
                 }
 
                 AddLog(Catalog.Unit(hit.AttackerId).Name + verb + ": " + result);
-                LastHit = hit;
-                DamageRevision++;
-                Publish(DamageResolved, hit);
+                pendingHits.Add(hit);
+            }
+
+            // a stack that moved strikes when it arrives; the pause after the action starts then
+            float glide = HexGrid.Distance(start, actor.Position) / Math.Max(0.01f, BattleMoveHexesPerSecond);
+            float strikeDelay = pendingHits.Count > 0 ? glide : 0f;
+            if (strikeDelay > 0)
+            {
+                PendingStriker = actor;
+                strikeTimer = strikeDelay;
+            }
+            else
+            {
+                PublishPendingHits();
             }
 
             ReportMorale();
@@ -1145,9 +1212,10 @@ namespace HeroesOfMetalAge.Application
             }
 
             // a decided battle opens its result screen after the delay (see Tick)
-            timer = Battle.Outcome == BattleOutcome.InProgress
+            timer = strikeDelay + (Battle.Outcome == BattleOutcome.InProgress
                 ? Math.Max(battleActionSeconds, Battle.Active.IsPlayer ? 0 : enemyTurnSeconds)
-                : battleResultSeconds;
+                : battleResultSeconds);
+            timer = Math.Max(timer, glide);
             if (Battle.Outcome != BattleOutcome.InProgress)
             {
                 return true;
@@ -1155,6 +1223,26 @@ namespace HeroesOfMetalAge.Application
 
             CueActiveVoice();
             return true;
+        }
+
+        private void PublishPendingHits()
+        {
+            PendingStriker = null;
+            strikeTimer = 0;
+            if (pendingHits.Count == 0)
+            {
+                return;
+            }
+
+            Revision++;
+            DamageEvent[] hits = pendingHits.ToArray();
+            pendingHits.Clear();
+            foreach (DamageEvent hit in hits)
+            {
+                LastHit = hit;
+                DamageRevision++;
+                Publish(DamageResolved, hit);
+            }
         }
 
         /// <summary>
