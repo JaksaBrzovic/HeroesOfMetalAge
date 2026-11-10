@@ -1,13 +1,13 @@
 AI-Native project developed by Jaksa Brzovic
 
 <!-- usage:start -->
-Claude Code time: 15 h 36 min of work over 19 sessions
+Claude Code time: 15 h 44 min of work over 20 sessions
 
 | Claude Code usage | Input | Output | Cache write 5m | Cache write 1h | Cache read | Web searches | Web fetches |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | claude-haiku-5-5 | 10 | 12,886 | 51,699 | 0 | 67,278 | 0 | 0 |
-| claude-opus-5-5 | 5,048 | 3,035,781 | 0 | 13,359,949 | 967,233,345 | 0 | 0 |
-<!-- usage-data: {"models": {"claude-haiku-5-5": {"cache_read": 67278, "cache_write_1h": 0, "cache_write_5m": 51699, "input": 10, "output": 12886, "web_fetches": 0, "web_searches": 0}, "claude-opus-5-5": {"cache_read": 967233345, "cache_write_1h": 13359949, "cache_write_5m": 0, "input": 5048, "output": 3035781, "web_fetches": 0, "web_searches": 0}}, "seconds": 56190.961, "sessions": 19, "until": "2026-11-10T20:25:58+00:00"} -->
+| claude-opus-5-5 | 5,162 | 3,065,975 | 0 | 13,434,299 | 973,898,391 | 0 | 0 |
+<!-- usage-data: {"models": {"claude-haiku-5-5": {"cache_read": 67278, "cache_write_1h": 0, "cache_write_5m": 51699, "input": 10, "output": 12886, "web_fetches": 0, "web_searches": 0}, "claude-opus-5-5": {"cache_read": 973898391, "cache_write_1h": 13434299, "cache_write_5m": 0, "input": 5162, "output": 3065975, "web_fetches": 0, "web_searches": 0}}, "seconds": 56659.934, "sessions": 20, "until": "2026-11-10T21:41:31+00:00"} -->
 <!-- usage:end -->
 
 Codex time (2026-10-09 – 2026-10-12, finished): 6 h 35 min of work over 5 sessions
